@@ -41,7 +41,6 @@ class ApiClient(
             json(this@ApiClient.json)
         }
         defaultRequest {
-            url(baseUrl)
             contentType(ContentType.Application.Json)
             authStorage.token?.let { token ->
                 header("Authorization", "Bearer $token")
@@ -49,49 +48,47 @@ class ApiClient(
         }
     }
 
-    private suspend fun handleResponse(response: HttpResponse): String {
+    @PublishedApi
+    internal fun fullUrl(path: String): String = "$baseUrl$path"
+
+    @PublishedApi
+    internal suspend fun handleResponse(response: HttpResponse) {
         if (response.status.value == 401) {
             authStorage.clear()
             onUnauthorized()
             throw ApiError(401, "Unauthorized", null)
         }
-        val text = response.bodyAsText()
         if (!response.status.isSuccess()) {
+            val text = response.bodyAsText()
             throw ApiError(response.status.value, response.status.description, text)
         }
-        return text
     }
 
     suspend inline fun <reified T> get(path: String): T {
-        val response = httpClient.get(path)
-        checkResponse(response)
+        val response = httpClient.get(fullUrl(path))
+        handleResponse(response)
         return response.body()
     }
 
     suspend inline fun <reified T> post(path: String, body: Any? = null): T {
-        val response = httpClient.post(path) {
+        val response = httpClient.post(fullUrl(path)) {
             if (body != null) setBody(body)
         }
-        checkResponse(response)
+        handleResponse(response)
         return response.body()
     }
 
     suspend inline fun <reified T> patch(path: String, body: Any? = null): T {
-        val response = httpClient.patch(path) {
+        val response = httpClient.patch(fullUrl(path)) {
             if (body != null) setBody(body)
         }
-        checkResponse(response)
+        handleResponse(response)
         return response.body()
     }
 
     suspend inline fun <reified T> delete(path: String): T {
-        val response = httpClient.delete(path)
-        checkResponse(response)
-        return response.body()
-    }
-
-    @PublishedApi
-    internal suspend fun checkResponse(response: HttpResponse) {
+        val response = httpClient.delete(fullUrl(path))
         handleResponse(response)
+        return response.body()
     }
 }
