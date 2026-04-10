@@ -49,7 +49,7 @@ fun MeusDadosScreen(component: RootComponent) {
     Column(
         modifier = Modifier.fillMaxSize().background(UbusBackground).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
-        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 48.dp)) {
+        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
         }
         Text("Meus dados", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp))

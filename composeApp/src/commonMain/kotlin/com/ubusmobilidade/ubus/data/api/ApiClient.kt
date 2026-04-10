@@ -34,6 +34,7 @@ class ApiClient(
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = false
+        coerceInputValues = true
     }
 
     val httpClient = HttpClient {

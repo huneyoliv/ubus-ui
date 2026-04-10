@@ -82,9 +82,9 @@ fun LoginScreen(component: RootComponent) {
                 component.onLoginSuccess()
             } catch (e: ApiError) {
                 error = if (e.status == 401) "Email ou senha incorretos."
-                else "Erro de conexão. Tente novamente."
-            } catch (_: Exception) {
-                error = "Erro de conexão. Tente novamente."
+                else "Erro ${e.status}: ${e.body ?: e.statusText}"
+            } catch (e: Exception) {
+                error = "Erro: ${e.message ?: "Falha na conexão"}"
             } finally {
                 loading = false
             }
@@ -105,7 +105,7 @@ fun LoginScreen(component: RootComponent) {
             // Back button
             IconButton(
                 onClick = { component.goBack() },
-                modifier = Modifier.padding(top = 48.dp),
+                modifier = Modifier.padding(top = 8.dp),
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,

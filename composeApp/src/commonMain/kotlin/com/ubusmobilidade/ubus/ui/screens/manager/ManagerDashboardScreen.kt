@@ -20,24 +20,36 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ubusmobilidade.ubus.data.api.ApiClient
+import com.ubusmobilidade.ubus.data.api.MetricsRepository
+import com.ubusmobilidade.ubus.data.model.DashboardMetrics
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.theme.UbusAccent
 import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.theme.UbusWarning
 
 private data class DashItem(val icon: ImageVector, val label: String, val config: RootComponent.Config)
 
@@ -53,12 +65,31 @@ private val dashItems = listOf(
 @Composable
 fun ManagerDashboardScreen(component: RootComponent) {
     val user = component.authStorage.user
+    val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
+    val metricsRepo = remember { MetricsRepository(apiClient) }
+    var metrics by remember { mutableStateOf<DashboardMetrics?>(null) }
+
+    LaunchedEffect(Unit) {
+        try {
+            metrics = metricsRepo.getDashboard()
+        } catch (_: Exception) {}
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp),
     ) {
-        Text("Painel do gestor", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 48.dp, bottom = 8.dp))
-        Text("Olá, ${user?.name ?: "Gestor"}!", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground, modifier = Modifier.padding(bottom = 24.dp))
+        Text("Painel do gestor", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
+        Text("Olá, ${user?.name ?: "Gestor"}!", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground, modifier = Modifier.padding(bottom = 16.dp))
+
+        // Quick metrics row
+        if (metrics != null) {
+            val m = metrics!!
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
+                SmallMetric("${m.activeTrips ?: 0}", "Viagens", Icons.Default.Schedule, UbusSuccess, Modifier.weight(1f))
+                SmallMetric("${m.pendingUsers ?: 0}", "Pendentes", Icons.Default.Group, UbusWarning, Modifier.weight(1f))
+                SmallMetric("${m.totalReservationsToday ?: 0}", "Reservas", Icons.Default.Assessment, UbusAccent, Modifier.weight(1f))
+            }
+        }
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -89,5 +120,22 @@ fun ManagerDashboardScreen(component: RootComponent) {
             }
         }
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun SmallMetric(
+    value: String,
+    label: String,
+    icon: ImageVector,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+) {
+    BentoCard(modifier = modifier) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = UbusMutedForeground)
+        }
     }
 }

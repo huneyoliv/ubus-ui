@@ -1,16 +1,23 @@
 package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,27 +25,86 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
+import com.ubusmobilidade.ubus.ui.theme.UbusAccent
 import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
 
 @Composable
 fun ManagerConfiguracoesScreen(component: RootComponent) {
-    Column(modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp)) {
-        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 48.dp)) {
+    val user = component.authStorage.user
+
+    Column(
+        modifier = Modifier.fillMaxSize().background(UbusBackground)
+            .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+    ) {
+        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
         }
-        Text("Configurações", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp))
-        BentoCard {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Settings, null, tint = UbusMutedForeground, modifier = Modifier.size(48.dp))
-                Spacer(Modifier.height(12.dp))
-                Text("Configurações do sistema", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, textAlign = TextAlign.Center)
-                Text("Ajuste parâmetros gerais.", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+        Text(
+            "Configurações",
+            style = MaterialTheme.typography.displaySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+        )
+        Text(
+            "Ajustes gerais do sistema",
+            style = MaterialTheme.typography.bodyMedium,
+            color = UbusMutedForeground,
+            modifier = Modifier.padding(bottom = 20.dp),
+        )
+
+        // User info card
+        BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Person, null, tint = UbusAccent, modifier = Modifier.size(32.dp))
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(user?.name ?: "Gestor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                    Text(user?.email ?: "", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                    Text("Cargo: ${user?.role?.name ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                }
             }
         }
+
+        // Municipality info
+        BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Business, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text("Município", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                    Text("ID: ${user?.municipalityId ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                }
+            }
+        }
+
+        // App info
+        BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Info, null, tint = UbusMutedForeground, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text("Sobre o app", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                    Text("Ubus v1.0.0 · Mobilidade universitária", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // Logout
+        BentoCard(modifier = Modifier.clickable { component.logout() }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = UbusDestructive, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(12.dp))
+                Text("Sair da conta", style = MaterialTheme.typography.titleSmall, color = UbusDestructive)
+            }
+        }
+        Spacer(Modifier.height(24.dp))
     }
 }

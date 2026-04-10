@@ -74,7 +74,7 @@ fun RedefinirSenhaScreen(component: RootComponent) {
     ) {
         IconButton(
             onClick = { component.goBack() },
-            modifier = Modifier.padding(top = 48.dp),
+            modifier = Modifier.padding(top = 8.dp),
         ) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onBackground)
         }

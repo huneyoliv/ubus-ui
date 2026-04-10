@@ -8,7 +8,7 @@ import kotlinx.serialization.json.Json
 
 class AuthStorage {
     private val settings = Settings()
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
     var token: String?
         get() = settings.getStringOrNull(KEY_TOKEN)
