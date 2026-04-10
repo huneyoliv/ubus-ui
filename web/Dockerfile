@@ -10,7 +10,6 @@ COPY gradlew gradlew.bat ./
 
 # Copy source code
 COPY composeApp ./composeApp
-COPY iosApp ./iosApp
 
 # Build wasmJs target
 RUN chmod +x gradlew && \
