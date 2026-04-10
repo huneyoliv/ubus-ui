@@ -64,7 +64,7 @@ fun ReservarScreen(component: RootComponent) {
     var successMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        try { trips = tripRepo.getTrips() } catch (_: Exception) {}
+        try { trips = tripRepo.getOpenTrips() } catch (_: Exception) {}
         loading = false
     }
 
@@ -123,12 +123,12 @@ fun ReservarScreen(component: RootComponent) {
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    trip.linha?.nome ?: "Rota",
+                                    trip.route?.name ?: "Rota",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onBackground,
                                 )
                                 Text(
-                                    "${trip.dataViagem} · ${trip.turno} · ${trip.direcao}",
+                                    "${trip.tripDate} · ${trip.shift} · ${trip.direction}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = UbusMutedForeground,
                                 )
@@ -137,12 +137,12 @@ fun ReservarScreen(component: RootComponent) {
                         Spacer(Modifier.height(12.dp))
                         UbusButton(
                             text = "Reservar",
-                            loading = reservingId == trip.idViagem,
+                            loading = reservingId == trip.tripId,
                             onClick = {
-                                reservingId = trip.idViagem
+                                reservingId = trip.tripId
                                 scope.launch {
                                     try {
-                                        reservationRepo.create(CreateReservationPayload(tripId = trip.idViagem))
+                                        reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
                                         successMessage = "Reserva confirmada!"
                                     } catch (_: Exception) {
                                         successMessage = "Erro ao reservar."

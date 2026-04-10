@@ -90,8 +90,8 @@ fun HistoricoScreen(component: RootComponent) {
             } else {
                 reservations.forEach { res ->
                     BentoCard(modifier = Modifier.padding(bottom = 8.dp)) {
-                        Text(res.viagem?.turno ?: "Viagem", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                        Text("${res.viagem?.dataViagem ?: ""} · ${res.status}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                        Text(res.trip?.shift ?: "Viagem", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                        Text("${res.trip?.tripDate ?: ""} · ${res.status}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
                     }
                 }
             }

@@ -75,7 +75,7 @@ fun HomeScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            openTrips = try { tripRepo.getTrips() } catch (_: Exception) { emptyList() }
+            openTrips = try { tripRepo.getOpenTrips() } catch (_: Exception) { emptyList() }
             myReservations = try { reservationRepo.getMyReservations() } catch (_: Exception) { emptyList() }
         } finally {
             loading = false
@@ -170,12 +170,12 @@ fun HomeScreen(component: RootComponent) {
                                 Spacer(Modifier.width(12.dp))
                                 Column {
                                     Text(
-                                        reservation.viagem?.turno ?: "Viagem",
+                                        reservation.trip?.shift ?: "Viagem",
                                         style = MaterialTheme.typography.titleSmall,
                                         color = MaterialTheme.colorScheme.onBackground,
                                     )
                                     Text(
-                                        reservation.viagem?.dataViagem ?: "",
+                                        reservation.trip?.tripDate ?: "",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = UbusMutedForeground,
                                     )

@@ -75,7 +75,9 @@ class ApiClient(
             if (body != null) setBody(body)
         }
         handleResponse(response)
-        return response.body()
+        return if (T::class == Unit::class) Unit as T
+        else if (T::class == String::class) response.bodyAsText() as T
+        else response.body()
     }
 
     suspend inline fun <reified T> patch(path: String, body: Any? = null): T {
@@ -83,12 +85,14 @@ class ApiClient(
             if (body != null) setBody(body)
         }
         handleResponse(response)
-        return response.body()
+        return if (T::class == Unit::class) Unit as T
+        else if (T::class == String::class) response.bodyAsText() as T
+        else response.body()
     }
 
     suspend inline fun <reified T> delete(path: String): T {
         val response = httpClient.delete(fullUrl(path))
         handleResponse(response)
-        return response.body()
+        return if (T::class == Unit::class) Unit as T else response.body()
     }
 }

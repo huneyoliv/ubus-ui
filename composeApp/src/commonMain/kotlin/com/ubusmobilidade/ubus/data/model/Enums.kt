@@ -8,21 +8,26 @@ enum class RoleUsuario {
 }
 
 @Serializable
-enum class StatusCadastro {
+enum class RegistrationStatus {
     PENDING, APPROVED, REJECTED
 }
 
 @Serializable
-enum class DirecaoViagem {
+enum class TripDirection {
     OUTBOUND, INBOUND
 }
 
 @Serializable
-enum class StatusViagem {
+enum class TripStatus {
     SCHEDULED, OPEN_FOR_RESERVATION, ONGOING, FINISHED, CANCELLED
 }
 
 @Serializable
-enum class StatusReserva {
+enum class ReservationStatus {
     CONFIRMED, PRESENT, ABSENT, CANCELLED_BY_SYSTEM, EXCESS
+}
+
+@Serializable
+enum class TripShift {
+    MORNING, AFTERNOON, NIGHT
 }

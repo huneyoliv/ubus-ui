@@ -56,7 +56,7 @@ fun RedefinirSenhaScreen(component: RootComponent) {
         loading = true
         scope.launch {
             try {
-                authRepo.requestPasswordReset(email.trim())
+                authRepo.sendPasswordResetEmail(email.trim())
                 success = true
             } catch (_: Exception) {
                 error = "Erro ao enviar email. Tente novamente."

@@ -114,21 +114,21 @@ fun BilheteScreen(component: RootComponent) {
                         Spacer(Modifier.height(8.dp))
 
                         Text(
-                            res.viagem?.turno ?: "Viagem",
+                            res.trip?.shift ?: "Viagem",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onBackground,
                         )
 
                         Text(
-                            res.viagem?.dataViagem ?: "",
+                            res.trip?.tripDate ?: "",
                             style = MaterialTheme.typography.bodyMedium,
                             color = UbusMutedForeground,
                         )
 
-                        if (res.numeroAssento != null) {
+                        if (res.seatNumber != null) {
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                "Assento ${res.numeroAssento}",
+                                "Assento ${res.seatNumber}",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = UbusAccent,
                             )
