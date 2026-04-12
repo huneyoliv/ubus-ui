@@ -67,6 +67,8 @@ class RootComponent(
         Config.ManagerRelatorios -> Child.ManagerRelatorios
         Config.ManagerConfiguracoes -> Child.ManagerConfiguracoes
         Config.SuperAdminManagement -> Child.SuperAdminManagement
+        Config.ManagerCadastroMotorista -> Child.ManagerCadastroMotorista
+        Config.ManagerNotificacoes -> Child.ManagerNotificacoes
     }
 
     // ── Navigation actions ──
@@ -140,6 +142,8 @@ class RootComponent(
         @Serializable data object ManagerRelatorios : Config()
         @Serializable data object ManagerConfiguracoes : Config()
         @Serializable data object SuperAdminManagement : Config()
+        @Serializable data object ManagerCadastroMotorista : Config()
+        @Serializable data object ManagerNotificacoes : Config()
     }
 
     // ── Sealed children ──
@@ -184,5 +188,7 @@ class RootComponent(
         data object ManagerRelatorios : Child()
         data object ManagerConfiguracoes : Child()
         data object SuperAdminManagement : Child()
+        data object ManagerCadastroMotorista : Child()
+        data object ManagerNotificacoes : Child()
     }
 }

@@ -18,6 +18,8 @@ import com.ubusmobilidade.ubus.ui.screens.manager.ManagerConfiguracoesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerDashboardScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerFrotaScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerMotoristasScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerCadastroMotoristaScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerNotificacoesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRelatoriosScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRoutesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerValidationsScreen
@@ -83,6 +85,8 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.ManagerRelatorios -> ManagerRelatoriosScreen(component)
             is RootComponent.Child.ManagerConfiguracoes -> ManagerConfiguracoesScreen(component)
             is RootComponent.Child.SuperAdminManagement -> SuperAdminManagementScreen(component)
+            is RootComponent.Child.ManagerCadastroMotorista -> ManagerCadastroMotoristaScreen(component)
+            is RootComponent.Child.ManagerNotificacoes -> ManagerNotificacoesScreen(component)
         }
     }
 }

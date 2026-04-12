@@ -98,17 +98,42 @@ class UserRepository(private val api: ApiClient) {
     suspend fun updateMyPoint(pointId: String): User =
         api.patch("/users/me/point", UpdatePointPayload(pointId))
 
-    // Not in Swagger but expected to exist in backend
+    /** GET /users/me */
     suspend fun getMe(): User = api.get("/users/me")
 
+    /** PATCH /users/me — update editable profile fields */
+    suspend fun updateMe(data: UpdateProfilePayload): User =
+        api.patch("/users/me", data)
+
+    @Deprecated("Use updateMe(UpdateProfilePayload) instead")
     suspend fun updateMe(data: Map<String, String>): User =
         api.patch("/users/me", data)
 
+    /** PATCH /users/me/password */
     suspend fun changePassword(currentPassword: String, newPassword: String) {
         api.patch<String>(
             "/users/me/password",
-            mapOf("currentPassword" to currentPassword, "newPassword" to newPassword)
+            ChangePasswordPayload(currentPassword, newPassword)
         )
+    }
+
+    // TODO: endpoint não existe ainda na API — encaminhar para backend
+    /** POST /users/me/semester-renewal */
+    suspend fun requestSemesterRenewal(payload: SemesterRenewalPayload): SemesterRenewalResponse {
+        return api.post("/users/me/semester-renewal", payload)
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   Notification Repository — /notifications
+   ═══════════════════════════════════════════════ */
+
+// TODO: endpoint não existe ainda na API — encaminhar para backend
+class NotificationRepository(private val api: ApiClient) {
+
+    /** POST /notifications/send */
+    suspend fun send(payload: SendNotificationPayload): NotificationResponse {
+        return api.post("/notifications/send", payload)
     }
 }
 

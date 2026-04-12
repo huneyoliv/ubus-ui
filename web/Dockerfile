@@ -13,7 +13,7 @@ COPY composeApp ./composeApp
 
 # Build wasmJs target
 RUN chmod +x gradlew && \
-    ./gradlew :composeApp:wasmJsReleaseDistribution \
+    ./gradlew :composeApp:wasmJsBrowserDistribution \
     --no-daemon \
     -x test
 
@@ -24,10 +24,10 @@ FROM nginx:alpine
 RUN rm -rf /usr/share/nginx/html/*
 
 # Copy built wasmJs app
-COPY --from=builder /app/composeApp/build/dist/wasmJs /usr/share/nginx/html
+COPY --from=builder /app/composeApp/build/dist/wasmJs/productionExecutable /usr/share/nginx/html
 
 # Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

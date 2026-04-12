@@ -11,7 +11,7 @@ data class User(
     val email: String,
     val cpf: String,
     val role: RoleUsuario,
-    val municipalityId: String,
+    val municipalityId: String? = null,
     val phone: String? = null,
     val status: RegistrationStatus? = null,
     val priorityLevel: Int? = null,

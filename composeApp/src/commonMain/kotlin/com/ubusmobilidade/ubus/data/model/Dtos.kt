@@ -152,3 +152,70 @@ data class UpdateUserStatusPayload(
 data class UpdatePointPayload(
     val pointId: String,
 )
+
+@Serializable
+data class UpdateProfilePayload(
+    val phone: String? = null,
+    val email: String? = null,
+    val needsWheelchair: Boolean? = null,
+    val photoUrl: String? = null,
+)
+
+@Serializable
+data class ChangePasswordPayload(
+    val currentPassword: String,
+    val newPassword: String,
+)
+
+/* ── Email Verification ── */
+
+@Serializable
+data class SendEmailCodePayload(
+    val email: String,
+    val context: String, // "REGISTER" or "CHANGE_EMAIL"
+)
+
+@Serializable
+data class VerifyEmailCodePayload(
+    val email: String,
+    val code: String,
+)
+
+@Serializable
+data class VerifyEmailCodeResponse(
+    val verified: Boolean,
+    val message: String? = null,
+)
+
+/* ── Notifications ── */
+
+@Serializable
+data class SendNotificationPayload(
+    val title: String,
+    val message: String,
+    val target: String, // "MUNICIPALITY" or "ROUTE"
+    val targetId: String,
+)
+
+@Serializable
+data class NotificationResponse(
+    val id: String? = null,
+    val title: String? = null,
+    val message: String? = null,
+    val sentAt: String? = null,
+    val recipientCount: Int? = null,
+)
+
+/* ── Semester Renewal ── */
+
+@Serializable
+data class SemesterRenewalPayload(
+    val gradeFileUrl: String? = null,
+    val residenciaFileUrl: String? = null,
+)
+
+@Serializable
+data class SemesterRenewalResponse(
+    val message: String? = null,
+    val status: String? = null,
+)
