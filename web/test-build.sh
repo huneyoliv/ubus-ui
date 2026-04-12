@@ -7,7 +7,7 @@ echo "🔨 Building KMP wasmJs..."
 ./gradlew :composeApp:wasmJsReleaseDistribution --no-daemon
 
 echo "📦 Creating Docker image..."
-docker build -t ubus-web:test -f Dockerfile.web .
+docker build -t ubus-web:test -f web/Dockerfile .
 
 echo "🚀 Running container..."
 docker run -d -p 8080:80 --name ubus-web-test ubus-web:test

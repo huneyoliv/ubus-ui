@@ -37,9 +37,8 @@ import com.ubusmobilidade.ubus.data.model.RegisterPayload
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import kotlinx.coroutines.launch
 
 @Composable
@@ -94,7 +93,7 @@ fun CadastroScreen(component: RootComponent) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(UbusBackground)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
     ) {
@@ -111,13 +110,13 @@ fun CadastroScreen(component: RootComponent) {
 
         Spacer(Modifier.height(8.dp))
 
-        Text("Preencha seus dados para começar.", style = MaterialTheme.typography.bodyLarge, color = UbusMutedForeground)
+        Text("Preencha seus dados para começar.", style = MaterialTheme.typography.bodyLarge, color = UbusText3)
 
         Spacer(Modifier.height(32.dp))
 
         UbusTextField(
             value = name, onValueChange = { name = it }, label = "Nome completo", placeholder = "Seu nome",
-            leadingIcon = { Icon(Icons.Default.Person, null, tint = UbusMutedForeground, modifier = Modifier) },
+            leadingIcon = { Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
         Spacer(Modifier.height(16.dp))
@@ -130,21 +129,21 @@ fun CadastroScreen(component: RootComponent) {
 
         UbusTextField(
             value = email, onValueChange = { email = it }, label = "Email", placeholder = "seu@email.com",
-            leadingIcon = { Icon(Icons.Default.Email, null, tint = UbusMutedForeground, modifier = Modifier) },
+            leadingIcon = { Icon(Icons.Default.Email, null, tint = UbusText3, modifier = Modifier) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
         )
         Spacer(Modifier.height(16.dp))
 
         UbusTextField(
             value = phone, onValueChange = { phone = it }, label = "Telefone (opcional)", placeholder = "(00) 00000-0000",
-            leadingIcon = { Icon(Icons.Default.Phone, null, tint = UbusMutedForeground, modifier = Modifier) },
+            leadingIcon = { Icon(Icons.Default.Phone, null, tint = UbusText3, modifier = Modifier) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
         )
         Spacer(Modifier.height(16.dp))
 
         UbusTextField(
             value = password, onValueChange = { password = it }, label = "Senha", placeholder = "Mínimo 6 caracteres",
-            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusMutedForeground, modifier = Modifier) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusText3, modifier = Modifier) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next),
         )
@@ -152,7 +151,7 @@ fun CadastroScreen(component: RootComponent) {
 
         UbusTextField(
             value = confirmPassword, onValueChange = { confirmPassword = it }, label = "Confirmar senha", placeholder = "Repita a senha",
-            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusMutedForeground, modifier = Modifier) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusText3, modifier = Modifier) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         )

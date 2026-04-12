@@ -1,5 +1,6 @@
 package com.ubusmobilidade.ubus.ui.components
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.DirectionsBus
@@ -13,11 +14,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 enum class StudentTab(val label: String, val icon: ImageVector) {
     HOME("Início", Icons.Default.Home),
@@ -33,7 +34,9 @@ fun StudentBottomNavBar(
     onTabSelected: (StudentTab) -> Unit,
 ) {
     NavigationBar(
-        containerColor = UbusPrimary,
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+        modifier = Modifier.height(64.dp),
     ) {
         StudentTab.entries.forEach { tab ->
             NavigationBarItem(
@@ -42,11 +45,11 @@ fun StudentBottomNavBar(
                 icon = { Icon(tab.icon, contentDescription = tab.label) },
                 label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = UbusAccent,
-                    selectedTextColor = UbusAccent,
-                    unselectedIconColor = UbusMutedForeground,
-                    unselectedTextColor = UbusMutedForeground,
-                    indicatorColor = UbusBackground,
+                    selectedIconColor = UbusPrimary,
+                    selectedTextColor = UbusPrimary,
+                    unselectedIconColor = UbusText3,
+                    unselectedTextColor = UbusText3,
+                    indicatorColor = UbusPrimary.copy(alpha = 0.1f),
                 ),
             )
         }
@@ -64,7 +67,11 @@ fun DriverBottomNavBar(
     selectedTab: DriverTab,
     onTabSelected: (DriverTab) -> Unit,
 ) {
-    NavigationBar(containerColor = UbusPrimary) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp,
+        modifier = Modifier.height(64.dp),
+    ) {
         DriverTab.entries.forEach { tab ->
             NavigationBarItem(
                 selected = selectedTab == tab,
@@ -72,11 +79,11 @@ fun DriverBottomNavBar(
                 icon = { Icon(tab.icon, contentDescription = tab.label) },
                 label = { Text(tab.label, style = MaterialTheme.typography.labelSmall) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = UbusAccent,
-                    selectedTextColor = UbusAccent,
-                    unselectedIconColor = UbusMutedForeground,
-                    unselectedTextColor = UbusMutedForeground,
-                    indicatorColor = UbusBackground,
+                    selectedIconColor = UbusPrimary,
+                    selectedTextColor = UbusPrimary,
+                    unselectedIconColor = UbusText3,
+                    unselectedTextColor = UbusText3,
+                    indicatorColor = UbusPrimary.copy(alpha = 0.1f),
                 ),
             )
         }

@@ -3,7 +3,6 @@ package com.ubusmobilidade.ubus.ui.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -15,8 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.ui.theme.UbusBorder
-import com.ubusmobilidade.ubus.ui.theme.UbusCard
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryLight
+import com.ubusmobilidade.ubus.ui.theme.UbusSurface2
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun UbusTextField(
@@ -47,7 +47,7 @@ fun UbusTextField(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
-                Text(placeholder, color = UbusMutedForeground)
+                Text(placeholder, color = UbusText3)
             },
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
@@ -57,11 +57,11 @@ fun UbusTextField(
             singleLine = singleLine,
             isError = isError,
             enabled = enabled,
-            shape = RoundedCornerShape(16.dp),
+            shape = MaterialTheme.shapes.small, // 12dp — --radius-md
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = UbusCard,
-                unfocusedContainerColor = UbusCard,
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedContainerColor = UbusSurface2,
+                unfocusedContainerColor = UbusSurface2,
+                focusedBorderColor = UbusPrimaryLight,
                 unfocusedBorderColor = UbusBorder,
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedTextColor = MaterialTheme.colorScheme.onBackground,

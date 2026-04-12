@@ -25,4 +25,4 @@ APK: \composeApp/build/outputs/apk/debug/composeApp-debug.apk\
 - Google Play Store
 - Manual sideload via ADB
 
-See root [DEPLOY.md](../DEPLOY.md) for more details.
+See [web/DEPLOY.md](../web/DEPLOY.md) for more details.

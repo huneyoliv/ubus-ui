@@ -52,10 +52,9 @@ import com.ubusmobilidade.ubus.data.api.AuthRepository
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import kotlinx.coroutines.launch
 
 @Composable
@@ -94,7 +93,7 @@ fun LoginScreen(component: RootComponent) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(UbusBackground),
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Column(
             modifier = Modifier
@@ -122,18 +121,18 @@ fun LoginScreen(component: RootComponent) {
                     modifier = Modifier
                         .size(32.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(UbusAccent.copy(alpha = 0.1f)),
+                        .background(UbusPrimary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Default.DirectionsBus,
                         contentDescription = null,
-                        tint = UbusAccent,
+                        tint = UbusPrimary,
                         modifier = Modifier.size(16.dp),
                     )
                 }
                 Spacer(Modifier.width(10.dp))
-                Text("Ubus", color = UbusAccent, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Ubus", color = UbusPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
 
             Spacer(Modifier.height(32.dp))
@@ -150,7 +149,7 @@ fun LoginScreen(component: RootComponent) {
             Text(
                 "Informe suas credenciais para acessar.",
                 style = MaterialTheme.typography.bodyLarge,
-                color = UbusMutedForeground,
+                color = UbusText3,
             )
 
             Spacer(Modifier.height(32.dp))
@@ -162,7 +161,7 @@ fun LoginScreen(component: RootComponent) {
                 label = "Email",
                 placeholder = "seu@email.com",
                 leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = UbusMutedForeground, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Email, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
                 },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -179,14 +178,14 @@ fun LoginScreen(component: RootComponent) {
                 label = "Senha",
                 placeholder = "Sua senha",
                 leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = UbusMutedForeground, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
                 },
                 trailingIcon = {
                     IconButton(onClick = { showPassword = !showPassword }) {
                         Icon(
                             if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (showPassword) "Ocultar" else "Mostrar",
-                            tint = if (showPassword) UbusAccent else UbusMutedForeground,
+                            tint = if (showPassword) UbusPrimary else UbusText3,
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -204,7 +203,7 @@ fun LoginScreen(component: RootComponent) {
             // Forgot password
             Text(
                 "Esqueci minha senha",
-                color = UbusAccent,
+                color = UbusPrimary,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 modifier = Modifier
@@ -244,10 +243,10 @@ fun LoginScreen(component: RootComponent) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
-                Text("Ainda não tem conta? ", color = UbusMutedForeground, fontSize = 14.sp)
+                Text("Ainda não tem conta? ", color = UbusText3, fontSize = 14.sp)
                 Text(
                     "Cadastre-se",
-                    color = UbusAccent,
+                    color = UbusPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     modifier = Modifier.clickable {

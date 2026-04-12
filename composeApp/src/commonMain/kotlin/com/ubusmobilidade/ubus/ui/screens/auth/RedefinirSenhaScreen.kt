@@ -29,10 +29,9 @@ import com.ubusmobilidade.ubus.data.api.AuthRepository
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import kotlinx.coroutines.launch
 
 @Composable
@@ -69,7 +68,7 @@ fun RedefinirSenhaScreen(component: RootComponent) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(UbusBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),
     ) {
         IconButton(
@@ -88,7 +87,7 @@ fun RedefinirSenhaScreen(component: RootComponent) {
         Text(
             "Informe seu email para receber o link de redefinição.",
             style = MaterialTheme.typography.bodyLarge,
-            color = UbusMutedForeground,
+            color = UbusText3,
         )
 
         Spacer(Modifier.height(32.dp))
@@ -105,7 +104,7 @@ fun RedefinirSenhaScreen(component: RootComponent) {
                 onValueChange = { email = it },
                 label = "Email",
                 placeholder = "seu@email.com",
-                leadingIcon = { Icon(Icons.Default.Email, null, tint = UbusMutedForeground, modifier = Modifier) },
+                leadingIcon = { Icon(Icons.Default.Email, null, tint = UbusText3, modifier = Modifier) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Done),
             )
 

@@ -26,4 +26,4 @@ Push to \main\ branch - GitHub Actions automatically:
 2. Pushes to ghcr.io
 3. Deploys to VM via SSH
 
-See root [DEPLOY.md](../DEPLOY.md) for configuration.
+See root [DEPLOY.md](DEPLOY.md) for configuration.

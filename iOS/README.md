@@ -19,4 +19,4 @@ xcodebuild build \
 ## Deployment
 Package and submit to App Store via Xcode/TestFlight.
 
-See root [DEPLOY.md](../DEPLOY.md) for more details.
+See [web/DEPLOY.md](../web/DEPLOY.md) for more details.

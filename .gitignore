@@ -1,20 +1,38 @@
-*.iml
-.kotlin
-.gradle
+# ── Gradle / Kotlin ──────────────────────────────
+.gradle/
+.kotlin/
 **/build/
-xcuserdata
 !src/**/build/
 local.properties
-.idea
-.DS_Store
-captures
-.externalNativeBuild
-.cxx
+kotlin-js-store/
+
+# ── IDE ──────────────────────────────────────────
+.idea/
+*.iml
+captures/
+
+# ── Android ──────────────────────────────────────
+.externalNativeBuild/
+.cxx/
+
+# ── iOS / Xcode ──────────────────────────────────
+xcuserdata/
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
 !*.xcodeproj/xcshareddata/
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+DerivedData/
+*.xcarchive
+*.ipa
+
+# ── Web / Node ───────────────────────────────────
 node_modules/
+
+# ── OS ───────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Legacy ───────────────────────────────────────
 /ubus-frontend.old/

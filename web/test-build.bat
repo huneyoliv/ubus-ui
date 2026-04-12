@@ -9,7 +9,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.📦 Creating Docker image...
-docker build -t ubus-web:test -f Dockerfile.web .
+docker build -t ubus-web:test -f web\Dockerfile .
 if %ERRORLEVEL% neq 0 (
     echo.❌ Docker build failed
     exit /b 1
