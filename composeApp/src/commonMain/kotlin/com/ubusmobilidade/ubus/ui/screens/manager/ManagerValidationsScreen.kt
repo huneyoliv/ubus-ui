@@ -44,10 +44,9 @@ import com.ubusmobilidade.ubus.data.model.User
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.UbusButton
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import kotlinx.coroutines.launch
 
@@ -70,7 +69,7 @@ fun ManagerValidationsScreen(component: RootComponent) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
@@ -85,13 +84,13 @@ fun ManagerValidationsScreen(component: RootComponent) {
         Text(
             "Aprove ou recuse cadastros pendentes",
             style = MaterialTheme.typography.bodyMedium,
-            color = UbusMutedForeground,
+            color = UbusText3,
             modifier = Modifier.padding(bottom = 20.dp),
         )
 
         if (loading) {
             Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = UbusAccent)
+                CircularProgressIndicator(color = UbusPrimary)
             }
         } else if (error.isNotEmpty()) {
             BentoCard {
@@ -102,7 +101,7 @@ fun ManagerValidationsScreen(component: RootComponent) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.CheckCircle, null, tint = UbusSuccess, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(12.dp))
-                    Text("Nenhum cadastro pendente", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, textAlign = TextAlign.Center)
+                    Text("Nenhum cadastro pendente", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
                 }
             }
         } else {
@@ -110,17 +109,17 @@ fun ManagerValidationsScreen(component: RootComponent) {
                 var processing by remember { mutableStateOf(false) }
                 BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Person, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(user.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                            Text("${user.email} · ${user.role}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
-                            Text("CPF: ${user.cpf}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                            Text("${user.email} · ${user.role}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                            Text("CPF: ${user.cpf}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                         }
                     }
                     Spacer(Modifier.height(12.dp))
                     if (processing) {
-                        CircularProgressIndicator(color = UbusAccent, modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally))
+                        CircularProgressIndicator(color = UbusPrimary, modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally))
                     } else {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             UbusButton(

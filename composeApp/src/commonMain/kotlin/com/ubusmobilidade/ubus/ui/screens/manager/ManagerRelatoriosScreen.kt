@@ -44,10 +44,9 @@ import com.ubusmobilidade.ubus.data.api.MetricsRepository
 import com.ubusmobilidade.ubus.data.model.DashboardMetrics
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
 
@@ -69,7 +68,7 @@ fun ManagerRelatoriosScreen(component: RootComponent) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
@@ -84,13 +83,13 @@ fun ManagerRelatoriosScreen(component: RootComponent) {
         Text(
             "Métricas e dados do sistema",
             style = MaterialTheme.typography.bodyMedium,
-            color = UbusMutedForeground,
+            color = UbusText3,
             modifier = Modifier.padding(bottom = 20.dp),
         )
 
         if (loading) {
             Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = UbusAccent)
+                CircularProgressIndicator(color = UbusPrimary)
             }
         } else if (error.isNotEmpty()) {
             BentoCard {
@@ -100,13 +99,13 @@ fun ManagerRelatoriosScreen(component: RootComponent) {
             val m = metrics!!
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MetricCard("Alunos", "${m.totalStudents ?: 0}", Icons.Default.Group, UbusAccent, Modifier.weight(1f))
+                MetricCard("Alunos", "${m.totalStudents ?: 0}", Icons.Default.Group, UbusPrimary, Modifier.weight(1f))
                 MetricCard("Motoristas", "${m.totalDrivers ?: 0}", Icons.Default.Person, UbusSuccess, Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 MetricCard("Veículos", "${m.totalBuses ?: 0}", Icons.Default.DirectionsBus, UbusWarning, Modifier.weight(1f))
-                MetricCard("Rotas", "${m.totalRoutes ?: 0}", Icons.Default.Route, UbusAccent, Modifier.weight(1f))
+                MetricCard("Rotas", "${m.totalRoutes ?: 0}", Icons.Default.Route, UbusPrimary, Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -114,7 +113,7 @@ fun ManagerRelatoriosScreen(component: RootComponent) {
                 MetricCard("Pendentes", "${m.pendingUsers ?: 0}", Icons.Default.Assessment, UbusWarning, Modifier.weight(1f))
             }
             Spacer(Modifier.height(12.dp))
-            MetricCard("Reservas hoje", "${m.totalReservationsToday ?: 0}", Icons.Default.Today, UbusAccent, Modifier.fillMaxWidth())
+            MetricCard("Reservas hoje", "${m.totalReservationsToday ?: 0}", Icons.Default.Today, UbusPrimary, Modifier.fillMaxWidth())
         }
         Spacer(Modifier.height(16.dp))
     }
@@ -134,7 +133,7 @@ private fun MetricCard(
             Spacer(Modifier.width(12.dp))
             Column {
                 Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                Text(label, style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                Text(label, style = MaterialTheme.typography.bodySmall, color = UbusText3)
             }
         }
     }

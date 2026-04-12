@@ -44,10 +44,9 @@ import com.ubusmobilidade.ubus.data.api.MetricsRepository
 import com.ubusmobilidade.ubus.data.model.DashboardMetrics
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
 
@@ -76,10 +75,10 @@ fun ManagerDashboardScreen(component: RootComponent) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp),
     ) {
         Text("Painel do gestor", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
-        Text("Olá, ${user?.name ?: "Gestor"}!", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground, modifier = Modifier.padding(bottom = 16.dp))
+        Text("Olá, ${user?.name ?: "Gestor"}!", style = MaterialTheme.typography.bodyMedium, color = UbusText3, modifier = Modifier.padding(bottom = 16.dp))
 
         // Quick metrics row
         if (metrics != null) {
@@ -87,7 +86,7 @@ fun ManagerDashboardScreen(component: RootComponent) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
                 SmallMetric("${m.activeTrips ?: 0}", "Viagens", Icons.Default.Schedule, UbusSuccess, Modifier.weight(1f))
                 SmallMetric("${m.pendingUsers ?: 0}", "Pendentes", Icons.Default.Group, UbusWarning, Modifier.weight(1f))
-                SmallMetric("${m.totalReservationsToday ?: 0}", "Reservas", Icons.Default.Assessment, UbusAccent, Modifier.weight(1f))
+                SmallMetric("${m.totalReservationsToday ?: 0}", "Reservas", Icons.Default.Assessment, UbusPrimary, Modifier.weight(1f))
             }
         }
 
@@ -103,7 +102,7 @@ fun ManagerDashboardScreen(component: RootComponent) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                     ) {
-                        Icon(item.icon, null, tint = UbusAccent, modifier = Modifier.size(36.dp))
+                        Icon(item.icon, null, tint = UbusPrimary, modifier = Modifier.size(36.dp))
                         Spacer(Modifier.height(8.dp))
                         Text(item.label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
                     }
@@ -135,7 +134,7 @@ private fun SmallMetric(
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
             Icon(icon, null, tint = color, modifier = Modifier.size(20.dp))
             Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-            Text(label, style = MaterialTheme.typography.labelSmall, color = UbusMutedForeground)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = UbusText3)
         }
     }
 }

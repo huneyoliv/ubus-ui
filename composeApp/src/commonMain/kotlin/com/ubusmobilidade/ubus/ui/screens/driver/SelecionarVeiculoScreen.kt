@@ -25,13 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun SelecionarVeiculoScreen(component: RootComponent) {
-    Column(modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp)) {
+    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp)) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
         }
@@ -41,10 +40,10 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
         listOf("Ônibus 001 - Placa ABC-1234", "Ônibus 002 - Placa DEF-5678").forEach { vehicle ->
             BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { component.navigateTo(RootComponent.Config.Mapa) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.DirectionsBus, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                     Spacer(Modifier.width(12.dp))
                     Text(vehicle, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusMutedForeground, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(16.dp))
                 }
             }
         }

@@ -37,10 +37,9 @@ import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.data.model.User
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 
 @Composable
@@ -61,7 +60,7 @@ fun ManagerMotoristasScreen(component: RootComponent) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
@@ -76,13 +75,13 @@ fun ManagerMotoristasScreen(component: RootComponent) {
         Text(
             "Motoristas com cadastro pendente",
             style = MaterialTheme.typography.bodyMedium,
-            color = UbusMutedForeground,
+            color = UbusText3,
             modifier = Modifier.padding(bottom = 20.dp),
         )
 
         if (loading) {
             Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = UbusAccent)
+                CircularProgressIndicator(color = UbusPrimary)
             }
         } else if (error.isNotEmpty()) {
             BentoCard {
@@ -91,21 +90,21 @@ fun ManagerMotoristasScreen(component: RootComponent) {
         } else if (allPending.isEmpty()) {
             BentoCard {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Person, null, tint = UbusMutedForeground, modifier = Modifier.size(48.dp))
+                    Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(12.dp))
-                    Text("Nenhum motorista pendente", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, textAlign = TextAlign.Center)
+                    Text("Nenhum motorista pendente", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
                 }
             }
         } else {
             allPending.forEach { driver ->
                 BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Person, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(driver.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                            Text(driver.email, style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
-                            Text("CPF: ${driver.cpf}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                            Text(driver.email, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                            Text("CPF: ${driver.cpf}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                         }
                         Text(
                             driver.status?.name ?: "PENDING",

@@ -29,17 +29,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun ManagerConfiguracoesScreen(component: RootComponent) {
     val user = component.authStorage.user
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground)
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
@@ -54,19 +53,19 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         Text(
             "Ajustes gerais do sistema",
             style = MaterialTheme.typography.bodyMedium,
-            color = UbusMutedForeground,
+            color = UbusText3,
             modifier = Modifier.padding(bottom = 20.dp),
         )
 
         // User info card
         BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Person, null, tint = UbusAccent, modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(user?.name ?: "Gestor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
-                    Text(user?.email ?: "", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
-                    Text("Cargo: ${user?.role?.name ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                    Text(user?.email ?: "", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                    Text("Cargo: ${user?.role?.name ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                 }
             }
         }
@@ -74,11 +73,11 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         // Municipality info
         BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Business, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Business, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("Município", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                    Text("ID: ${user?.municipalityId ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                    Text("ID: ${user?.municipalityId ?: "—"}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                 }
             }
         }
@@ -86,11 +85,11 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         // App info
         BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Info, null, tint = UbusMutedForeground, modifier = Modifier.size(24.dp))
+                Icon(Icons.Default.Info, null, tint = UbusText3, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text("Sobre o app", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                    Text("Ubus v1.0.0 · Mobilidade universitária", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                    Text("Ubus v1.0.0 · Mobilidade universitária", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                 }
             }
         }

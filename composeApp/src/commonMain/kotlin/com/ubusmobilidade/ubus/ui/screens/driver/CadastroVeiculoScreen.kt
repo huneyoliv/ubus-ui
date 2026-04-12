@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 
 @Composable
 fun CadastroVeiculoScreen(component: RootComponent) {
@@ -34,7 +33,7 @@ fun CadastroVeiculoScreen(component: RootComponent) {
     var ano by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)

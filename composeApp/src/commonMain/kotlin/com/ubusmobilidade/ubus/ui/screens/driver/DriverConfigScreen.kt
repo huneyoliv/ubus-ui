@@ -26,8 +26,7 @@ import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.DriverBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.DriverTab
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 
 @Composable
@@ -46,12 +45,12 @@ fun DriverConfigScreen(component: RootComponent) {
             )
         },
     ) {
-        Column(modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp)) {
+        Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp)) {
             Text("Configurações", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 32.dp, bottom = 24.dp))
 
             BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { component.navigateTo(RootComponent.Config.MeusDados) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Person, null, tint = UbusAccent, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Text("Meus dados", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
                 }

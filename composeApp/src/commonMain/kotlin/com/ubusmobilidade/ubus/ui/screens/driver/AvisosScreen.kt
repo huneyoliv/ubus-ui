@@ -20,8 +20,7 @@ import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.DriverBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.DriverTab
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun AvisosScreen(component: RootComponent) {
@@ -40,12 +39,12 @@ fun AvisosScreen(component: RootComponent) {
         },
     ) {
         Box(
-            modifier = Modifier.fillMaxSize().background(UbusBackground),
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                Icon(Icons.Default.Notifications, null, tint = UbusMutedForeground, modifier = Modifier.size(64.dp))
-                Text("Nenhum aviso", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, modifier = Modifier.padding(top = 8.dp))
+                Icon(Icons.Default.Notifications, null, tint = UbusText3, modifier = Modifier.size(64.dp))
+                Text("Nenhum aviso", style = MaterialTheme.typography.titleMedium, color = UbusText3, modifier = Modifier.padding(top = 8.dp))
             }
         }
     }
