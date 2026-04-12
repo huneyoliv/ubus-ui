@@ -11,16 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Schedule
@@ -45,7 +44,6 @@ import com.ubusmobilidade.ubus.data.model.DashboardMetrics
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
-import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
@@ -58,6 +56,7 @@ private val dashItems = listOf(
     DashItem(Icons.Default.DirectionsBus, "Frota", RootComponent.Config.ManagerFrota),
     DashItem(Icons.Default.Person, "Motoristas", RootComponent.Config.ManagerMotoristas),
     DashItem(Icons.Default.Assessment, "Relatórios", RootComponent.Config.ManagerRelatorios),
+    DashItem(Icons.Default.Notifications, "Notificações", RootComponent.Config.ManagerNotificacoes),
     DashItem(Icons.Default.Settings, "Configurações", RootComponent.Config.ManagerConfiguracoes),
 )
 
@@ -110,14 +109,6 @@ fun ManagerDashboardScreen(component: RootComponent) {
             }
         }
 
-        Spacer(Modifier.height(16.dp))
-        BentoCard(modifier = Modifier.clickable { component.logout() }) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = UbusDestructive, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(12.dp))
-                Text("Sair", style = MaterialTheme.typography.titleSmall, color = UbusDestructive)
-            }
-        }
         Spacer(Modifier.height(24.dp))
     }
 }

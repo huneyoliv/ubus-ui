@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,6 +53,14 @@ fun DriverConfigScreen(component: RootComponent) {
                     Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
                     Text("Meus dados", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                }
+            }
+
+            BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { component.navigateTo(RootComponent.Config.AlterarSenha) }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Lock, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text("Alterar senha", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 

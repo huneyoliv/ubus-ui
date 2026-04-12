@@ -1,6 +1,7 @@
 package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,49 +13,60 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.UserRepository
+import com.ubusmobilidade.ubus.data.model.RegistrationStatus
 import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.data.model.User
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
+import com.ubusmobilidade.ubus.ui.components.UbusButton
+import com.ubusmobilidade.ubus.ui.components.UbusOutlinedButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.theme.UbusWarning
+import kotlinx.coroutines.launch
 
 @Composable
 fun ManagerMotoristasScreen(component: RootComponent) {
+    val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val userRepo = remember { UserRepository(apiClient) }
-    var allPending by remember { mutableStateOf<List<User>>(emptyList()) }
+    var drivers by remember { mutableStateOf<List<User>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         try {
-            allPending = userRepo.listPending().filter { it.role == RoleUsuario.DRIVER }
+            drivers = userRepo.listPending().filter { it.role == RoleUsuario.DRIVER }
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar"
+            error = e.message ?: "Erro ao carregar motoristas"
         }
         loading = false
     }
@@ -73,9 +85,15 @@ fun ManagerMotoristasScreen(component: RootComponent) {
             modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
         )
         Text(
-            "Motoristas com cadastro pendente",
+            "Gerencie motoristas do sistema",
             style = MaterialTheme.typography.bodyMedium,
             color = UbusText3,
+            modifier = Modifier.padding(bottom = 16.dp),
+        )
+
+        UbusButton(
+            text = "Cadastrar motorista",
+            onClick = { component.navigateTo(RootComponent.Config.ManagerCadastroMotorista) },
             modifier = Modifier.padding(bottom = 20.dp),
         )
 
@@ -87,7 +105,7 @@ fun ManagerMotoristasScreen(component: RootComponent) {
             BentoCard {
                 Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodyMedium)
             }
-        } else if (allPending.isEmpty()) {
+        } else if (drivers.isEmpty()) {
             BentoCard {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier.size(48.dp))
@@ -96,21 +114,80 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                 }
             }
         } else {
-            allPending.forEach { driver ->
+            drivers.forEach { driver ->
+                var processing by remember { mutableStateOf(false) }
                 BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(driver.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                            Text(driver.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                             Text(driver.email, style = MaterialTheme.typography.bodySmall, color = UbusText3)
                             Text("CPF: ${driver.cpf}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                         }
-                        Text(
-                            driver.status?.name ?: "PENDING",
-                            color = UbusSuccess,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
+                        val statusColor = when (driver.status) {
+                            RegistrationStatus.PENDING -> UbusWarning
+                            RegistrationStatus.APPROVED -> UbusSuccess
+                            RegistrationStatus.REJECTED -> UbusDestructive
+                            else -> UbusWarning
+                        }
+                        val statusLabel = when (driver.status) {
+                            RegistrationStatus.PENDING -> "PENDENTE"
+                            RegistrationStatus.APPROVED -> "APROVADO"
+                            RegistrationStatus.REJECTED -> "REJEITADO"
+                            else -> "PENDENTE"
+                        }
+                        Surface(
+                            color = statusColor.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(8.dp),
+                        ) {
+                            Text(
+                                statusLabel,
+                                color = statusColor,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            )
+                        }
+                    }
+                    if (driver.status == RegistrationStatus.PENDING || driver.status == null) {
+                        Spacer(Modifier.height(12.dp))
+                        if (processing) {
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = UbusPrimary, modifier = Modifier.size(24.dp))
+                            }
+                        } else {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                UbusButton(
+                                    text = "Aprovar",
+                                    onClick = {
+                                        processing = true
+                                        scope.launch {
+                                            try {
+                                                userRepo.updateStatus(driver.id, RegistrationStatus.APPROVED)
+                                                drivers = drivers.filter { it.id != driver.id }
+                                            } catch (_: Exception) {}
+                                            processing = false
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                                UbusOutlinedButton(
+                                    text = "Rejeitar",
+                                    onClick = {
+                                        processing = true
+                                        scope.launch {
+                                            try {
+                                                userRepo.updateStatus(driver.id, RegistrationStatus.REJECTED)
+                                                drivers = drivers.filter { it.id != driver.id }
+                                            } catch (_: Exception) {}
+                                            processing = false
+                                        }
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
                     }
                 }
             }
