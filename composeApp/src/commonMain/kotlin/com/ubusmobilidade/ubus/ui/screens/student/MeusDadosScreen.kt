@@ -27,9 +27,7 @@ import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import kotlinx.coroutines.launch
 
@@ -47,7 +45,7 @@ fun MeusDadosScreen(component: RootComponent) {
     var isError by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)

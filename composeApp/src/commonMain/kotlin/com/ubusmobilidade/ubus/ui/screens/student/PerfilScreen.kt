@@ -21,7 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -40,9 +40,9 @@ import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun PerfilScreen(component: RootComponent) {
@@ -84,7 +84,7 @@ fun PerfilScreen(component: RootComponent) {
                         .size(72.dp)
                         .clip(CircleShape)
                         .background(
-                            Brush.linearGradient(listOf(UbusAccent, MaterialTheme.colorScheme.tertiary))
+                            Brush.linearGradient(listOf(UbusPrimary, MaterialTheme.colorScheme.tertiary))
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -92,7 +92,7 @@ fun PerfilScreen(component: RootComponent) {
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(user?.name ?: "", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
-                Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground)
+                Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
             }
 
             // Menu items
@@ -100,7 +100,7 @@ fun PerfilScreen(component: RootComponent) {
             ProfileMenuItem(Icons.Default.Lock, "Alterar senha") { component.navigateTo(RootComponent.Config.AlterarSenha) }
             ProfileMenuItem(Icons.Default.CalendarMonth, "Renovar semestre") { component.navigateTo(RootComponent.Config.RenovarSemestre) }
             ProfileMenuItem(Icons.Default.Accessibility, "Acessibilidade") { component.navigateTo(RootComponent.Config.BaixaMobilidade) }
-            ProfileMenuItem(Icons.Default.MenuBook, "Regras") { component.navigateTo(RootComponent.Config.Regras) }
+            ProfileMenuItem(Icons.AutoMirrored.Filled.MenuBook, "Regras") { component.navigateTo(RootComponent.Config.Regras) }
             ProfileMenuItem(Icons.Default.Person, "Carteirinha") { component.navigateTo(RootComponent.Config.Carteirinha) }
 
             Spacer(Modifier.height(16.dp))
@@ -123,10 +123,10 @@ fun PerfilScreen(component: RootComponent) {
 private fun ProfileMenuItem(icon: ImageVector, label: String, onClick: () -> Unit) {
     BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable(onClick = onClick)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = UbusAccent, modifier = Modifier.size(20.dp))
+            Icon(icon, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(12.dp))
             Text(label, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusMutedForeground, modifier = Modifier.size(16.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(16.dp))
         }
     }
 }

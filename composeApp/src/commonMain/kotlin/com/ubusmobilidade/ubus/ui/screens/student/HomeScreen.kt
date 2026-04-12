@@ -50,9 +50,8 @@ import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 
 @Composable
@@ -117,7 +116,7 @@ fun HomeScreen(component: RootComponent) {
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
-                                colors = listOf(UbusAccent, MaterialTheme.colorScheme.tertiary)
+                                colors = listOf(UbusPrimary, MaterialTheme.colorScheme.tertiary)
                             )
                         ),
                     contentAlignment = Alignment.Center,
@@ -126,30 +125,30 @@ fun HomeScreen(component: RootComponent) {
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Bem-vindo de volta", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                    Text("Bem-vindo de volta", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                     Text(firstName, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                 }
             }
 
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = UbusAccent)
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
             } else {
                 // Quick action: Reserve
                 BentoCard(modifier = Modifier.clickable { component.navigateTo(RootComponent.Config.Reservar) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DirectionsBus, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                        Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Reservar viagem", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
                             Text(
                                 "${openTrips.size} viagens disponíveis",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = UbusMutedForeground,
+                                color = UbusText3,
                             )
                         }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusMutedForeground, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(20.dp))
                     }
                 }
 
@@ -177,7 +176,7 @@ fun HomeScreen(component: RootComponent) {
                                     Text(
                                         reservation.trip?.tripDate ?: "",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = UbusMutedForeground,
+                                        color = UbusText3,
                                     )
                                 }
                             }
@@ -186,10 +185,10 @@ fun HomeScreen(component: RootComponent) {
                 } else {
                     BentoCard {
                         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                            Icon(Icons.Default.CalendarMonth, null, tint = UbusMutedForeground, modifier = Modifier.size(32.dp))
+                            Icon(Icons.Default.CalendarMonth, null, tint = UbusText3, modifier = Modifier.size(32.dp))
                             Spacer(Modifier.height(8.dp))
-                            Text("Nenhuma reserva ativa", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground)
-                            Text("Reserve uma viagem para começar", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                            Text("Nenhuma reserva ativa", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
+                            Text("Reserve uma viagem para começar", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                         }
                     }
                 }

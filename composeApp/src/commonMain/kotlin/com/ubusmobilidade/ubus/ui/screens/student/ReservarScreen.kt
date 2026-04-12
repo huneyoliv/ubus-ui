@@ -46,8 +46,8 @@ import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.components.UbusButton
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import kotlinx.coroutines.launch
 
@@ -105,21 +105,21 @@ fun ReservarScreen(component: RootComponent) {
 
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = UbusAccent)
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
             } else if (trips.isEmpty()) {
                 BentoCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Schedule, null, tint = UbusMutedForeground, modifier = Modifier.size(32.dp))
+                        Icon(Icons.Default.Schedule, null, tint = UbusText3, modifier = Modifier.size(32.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("Nenhuma viagem disponível", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground)
+                        Text("Nenhuma viagem disponível", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
                     }
                 }
             } else {
                 trips.forEach { trip ->
                     BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.DirectionsBus, null, tint = UbusAccent, modifier = Modifier.size(24.dp))
+                            Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
@@ -130,7 +130,7 @@ fun ReservarScreen(component: RootComponent) {
                                 Text(
                                     "${trip.tripDate} · ${trip.shift} · ${trip.direction}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = UbusMutedForeground,
+                                    color = UbusText3,
                                 )
                             }
                         }

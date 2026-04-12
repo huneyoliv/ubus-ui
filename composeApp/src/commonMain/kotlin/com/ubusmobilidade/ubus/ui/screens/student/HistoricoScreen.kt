@@ -34,8 +34,8 @@ import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun HistoricoScreen(component: RootComponent) {
@@ -77,21 +77,21 @@ fun HistoricoScreen(component: RootComponent) {
 
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = UbusAccent)
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
             } else if (reservations.isEmpty()) {
                 BentoCard {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.History, null, tint = UbusMutedForeground, modifier = Modifier.size(48.dp))
+                        Icon(Icons.Default.History, null, tint = UbusText3, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(12.dp))
-                        Text("Nenhum histórico", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, textAlign = TextAlign.Center)
+                        Text("Nenhum histórico", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
                     }
                 }
             } else {
                 reservations.forEach { res ->
                     BentoCard(modifier = Modifier.padding(bottom = 8.dp)) {
                         Text(res.trip?.shift ?: "Viagem", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                        Text("${res.trip?.tripDate ?: ""} · ${res.status}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                        Text("${res.trip?.tripDate ?: ""} · ${res.status}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
                     }
                 }
             }

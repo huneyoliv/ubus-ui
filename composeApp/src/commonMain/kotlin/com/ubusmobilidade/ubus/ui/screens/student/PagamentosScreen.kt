@@ -23,13 +23,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun PagamentosScreen(component: RootComponent) {
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
@@ -38,10 +37,10 @@ fun PagamentosScreen(component: RootComponent) {
 
         BentoCard {
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Payment, null, tint = UbusMutedForeground, modifier = Modifier.size(48.dp))
+                Icon(Icons.Default.Payment, null, tint = UbusText3, modifier = Modifier.size(48.dp))
                 Spacer(Modifier.height(12.dp))
-                Text("Nenhum pagamento pendente", style = MaterialTheme.typography.titleMedium, color = UbusMutedForeground, textAlign = TextAlign.Center)
-                Text("Seus pagamentos aparecerão aqui.", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                Text("Nenhum pagamento pendente", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
+                Text("Seus pagamentos aparecerão aqui.", style = MaterialTheme.typography.bodySmall, color = UbusText3)
             }
         }
     }

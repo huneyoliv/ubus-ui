@@ -29,9 +29,8 @@ import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import kotlinx.coroutines.launch
 
@@ -49,7 +48,7 @@ fun AlterarSenhaScreen(component: RootComponent) {
     var isError by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
@@ -58,21 +57,21 @@ fun AlterarSenhaScreen(component: RootComponent) {
 
         UbusTextField(
             value = currentPassword, onValueChange = { currentPassword = it }, label = "Senha atual",
-            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusMutedForeground) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusText3) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         )
         Spacer(Modifier.height(16.dp))
         UbusTextField(
             value = newPassword, onValueChange = { newPassword = it }, label = "Nova senha",
-            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusMutedForeground) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusText3) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         )
         Spacer(Modifier.height(16.dp))
         UbusTextField(
             value = confirmPassword, onValueChange = { confirmPassword = it }, label = "Confirmar nova senha",
-            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusMutedForeground) },
+            leadingIcon = { Icon(Icons.Default.Lock, null, tint = UbusText3) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         )

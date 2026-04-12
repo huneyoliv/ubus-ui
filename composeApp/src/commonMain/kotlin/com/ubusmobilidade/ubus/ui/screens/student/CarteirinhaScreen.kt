@@ -30,17 +30,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusAccentContainer
-import com.ubusmobilidade.ubus.ui.theme.UbusBackground
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryContainer
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
 @Composable
 fun CarteirinhaScreen(component: RootComponent) {
     val user = component.authStorage.user
 
     Column(
-        modifier = Modifier.fillMaxSize().background(UbusBackground).padding(horizontal = 20.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp),
     ) {
         IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
@@ -63,7 +62,7 @@ fun CarteirinhaScreen(component: RootComponent) {
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(UbusAccent, MaterialTheme.colorScheme.tertiary))),
+                        .background(Brush.linearGradient(listOf(UbusPrimary, MaterialTheme.colorScheme.tertiary))),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Default.Badge, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(36.dp))
@@ -72,8 +71,8 @@ fun CarteirinhaScreen(component: RootComponent) {
                 Spacer(Modifier.height(16.dp))
 
                 Text(user?.name ?: "", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
-                Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusMutedForeground)
-                Text("CPF: ${user?.cpf ?: ""}", style = MaterialTheme.typography.bodySmall, color = UbusMutedForeground)
+                Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
+                Text("CPF: ${user?.cpf ?: ""}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
 
                 Spacer(Modifier.height(20.dp))
 
@@ -82,14 +81,14 @@ fun CarteirinhaScreen(component: RootComponent) {
                     modifier = Modifier
                         .size(160.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(UbusAccentContainer),
+                        .background(UbusPrimaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.QrCode2, null, tint = UbusAccent, modifier = Modifier.size(100.dp))
+                    Icon(Icons.Default.QrCode2, null, tint = UbusPrimary, modifier = Modifier.size(100.dp))
                 }
 
                 Spacer(Modifier.height(12.dp))
-                Text("ESTUDANTE", color = UbusAccent, fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 2.sp)
+                Text("ESTUDANTE", color = UbusPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp, letterSpacing = 2.sp)
             }
         }
     }

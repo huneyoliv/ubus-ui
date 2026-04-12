@@ -39,9 +39,9 @@ import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
-import com.ubusmobilidade.ubus.ui.theme.UbusAccent
-import com.ubusmobilidade.ubus.ui.theme.UbusAccentContainer
-import com.ubusmobilidade.ubus.ui.theme.UbusMutedForeground
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryContainer
+import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 
 @Composable
@@ -87,7 +87,7 @@ fun BilheteScreen(component: RootComponent) {
 
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = UbusAccent)
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
             } else if (activeReservation != null) {
                 val res = activeReservation!!
@@ -101,10 +101,10 @@ fun BilheteScreen(component: RootComponent) {
                             modifier = Modifier
                                 .size(200.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(UbusAccentContainer),
+                                .background(UbusPrimaryContainer),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Default.QrCode2, null, tint = UbusAccent, modifier = Modifier.size(120.dp))
+                            Icon(Icons.Default.QrCode2, null, tint = UbusPrimary, modifier = Modifier.size(120.dp))
                         }
 
                         Spacer(Modifier.height(20.dp))
@@ -122,7 +122,7 @@ fun BilheteScreen(component: RootComponent) {
                         Text(
                             res.trip?.tripDate ?: "",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = UbusMutedForeground,
+                            color = UbusText3,
                         )
 
                         if (res.seatNumber != null) {
@@ -130,7 +130,7 @@ fun BilheteScreen(component: RootComponent) {
                             Text(
                                 "Assento ${res.seatNumber}",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = UbusAccent,
+                                color = UbusPrimary,
                             )
                         }
                     }
@@ -141,18 +141,18 @@ fun BilheteScreen(component: RootComponent) {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Default.ConfirmationNumber, null, tint = UbusMutedForeground, modifier = Modifier.size(48.dp))
+                        Icon(Icons.Default.ConfirmationNumber, null, tint = UbusText3, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(12.dp))
                         Text(
                             "Nenhum bilhete ativo",
                             style = MaterialTheme.typography.titleMedium,
-                            color = UbusMutedForeground,
+                            color = UbusText3,
                             textAlign = TextAlign.Center,
                         )
                         Text(
                             "Reserve uma viagem para obter seu bilhete.",
                             style = MaterialTheme.typography.bodySmall,
-                            color = UbusMutedForeground,
+                            color = UbusText3,
                             textAlign = TextAlign.Center,
                         )
                     }
