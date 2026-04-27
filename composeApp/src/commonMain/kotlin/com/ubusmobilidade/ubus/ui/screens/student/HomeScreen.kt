@@ -45,6 +45,7 @@ import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.Reservation
 import com.ubusmobilidade.ubus.data.model.Trip
+import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -53,6 +54,7 @@ import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 @Composable
 fun HomeScreen(component: RootComponent) {
@@ -67,6 +69,7 @@ fun HomeScreen(component: RootComponent) {
     var openTrips by remember { mutableStateOf<List<Trip>>(emptyList()) }
     var myReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
 
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val tripRepo = remember { TripRepository(apiClient) }
@@ -74,8 +77,22 @@ fun HomeScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            openTrips = try { tripRepo.getOpenTrips() } catch (_: Exception) { emptyList() }
-            myReservations = try { reservationRepo.getMyReservations() } catch (_: Exception) { emptyList() }
+            try {
+                openTrips = tripRepo.getOpenTrips()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                openTrips = emptyList()
+                loadError = e.toUserMessage("Não foi possível carregar os dados da tela inicial.")
+            }
+            try {
+                myReservations = reservationRepo.getMyReservations()
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                myReservations = emptyList()
+                if (loadError == null) {
+                    loadError = e.toUserMessage("Não foi possível carregar os dados da tela inicial.")
+                }
+            }
         } finally {
             loading = false
         }
@@ -85,11 +102,12 @@ fun HomeScreen(component: RootComponent) {
         bottomBar = {
             StudentBottomNavBar(
                 selectedTab = StudentTab.HOME,
+                showLeaderTab = component.authStorage.user?.role == RoleUsuario.LEADER,
                 onTabSelected = { tab ->
                     when (tab) {
                         StudentTab.HOME -> {}
                         StudentTab.RESERVAR -> component.navigateTo(RootComponent.Config.Reservar)
-                        StudentTab.BILHETE -> component.navigateTo(RootComponent.Config.Bilhete)
+                        StudentTab.LIDER -> component.navigateTo(RootComponent.Config.Lider)
                         StudentTab.HISTORICO -> component.navigateTo(RootComponent.Config.Historico)
                         StudentTab.PERFIL -> component.navigateTo(RootComponent.Config.Perfil)
                     }
@@ -135,6 +153,16 @@ fun HomeScreen(component: RootComponent) {
                     CircularProgressIndicator(color = UbusPrimary)
                 }
             } else {
+                if (!loadError.isNullOrBlank()) {
+                    BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+                        Text(
+                            loadError!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+
                 // Quick action: Reserve
                 BentoCard(modifier = Modifier.clickable { component.navigateTo(RootComponent.Config.Reservar) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -23,7 +24,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 enum class StudentTab(val label: String, val icon: ImageVector) {
     HOME("Início", Icons.Default.Home),
     RESERVAR("Reservar", Icons.Default.DirectionsBus),
-    BILHETE("Bilhete", Icons.Default.ConfirmationNumber),
+    LIDER("Líder", Icons.Default.Groups),
     HISTORICO("Histórico", Icons.Default.History),
     PERFIL("Perfil", Icons.Default.Person),
 }
@@ -31,14 +32,32 @@ enum class StudentTab(val label: String, val icon: ImageVector) {
 @Composable
 fun StudentBottomNavBar(
     selectedTab: StudentTab,
+    showLeaderTab: Boolean = false,
     onTabSelected: (StudentTab) -> Unit,
 ) {
+    val tabs = if (showLeaderTab) {
+        listOf(
+            StudentTab.HOME,
+            StudentTab.RESERVAR,
+            StudentTab.LIDER,
+            StudentTab.HISTORICO,
+            StudentTab.PERFIL,
+        )
+    } else {
+        listOf(
+            StudentTab.HOME,
+            StudentTab.RESERVAR,
+            StudentTab.HISTORICO,
+            StudentTab.PERFIL,
+        )
+    }
+
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         modifier = Modifier.height(64.dp),
     ) {
-        StudentTab.entries.forEach { tab ->
+        tabs.forEach { tab ->
             NavigationBarItem(
                 selected = selectedTab == tab,
                 onClick = { onTabSelected(tab) },

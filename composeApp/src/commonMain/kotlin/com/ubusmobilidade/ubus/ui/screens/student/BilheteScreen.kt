@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ConfirmationNumber
-import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.foundation.Canvas
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,11 +29,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.model.Reservation
+import com.ubusmobilidade.ubus.data.model.RoleUsuario
+import com.ubusmobilidade.ubus.data.model.ReservationStatus
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -43,6 +46,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryContainer
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 @Composable
 fun BilheteScreen(component: RootComponent) {
@@ -50,24 +54,29 @@ fun BilheteScreen(component: RootComponent) {
     val reservationRepo = remember { ReservationRepository(apiClient) }
     var activeReservation by remember { mutableStateOf<Reservation?>(null) }
     var loading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         try {
             val reservations = reservationRepo.getMyReservations()
-            activeReservation = reservations.firstOrNull { it.status.name == "CONFIRMED" }
-        } catch (_: Exception) {}
+            activeReservation = reservations.firstOrNull { it.status == ReservationStatus.CONFIRMED }
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            errorMessage = e.toUserMessage("Não foi possível carregar seu bilhete.")
+        }
         loading = false
     }
 
     AppScaffold(
         bottomBar = {
             StudentBottomNavBar(
-                selectedTab = StudentTab.BILHETE,
+                selectedTab = StudentTab.HISTORICO,
+                showLeaderTab = component.authStorage.user?.role == RoleUsuario.LEADER,
                 onTabSelected = { tab ->
                     when (tab) {
                         StudentTab.HOME -> component.replaceWith(RootComponent.Config.StudentHome)
                         StudentTab.RESERVAR -> component.replaceWith(RootComponent.Config.Reservar)
-                        StudentTab.BILHETE -> {}
+                        StudentTab.LIDER -> component.replaceWith(RootComponent.Config.Lider)
                         StudentTab.HISTORICO -> component.replaceWith(RootComponent.Config.Historico)
                         StudentTab.PERFIL -> component.replaceWith(RootComponent.Config.Perfil)
                     }
@@ -89,6 +98,16 @@ fun BilheteScreen(component: RootComponent) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = UbusPrimary)
                 }
+            } else if (errorMessage != null) {
+                BentoCard {
+                    Text(
+                        errorMessage!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             } else if (activeReservation != null) {
                 val res = activeReservation!!
                 BentoCard {
@@ -101,10 +120,13 @@ fun BilheteScreen(component: RootComponent) {
                             modifier = Modifier
                                 .size(200.dp)
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(UbusPrimaryContainer),
+                                .background(Color.White),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Default.QrCode2, null, tint = UbusPrimary, modifier = Modifier.size(120.dp))
+                            DenseQrPlaceholder(
+                                value = "${res.id}-${res.trip?.tripId.orEmpty()}-${res.seatNumber ?: 0}",
+                                modifier = Modifier.size(160.dp),
+                            )
                         }
 
                         Spacer(Modifier.height(20.dp))
@@ -156,6 +178,40 @@ fun BilheteScreen(component: RootComponent) {
                             textAlign = TextAlign.Center,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DenseQrPlaceholder(
+    value: String,
+    modifier: Modifier = Modifier,
+    modules: Int = 33,
+) {
+    val safeModules = if (modules < 21) 21 else modules
+    val hashes = value.fold(7) { acc, c -> (acc * 31) + c.code }
+    Canvas(modifier = modifier.background(Color.White)) {
+        val moduleSize = size.minDimension / safeModules
+        for (x in 0 until safeModules) {
+            for (y in 0 until safeModules) {
+                val isFinder = (x < 7 && y < 7) ||
+                    (x > safeModules - 8 && y < 7) ||
+                    (x < 7 && y > safeModules - 8)
+                val isOn = if (isFinder) {
+                    val edge = x == 0 || y == 0 || x == 6 || y == 6
+                    val center = x in 2..4 && y in 2..4
+                    edge || center
+                } else {
+                    ((x * 17 + y * 31 + hashes) % 7) < 3
+                }
+                if (isOn) {
+                    drawRect(
+                        color = Color.Black,
+                        topLeft = androidx.compose.ui.geometry.Offset(x * moduleSize, y * moduleSize),
+                        size = androidx.compose.ui.geometry.Size(moduleSize, moduleSize),
+                    )
                 }
             }
         }

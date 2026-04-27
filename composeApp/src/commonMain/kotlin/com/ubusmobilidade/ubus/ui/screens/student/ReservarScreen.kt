@@ -36,9 +36,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
+import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.CreateReservationPayload
+import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.data.model.Trip
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
@@ -49,6 +51,7 @@ import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -62,9 +65,15 @@ fun ReservarScreen(component: RootComponent) {
     var loading by remember { mutableStateOf(true) }
     var reservingId by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        try { trips = tripRepo.getOpenTrips() } catch (_: Exception) {}
+        try {
+            trips = tripRepo.getOpenTrips()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            errorMessage = e.toUserMessage("Não foi possível carregar as viagens disponíveis.")
+        }
         loading = false
     }
 
@@ -72,11 +81,12 @@ fun ReservarScreen(component: RootComponent) {
         bottomBar = {
             StudentBottomNavBar(
                 selectedTab = StudentTab.RESERVAR,
+                showLeaderTab = component.authStorage.user?.role == RoleUsuario.LEADER,
                 onTabSelected = { tab ->
                     when (tab) {
                         StudentTab.HOME -> component.replaceWith(RootComponent.Config.StudentHome)
                         StudentTab.RESERVAR -> {}
-                        StudentTab.BILHETE -> component.replaceWith(RootComponent.Config.Bilhete)
+                        StudentTab.LIDER -> component.replaceWith(RootComponent.Config.Lider)
                         StudentTab.HISTORICO -> component.replaceWith(RootComponent.Config.Historico)
                         StudentTab.PERFIL -> component.replaceWith(RootComponent.Config.Perfil)
                     }
@@ -100,6 +110,22 @@ fun ReservarScreen(component: RootComponent) {
             if (successMessage.isNotEmpty()) {
                 BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
                     Text(successMessage, color = UbusSuccess, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            if (errorMessage.isNotEmpty()) {
+                BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            if (!BackendCapabilities.supportsPickupPointConfirmationInReservation) {
+                BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Text(
+                        "Confirmacao de ponto de embarque na reserva sera ativada apos atualizacao da API. No momento, a reserva segue com o fluxo padrao.",
+                        color = UbusText3,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
 
@@ -142,10 +168,23 @@ fun ReservarScreen(component: RootComponent) {
                                 reservingId = trip.tripId
                                 scope.launch {
                                     try {
-                                        reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
+                                        val defaultPointId = component.authStorage.user?.defaultPointId
+                                        if (
+                                            BackendCapabilities.supportsPickupPointConfirmationInReservation &&
+                                            !defaultPointId.isNullOrBlank()
+                                        ) {
+                                            reservationRepo.createWithPickupPoint(
+                                                tripId = trip.tripId,
+                                                pickupPointId = defaultPointId,
+                                            )
+                                        } else {
+                                            reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
+                                        }
                                         successMessage = "Reserva confirmada!"
-                                    } catch (_: Exception) {
-                                        successMessage = "Erro ao reservar."
+                                        errorMessage = ""
+                                    } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
+                                        errorMessage = e.toUserMessage("Não foi possível concluir a reserva.")
                                     }
                                     reservingId = null
                                 }

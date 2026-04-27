@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.model.Reservation
+import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -36,6 +37,7 @@ import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 @Composable
 fun HistoricoScreen(component: RootComponent) {
@@ -43,9 +45,15 @@ fun HistoricoScreen(component: RootComponent) {
     val reservationRepo = remember { ReservationRepository(apiClient) }
     var reservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        try { reservations = reservationRepo.getMyReservations() } catch (_: Exception) {}
+        try {
+            reservations = reservationRepo.getMyReservations()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            errorMessage = e.toUserMessage("Não foi possível carregar seu histórico.")
+        }
         loading = false
     }
 
@@ -53,11 +61,12 @@ fun HistoricoScreen(component: RootComponent) {
         bottomBar = {
             StudentBottomNavBar(
                 selectedTab = StudentTab.HISTORICO,
+                showLeaderTab = component.authStorage.user?.role == RoleUsuario.LEADER,
                 onTabSelected = { tab ->
                     when (tab) {
                         StudentTab.HOME -> component.replaceWith(RootComponent.Config.StudentHome)
                         StudentTab.RESERVAR -> component.replaceWith(RootComponent.Config.Reservar)
-                        StudentTab.BILHETE -> component.replaceWith(RootComponent.Config.Bilhete)
+                        StudentTab.LIDER -> component.replaceWith(RootComponent.Config.Lider)
                         StudentTab.HISTORICO -> {}
                         StudentTab.PERFIL -> component.replaceWith(RootComponent.Config.Perfil)
                     }
@@ -78,6 +87,16 @@ fun HistoricoScreen(component: RootComponent) {
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = UbusPrimary)
+                }
+            } else if (!errorMessage.isNullOrBlank()) {
+                BentoCard {
+                    Text(
+                        errorMessage!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             } else if (reservations.isEmpty()) {
                 BentoCard {

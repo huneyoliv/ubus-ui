@@ -8,6 +8,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -26,7 +27,7 @@ class ApiError(
 ) : Exception("API Error $status: $statusText")
 
 class ApiClient(
-    private val authStorage: AuthStorage,
+    internal val authStorage: AuthStorage,
     private val baseUrl: String = "https://api.ubus.me/v1",
     private val onUnauthorized: () -> Unit = {},
 ) {
@@ -64,9 +65,10 @@ class ApiClient(
             throw ApiError(response.status.value, response.status.description, text)
         }
     }
-
-    suspend inline fun <reified T> get(path: String): T {
-        val response = httpClient.get(fullUrl(path))
+    suspend inline fun <reified T> get(path: String, params: Map<String, String>? = null): T {
+        val response = httpClient.get(fullUrl(path)) {
+            params?.forEach { (k, v) -> parameter(k, v) }
+        }
         handleResponse(response)
         return response.body()
     }

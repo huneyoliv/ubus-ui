@@ -118,11 +118,15 @@ fun BaixaMobilidadeScreen(component: RootComponent) {
                         needsWheelchair = newValue
                         scope.launch {
                             try {
+                                println("DEBUG: BaixaMobilidadeScreen - Updating needsWheelchair to: $newValue")
                                 val updated = userRepo.updateMe(UpdateProfilePayload(needsWheelchair = newValue))
+                                println("DEBUG: BaixaMobilidadeScreen - Update success, refreshing AuthStorage")
                                 component.authStorage.user = updated
                                 message = if (newValue) "Acessibilidade ativada!" else "Acessibilidade desativada."
                                 isError = false
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                println("DEBUG: BaixaMobilidadeScreen - Update failed: ${e.message}")
                                 needsWheelchair = previous
                                 message = "Erro ao atualizar."
                                 isError = true

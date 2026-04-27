@@ -36,3 +36,16 @@ Thumbs.db
 
 # ── Legacy ───────────────────────────────────────
 /ubus-frontend.old/
+
+# ── Claude ───────────────────────────────────────
+*.md
+*.html
+/Swagger UI_files/
+.claude/
+.antigravity/
+.vscode/
+prompt.txt
+IMPORTANTE.txt
+ENDPOINTS_NAO_DOCUMENTADOS.md
+BACKEND_PATHS_PENDENTES_APP.md
+*.ps1

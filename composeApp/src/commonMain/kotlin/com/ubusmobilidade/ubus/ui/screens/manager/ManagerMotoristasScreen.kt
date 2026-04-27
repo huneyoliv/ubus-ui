@@ -1,6 +1,7 @@
 package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -64,9 +66,16 @@ fun ManagerMotoristasScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            drivers = userRepo.listPending().filter { it.role == RoleUsuario.DRIVER }
+            println("DEBUG: ManagerMotoristasScreen - Loading drivers for municipality: ${component.authStorage.user?.municipalityId}")
+            drivers = userRepo.listUsers(
+                municipalityId = component.authStorage.user?.municipalityId,
+                role = RoleUsuario.DRIVER
+            )
+            println("DEBUG: ManagerMotoristasScreen - Loaded ${drivers.size} drivers")
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar motoristas"
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            println("DEBUG: ManagerMotoristasScreen - Error loading drivers: ${e.message}")
+            error = e.toUserMessage("Não foi possível carregar motoristas.")
         }
         loading = false
     }
@@ -110,13 +119,15 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(12.dp))
-                    Text("Nenhum motorista pendente", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
+                    Text("Nenhum motorista encontrado", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
                 }
             }
         } else {
             drivers.forEach { driver ->
                 var processing by remember { mutableStateOf(false) }
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable { 
+                    component.navigateTo(RootComponent.Config.ManagerMotoristaDetail(driver.id)) 
+                }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
@@ -166,7 +177,10 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                                             try {
                                                 userRepo.updateStatus(driver.id, RegistrationStatus.APPROVED)
                                                 drivers = drivers.filter { it.id != driver.id }
-                                            } catch (_: Exception) {}
+                                            } catch (e: Exception) {
+                                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                                error = e.toUserMessage("Não foi possível aprovar o motorista.")
+                                            }
                                             processing = false
                                         }
                                     },
@@ -180,7 +194,10 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                                             try {
                                                 userRepo.updateStatus(driver.id, RegistrationStatus.REJECTED)
                                                 drivers = drivers.filter { it.id != driver.id }
-                                            } catch (_: Exception) {}
+                                            } catch (e: Exception) {
+                                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                                error = e.toUserMessage("Não foi possível rejeitar o motorista.")
+                                            }
                                             processing = false
                                         }
                                     },

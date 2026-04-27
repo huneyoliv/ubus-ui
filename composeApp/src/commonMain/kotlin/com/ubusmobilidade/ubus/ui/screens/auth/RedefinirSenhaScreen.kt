@@ -55,9 +55,10 @@ fun RedefinirSenhaScreen(component: RootComponent) {
         loading = true
         scope.launch {
             try {
-                authRepo.sendPasswordResetEmail(email.trim())
+                authRepo.requestPasswordRedefinition(email.trim())
                 success = true
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 error = "Erro ao enviar email. Tente novamente."
             } finally {
                 loading = false

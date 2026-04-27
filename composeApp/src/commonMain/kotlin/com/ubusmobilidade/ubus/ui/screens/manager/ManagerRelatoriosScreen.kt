@@ -49,6 +49,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 @Composable
 fun ManagerRelatoriosScreen(component: RootComponent) {
@@ -62,7 +63,8 @@ fun ManagerRelatoriosScreen(component: RootComponent) {
         try {
             metrics = metricsRepo.getDashboard()
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar"
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Não foi possível carregar os relatórios.")
         }
         loading = false
     }

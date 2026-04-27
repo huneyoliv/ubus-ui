@@ -19,6 +19,7 @@ data class LoginResponse(
 @Serializable
 data class RegisterPayload(
     val municipalityId: String,
+    val defaultPointId: String? = null,
     val cpf: String,
     val name: String,
     val email: String,
@@ -44,6 +45,7 @@ data class PasswordRedefinitionPayload(
 @Serializable
 data class CreateReservationPayload(
     val tripId: String,
+    val pickupPointId: String? = null,
     val seatNumber: Int? = null,
     val isRideShare: Boolean? = null,
 )
@@ -93,6 +95,7 @@ data class UpdateBusPayload(
     val standardCapacity: Int? = null,
     val hasBathroom: Boolean? = null,
     val hasAirConditioning: Boolean? = null,
+    val routeId: String? = null,
     val active: Boolean? = null,
 )
 
@@ -204,6 +207,36 @@ data class NotificationResponse(
     val message: String? = null,
     val sentAt: String? = null,
     val recipientCount: Int? = null,
+)
+
+/* ── Driver operations ── */
+
+@Serializable
+data class DriverAssignmentPayload(
+    val busId: String,
+    val serviceDate: String,
+)
+
+@Serializable
+data class DriverDepartingPayload(
+    val departingNow: Boolean = true,
+)
+
+/* ── Trip scheduling ── */
+
+@Serializable
+data class ScheduleTripsPayload(
+    val routeId: String,
+    val dates: List<String>,
+    val direction: TripDirection,
+    val shift: TripShift,
+    val busId: String? = null,
+    val driverId: String? = null,
+)
+
+@Serializable
+data class AssignTripDriverPayload(
+    val driverId: String,
 )
 
 /* ── Semester Renewal ── */

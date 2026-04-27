@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
@@ -48,6 +49,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,7 +65,8 @@ fun ManagerValidationsScreen(component: RootComponent) {
         try {
             pendingUsers = userRepo.listPending()
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar"
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Não foi possível carregar os cadastros pendentes.")
         }
         loading = false
     }
@@ -107,7 +110,9 @@ fun ManagerValidationsScreen(component: RootComponent) {
         } else {
             pendingUsers.forEach { user ->
                 var processing by remember { mutableStateOf(false) }
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
+                    component.navigateTo(RootComponent.Config.ManagerStudentDetail(user.id))
+                }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))
@@ -118,6 +123,12 @@ fun ManagerValidationsScreen(component: RootComponent) {
                         }
                     }
                     Spacer(Modifier.height(12.dp))
+                    if (user.gradeFileUrl != null || user.residenciaFileUrl != null) {
+                        Text("Documentos enviados:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        user.gradeFileUrl?.let { Text("Matrícula: $it", style = MaterialTheme.typography.bodySmall, color = UbusPrimary) }
+                        user.residenciaFileUrl?.let { Text("Residência: $it", style = MaterialTheme.typography.bodySmall, color = UbusPrimary) }
+                        Spacer(Modifier.height(12.dp))
+                    }
                     if (processing) {
                         CircularProgressIndicator(color = UbusPrimary, modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally))
                     } else {
@@ -130,7 +141,10 @@ fun ManagerValidationsScreen(component: RootComponent) {
                                         try {
                                             userRepo.updateStatus(user.id, RegistrationStatus.APPROVED)
                                             pendingUsers = pendingUsers.filter { it.id != user.id }
-                                        } catch (_: Exception) {}
+                                        } catch (e: Exception) {
+                                            if (e is kotlinx.coroutines.CancellationException) throw e
+                                            error = e.toUserMessage("Não foi possível aprovar o cadastro.")
+                                        }
                                         processing = false
                                     }
                                 },
@@ -144,7 +158,10 @@ fun ManagerValidationsScreen(component: RootComponent) {
                                         try {
                                             userRepo.updateStatus(user.id, RegistrationStatus.REJECTED)
                                             pendingUsers = pendingUsers.filter { it.id != user.id }
-                                        } catch (_: Exception) {}
+                                        } catch (e: Exception) {
+                                            if (e is kotlinx.coroutines.CancellationException) throw e
+                                            error = e.toUserMessage("Não foi possível recusar o cadastro.")
+                                        }
                                         processing = false
                                     }
                                 },

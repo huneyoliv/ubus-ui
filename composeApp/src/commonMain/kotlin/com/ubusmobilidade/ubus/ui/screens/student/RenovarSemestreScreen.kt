@@ -18,11 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.HourglassTop
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,7 +48,14 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryContainer
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
+import com.ubusmobilidade.ubus.ui.util.rememberFilePickerLauncher
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.HourglassTop
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.UploadFile
 
 @Composable
 fun RenovarSemestreScreen(component: RootComponent) {
@@ -62,14 +64,31 @@ fun RenovarSemestreScreen(component: RootComponent) {
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val userRepo = remember { UserRepository(apiClient) }
 
+    var gradeUri by remember { mutableStateOf<String?>(null) }
+    var residenciaUri by remember { mutableStateOf<String?>(null) }
     var gradeSelected by remember { mutableStateOf(false) }
     var residenciaSelected by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
-
+    
     val statusApproved = user?.status == RegistrationStatus.APPROVED
     val statusPending = user?.status == RegistrationStatus.PENDING
+
+    val gradePicker = rememberFilePickerLauncher { uri ->
+        if (uri != null) {
+            println("DEBUG: RenovarSemestreScreen - Grade document selected: $uri")
+            gradeUri = uri
+            gradeSelected = true
+        }
+    }
+    val residenciaPicker = rememberFilePickerLauncher { uri ->
+        if (uri != null) {
+            println("DEBUG: RenovarSemestreScreen - Residencia document selected: $uri")
+            residenciaUri = uri
+            residenciaSelected = true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -88,7 +107,6 @@ fun RenovarSemestreScreen(component: RootComponent) {
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
         )
 
-        // Status badge
         BentoCard {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (statusApproved) {
@@ -115,7 +133,6 @@ fun RenovarSemestreScreen(component: RootComponent) {
 
         Spacer(Modifier.height(16.dp))
 
-        // Info card
         BentoCard {
             Row(verticalAlignment = Alignment.Top) {
                 Icon(Icons.Default.Info, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
@@ -130,21 +147,26 @@ fun RenovarSemestreScreen(component: RootComponent) {
 
         Spacer(Modifier.height(24.dp))
 
-        // Document upload placeholders
         Text("Documentos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(12.dp))
 
         DocumentUploadItem(
             label = "Comprovante de matrícula",
             selected = gradeSelected,
-            onSelect = { gradeSelected = !gradeSelected },
+            onSelect = { 
+                println("DEBUG: RenovarSemestreScreen - Opening grade file picker")
+                gradePicker()
+            },
         )
         Spacer(Modifier.height(12.dp))
 
         DocumentUploadItem(
             label = "Comprovante de residência",
             selected = residenciaSelected,
-            onSelect = { residenciaSelected = !residenciaSelected },
+            onSelect = { 
+                println("DEBUG: RenovarSemestreScreen - Opening residencia file picker")
+                residenciaPicker()
+            },
         )
 
         Spacer(Modifier.height(24.dp))
@@ -159,19 +181,22 @@ fun RenovarSemestreScreen(component: RootComponent) {
             loading = loading,
             enabled = gradeSelected || residenciaSelected,
             onClick = {
+                println("DEBUG: RenovarSemestreScreen - Requesting semester renewal")
                 loading = true; message = ""
                 scope.launch {
                     try {
-                        userRepo.requestSemesterRenewal(
-                            SemesterRenewalPayload(
-                                gradeFileUrl = if (gradeSelected) "placeholder://grade" else null,
-                                residenciaFileUrl = if (residenciaSelected) "placeholder://residencia" else null,
-                            ),
-                        )
-                        message = "Solicitação enviada com sucesso!"
+                        println("DEBUG: RenovarSemestreScreen - Requesting renewal with docs: Grade=$gradeUri, Res=$residenciaUri")
+                        val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
+                            gradeFileUrl = gradeUri,
+                            residenciaFileUrl = residenciaUri
+                        ))
+                        message = resp.message ?: "Solicitação enviada com sucesso!"
                         isError = false
-                    } catch (_: Exception) {
-                        message = "Erro ao solicitar renovação."
+                        println("DEBUG: RenovarSemestreScreen - Success: ${resp.message}")
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        println("DEBUG: RenovarSemestreScreen - Error: ${e.message}")
+                        message = e.toUserMessage("Erro ao solicitar renovação.")
                         isError = true
                     }
                     loading = false

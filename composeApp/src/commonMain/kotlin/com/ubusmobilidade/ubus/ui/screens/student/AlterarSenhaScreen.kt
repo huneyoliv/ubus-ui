@@ -165,7 +165,8 @@ fun AlterarSenhaScreen(component: RootComponent) {
                             isError = false
                             delay(2000)
                             component.goBack()
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             message = "Senha incorreta ou erro ao alterar."
                             isError = true
                         }

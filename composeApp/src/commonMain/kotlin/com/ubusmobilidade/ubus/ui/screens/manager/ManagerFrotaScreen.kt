@@ -1,6 +1,7 @@
 package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,12 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
+import androidx.compose.ui.graphics.Color
+
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Add
 
 @Composable
 fun ManagerFrotaScreen(component: RootComponent) {
@@ -55,79 +62,94 @@ fun ManagerFrotaScreen(component: RootComponent) {
         try {
             buses = fleetRepo.listBuses()
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar"
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Não foi possível carregar a frota.")
         }
         loading = false
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
-    ) {
-        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep) },
+                containerColor = UbusPrimary,
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Default.Add, "Cadastrar Veículo")
+            }
         }
-        Text(
-            "Frota",
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-        )
-        Text(
-            "Veículos cadastrados no sistema",
-            style = MaterialTheme.typography.bodyMedium,
-            color = UbusText3,
-            modifier = Modifier.padding(bottom = 20.dp),
-        )
+    ) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState()).padding(padding).padding(horizontal = 20.dp),
+        ) {
+            IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
+            }
+            Text(
+                "Frota",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+            )
+            Text(
+                "Veículos cadastrados no sistema",
+                style = MaterialTheme.typography.bodyMedium,
+                color = UbusText3,
+                modifier = Modifier.padding(bottom = 20.dp),
+            )
 
-        if (loading) {
-            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = UbusPrimary)
-            }
-        } else if (error.isNotEmpty()) {
-            BentoCard {
-                Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodyMedium)
-            }
-        } else if (buses.isEmpty()) {
-            BentoCard {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.DirectionsBus, null, tint = UbusText3, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text("Nenhum veículo cadastrado", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
+            if (loading) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
-            }
-        } else {
-            buses.forEach { bus ->
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("Nº ${bus.identificationNumber}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                            Text("Placa: ${bus.plate ?: "—"} · ${bus.standardCapacity} lugares", style = MaterialTheme.typography.bodySmall, color = UbusText3)
-                        }
-                        Text(
-                            if (bus.active) "Ativo" else "Inativo",
-                            color = if (bus.active) UbusSuccess else UbusDestructive,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
+            } else if (error.isNotEmpty()) {
+                BentoCard {
+                    Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodyMedium)
+                }
+            } else if (buses.isEmpty()) {
+                BentoCard {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.DirectionsBus, null, tint = UbusText3, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Nenhum veículo cadastrado", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
                     }
-                    Row(modifier = Modifier.padding(top = 4.dp)) {
-                        if (bus.hasAirConditioning) {
-                            Icon(Icons.Default.AcUnit, "Ar", tint = UbusText3, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("A/C", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                }
+            } else {
+                buses.forEach { bus ->
+                    BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
+                        component.navigateTo(RootComponent.Config.ManagerBusDetail(bus.id))
+                    }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                             Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Nº ${bus.identificationNumber}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                                Text("Placa: ${bus.plate ?: "—"} · ${bus.standardCapacity} lugares", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                            }
+                            Text(
+                                if (bus.active) "Ativo" else "Inativo",
+                                color = if (bus.active) UbusSuccess else UbusDestructive,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
                         }
-                        if (bus.hasBathroom) {
-                            Icon(Icons.Default.Wc, "WC", tint = UbusText3, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("WC", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                        Row(modifier = Modifier.padding(top = 4.dp)) {
+                            if (bus.hasAirConditioning) {
+                                Icon(Icons.Default.AcUnit, "Ar", tint = UbusText3, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("A/C", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                                Spacer(Modifier.width(12.dp))
+                            }
+                            if (bus.hasBathroom) {
+                                Icon(Icons.Default.Wc, "WC", tint = UbusText3, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("WC", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                            }
                         }
                     }
                 }
             }
+            Spacer(Modifier.height(80.dp)) // Espaço para o FAB
         }
-        Spacer(Modifier.height(16.dp))
     }
 }

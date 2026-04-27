@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.AuthRepository
+import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.ManagementRepository
 import com.ubusmobilidade.ubus.data.model.Municipality
 import com.ubusmobilidade.ubus.data.model.RegisterPayload
@@ -67,18 +71,23 @@ import com.ubusmobilidade.ubus.ui.components.UbusTextField
 import com.ubusmobilidade.ubus.ui.theme.UbusBorder
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.util.CpfVisualTransformation
 import com.ubusmobilidade.ubus.ui.util.PasswordStrength
 import com.ubusmobilidade.ubus.ui.util.PhoneVisualTransformation
 import com.ubusmobilidade.ubus.ui.util.isValidCpf
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val TOTAL_STEPS = 4
+import com.ubusmobilidade.ubus.ui.util.rememberCameraLauncher
+
+private const val TOTAL_STEPS = 5
 
 private val stepTitles = listOf(
     "Dados pessoais",
+    "Tirar foto",
     "Verificar e-mail",
     "Selecionar município",
     "Criar senha",
@@ -86,6 +95,7 @@ private val stepTitles = listOf(
 
 private val stepSubtitles = listOf(
     "Informe seu nome, CPF e telefone.",
+    "Precisamos de uma foto sua para identificação.",
     "Enviaremos um código para seu e-mail.",
     "Escolha o município onde você utiliza o transporte.",
     "Crie uma senha segura para sua conta.",
@@ -100,16 +110,22 @@ fun CadastroScreen(component: RootComponent) {
     val authRepo = remember { AuthRepository(apiClient) }
     val managementRepo = remember { ManagementRepository(apiClient) }
 
-    // ── Step ──
     var currentStep by remember { mutableIntStateOf(0) }
 
-    // ── Step 1: Dados pessoais ──
     var name by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
     var cpfError by remember { mutableStateOf<String?>(null) }
     var phoneError by remember { mutableStateOf<String?>(null) }
+
+    var photoUri by remember { mutableStateOf<String?>(null) }
+    val cameraLauncher = rememberCameraLauncher { uri ->
+        if (uri != null) {
+            println("DEBUG: CadastroScreen - Photo captured: $uri")
+            photoUri = uri
+        }
+    }
 
     // ── Step 2: E-mail + código ──
     var email by remember { mutableStateOf("") }
@@ -144,6 +160,14 @@ fun CadastroScreen(component: RootComponent) {
         }
     }
 
+    // ── Auto open camera in step 1 ──
+    LaunchedEffect(currentStep) {
+        if (currentStep == 1 && photoUri == null) {
+            println("DEBUG: CadastroScreen - Auto opening camera")
+            cameraLauncher()
+        }
+    }
+
     // ── Load municipalities when entering step 3 ──
     LaunchedEffect(currentStep) {
         if (currentStep == 2 && municipalities.isEmpty() && !loadingMunicipalities) {
@@ -151,7 +175,8 @@ fun CadastroScreen(component: RootComponent) {
             municipalitiesError = null
             try {
                 municipalities = managementRepo.listPublicMunicipalities()
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 municipalitiesError = "Erro ao carregar municípios. Tente novamente."
             } finally {
                 loadingMunicipalities = false
@@ -210,7 +235,8 @@ fun CadastroScreen(component: RootComponent) {
                 codeSent = true
                 resendCountdown = 60
             } catch (e: Exception) {
-                generalError = "Erro ao enviar código: ${e.message ?: "tente novamente"}"
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                generalError = e.toUserMessage("Não foi possível enviar o código. Tente novamente.")
             } finally {
                 sendingCode = false
             }
@@ -234,7 +260,8 @@ fun CadastroScreen(component: RootComponent) {
                     codeError = response.message ?: "Código inválido"
                 }
             } catch (e: Exception) {
-                codeError = "Erro ao verificar código: ${e.message ?: "tente novamente"}"
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                codeError = e.toUserMessage("Não foi possível verificar o código. Tente novamente.")
             } finally {
                 verifyingCode = false
             }
@@ -255,11 +282,13 @@ fun CadastroScreen(component: RootComponent) {
                         email = email.trim(),
                         password = password,
                         phone = phone.filter { it.isDigit() },
+                        photoUrl = photoUri,
                     )
                 )
                 component.replaceWith(RootComponent.Config.Login)
             } catch (e: Exception) {
-                generalError = "Erro ao cadastrar: ${e.message ?: "tente novamente"}"
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                generalError = e.toUserMessage("Não foi possível concluir o cadastro. Tente novamente.")
             } finally {
                 registering = false
             }
@@ -270,9 +299,10 @@ fun CadastroScreen(component: RootComponent) {
         generalError = null
         when (currentStep) {
             0 -> if (validateStep1()) currentStep = 1
-            1 -> { /* advance handled by verify callback */ }
-            2 -> if (selectedMunicipalityId != null) currentStep = 3
-            3 -> handleRegister()
+            1 -> if (photoUri != null) currentStep = 2 else generalError = "Tire uma foto para continuar"
+            2 -> { /* advance handled by verify callback */ }
+            3 -> if (selectedMunicipalityId != null) currentStep = 4
+            4 -> handleRegister()
         }
     }
 
@@ -287,7 +317,6 @@ fun CadastroScreen(component: RootComponent) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
-        // ── Top bar ──
         IconButton(
             onClick = { handleBack() },
             modifier = Modifier.padding(start = 8.dp, top = 8.dp),
@@ -307,12 +336,10 @@ fun CadastroScreen(component: RootComponent) {
         ) {
             Spacer(Modifier.height(8.dp))
 
-            // ── Step indicator ──
             StepIndicator(currentStep = currentStep, totalSteps = TOTAL_STEPS)
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Title ──
             Text(
                 stepTitles[currentStep],
                 style = MaterialTheme.typography.displaySmall,
@@ -325,9 +352,17 @@ fun CadastroScreen(component: RootComponent) {
                 color = UbusText3,
             )
 
+            if (currentStep == 3 && !BackendCapabilities.supportsPickupPointInRegistration) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Selecao do ponto de embarque no cadastro sera liberada junto da nova versao da API.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = UbusText3,
+                )
+            }
+
             Spacer(Modifier.height(32.dp))
 
-            // ── Content per step ──
             AnimatedContent(
                 targetState = currentStep,
                 transitionSpec = {
@@ -344,7 +379,14 @@ fun CadastroScreen(component: RootComponent) {
                             phone = phone, onPhoneChange = { if (it.filter(Char::isDigit).length <= 11) { phone = it.filter(Char::isDigit) }; phoneError = null },
                             nameError = nameError, cpfError = cpfError, phoneError = phoneError,
                         )
-                        1 -> StepVerificarEmail(
+                        1 -> StepTirarFoto(
+                            photoUri = photoUri,
+                            onTakePhoto = { 
+                                println("DEBUG: CadastroScreen - Requesting camera")
+                                cameraLauncher() 
+                            }
+                        )
+                        2 -> StepVerificarEmail(
                             email = email, onEmailChange = { email = it; emailError = null },
                             emailError = emailError,
                             codeSent = codeSent,
@@ -356,7 +398,7 @@ fun CadastroScreen(component: RootComponent) {
                             onSendCode = { handleSendCode() },
                             onVerifyCode = { handleVerifyCode() },
                         )
-                        2 -> StepSelecionarMunicipio(
+                        3 -> StepSelecionarMunicipio(
                             municipalities = municipalities,
                             loading = loadingMunicipalities,
                             error = municipalitiesError,
@@ -366,17 +408,18 @@ fun CadastroScreen(component: RootComponent) {
                                 municipalitiesError = null
                                 loadingMunicipalities = true
                                 scope.launch {
-                                    try {
-                                        municipalities = managementRepo.listPublicMunicipalities()
-                                    } catch (_: Exception) {
-                                        municipalitiesError = "Erro ao carregar municípios."
-                                    } finally {
-                                        loadingMunicipalities = false
-                                    }
+                                try {
+                                    municipalities = managementRepo.listPublicMunicipalities()
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    municipalitiesError = "Erro ao carregar municípios."
+                                } finally {
+                                    loadingMunicipalities = false
+                                }
                                 }
                             },
                         )
-                        3 -> StepCriarSenha(
+                        4 -> StepCriarSenha(
                             password = password, onPasswordChange = { password = it; passwordError = null },
                             confirmPassword = confirmPassword, onConfirmChange = { confirmPassword = it; confirmPasswordError = null },
                             passwordError = passwordError, confirmPasswordError = confirmPasswordError,
@@ -385,7 +428,6 @@ fun CadastroScreen(component: RootComponent) {
                 }
             }
 
-            // ── General error ──
             if (!generalError.isNullOrBlank()) {
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -398,23 +440,50 @@ fun CadastroScreen(component: RootComponent) {
             Spacer(Modifier.height(24.dp))
         }
 
-        // ── Bottom action button ──
         Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             when (currentStep) {
-                0 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
-                1 -> {} // buttons are inline in step content
-                2 -> UbusButton(
+                0, 1 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
+                2 -> {} 
+                3 -> UbusButton(
                     text = "Avançar",
                     onClick = { handleAdvance() },
                     enabled = selectedMunicipalityId != null,
                 )
-                3 -> UbusButton(
+                4 -> UbusButton(
                     text = "Criar conta",
                     onClick = { handleAdvance() },
                     loading = registering,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun StepTirarFoto(
+    photoUri: String?,
+    onTakePhoto: () -> Unit,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .clip(CircleShape)
+                .background(UbusBorder)
+                .clickable { onTakePhoto() },
+            contentAlignment = Alignment.Center,
+        ) {
+            if (photoUri != null) {
+                Icon(Icons.Default.CheckCircle, null, tint = UbusSuccess, modifier = Modifier.size(64.dp))
+            } else {
+                Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier.size(64.dp))
+            }
+        }
+        Spacer(Modifier.height(24.dp))
+        UbusOutlinedButton(
+            text = if (photoUri != null) "Tirar outra foto" else "Tirar foto",
+            onClick = onTakePhoto,
+        )
     }
 }
 

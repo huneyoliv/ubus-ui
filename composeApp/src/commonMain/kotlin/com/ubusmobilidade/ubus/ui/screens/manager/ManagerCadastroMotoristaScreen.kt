@@ -44,6 +44,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.util.CpfVisualTransformation
 import com.ubusmobilidade.ubus.ui.util.PhoneVisualTransformation
 import com.ubusmobilidade.ubus.ui.util.isValidCpf
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -184,7 +185,8 @@ fun ManagerCadastroMotoristaScreen(component: RootComponent) {
                         delay(2000)
                         component.goBack()
                     } catch (e: Exception) {
-                        error = e.message ?: "Erro ao cadastrar motorista"
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        error = e.toUserMessage("Não foi possível cadastrar o motorista. Tente novamente.")
                     }
                     loading = false
                 }

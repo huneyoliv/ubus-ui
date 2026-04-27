@@ -50,6 +50,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 private const val TARGET_MUNICIPALITY = "MUNICIPALITY"
@@ -69,6 +70,7 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
 
     var routes by remember { mutableStateOf<List<Route>>(emptyList()) }
     var routesLoading by remember { mutableStateOf(false) }
+    var routesError by remember { mutableStateOf("") }
 
     var sending by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -80,9 +82,13 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
     LaunchedEffect(selectedTarget) {
         if (selectedTarget == TARGET_ROUTE && routes.isEmpty()) {
             routesLoading = true
+            routesError = ""
             try {
                 routes = fleetRepo.listRoutes()
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                routesError = e.toUserMessage("Não foi possível carregar as rotas.")
+            }
             routesLoading = false
         }
     }
@@ -156,6 +162,7 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
                     .clickable {
                         selectedTarget = TARGET_MUNICIPALITY
                         selectedRouteId = null
+                        routesError = ""
                     },
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
@@ -177,7 +184,10 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
                         if (routeSelected) Modifier.border(2.dp, UbusPrimary, RoundedCornerShape(18.dp))
                         else Modifier.border(1.dp, UbusBorder, RoundedCornerShape(18.dp))
                     )
-                    .clickable { selectedTarget = TARGET_ROUTE },
+                    .clickable {
+                        selectedTarget = TARGET_ROUTE
+                        routesError = ""
+                    },
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                     Icon(Icons.Default.Route, null, tint = if (routeSelected) UbusPrimary else UbusText3, modifier = Modifier.size(24.dp))
@@ -199,6 +209,8 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
                 Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = UbusPrimary, modifier = Modifier.size(24.dp))
                 }
+            } else if (routesError.isNotBlank()) {
+                Text(routesError, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             } else if (routes.isEmpty()) {
                 Text("Nenhuma rota encontrada", style = MaterialTheme.typography.bodySmall, color = UbusText3)
             } else {
@@ -278,7 +290,8 @@ fun ManagerNotificacoesScreen(component: RootComponent) {
                         selectedTarget = TARGET_MUNICIPALITY
                         selectedRouteId = null
                     } catch (e: Exception) {
-                        error = e.message ?: "Erro ao enviar notificação"
+                        if (e is kotlinx.coroutines.CancellationException) throw e
+                        error = e.toUserMessage("Não foi possível enviar a notificação.")
                     }
                     sending = false
                 }

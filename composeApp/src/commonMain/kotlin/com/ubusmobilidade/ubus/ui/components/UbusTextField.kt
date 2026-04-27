@@ -17,6 +17,9 @@ import com.ubusmobilidade.ubus.ui.theme.UbusBorder
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryLight
 import com.ubusmobilidade.ubus.ui.theme.UbusSurface2
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.contentDescription
 
 @Composable
 fun UbusTextField(
@@ -45,7 +48,10 @@ fun UbusTextField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().semantics {
+                contentDescription = label
+                if (isError) stateDescription = "Erro: $errorMessage"
+            },
             placeholder = {
                 Text(placeholder, color = UbusText3)
             },

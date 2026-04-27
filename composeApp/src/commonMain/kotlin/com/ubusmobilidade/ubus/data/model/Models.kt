@@ -72,6 +72,7 @@ data class Bus(
     val driverId: String? = null,
     val hasBathroom: Boolean = false,
     val hasAirConditioning: Boolean = false,
+    val routeId: String? = null,
     val active: Boolean = true,
 )
 
@@ -115,6 +116,8 @@ data class ReservationUser(
     val id: String,
     val name: String,
     val cpf: String,
+    val phone: String,
+    val photoUrl: String? = null,
 )
 
 /* ── Location ── */
@@ -145,4 +148,30 @@ data class OccupiedSeat(
     val seatNumber: Int,
     val userId: String? = null,
     val userName: String? = null,
+)
+
+@Serializable
+data class DriverAssignmentResponse(
+    val assignmentId: String? = null,
+    val tripOutId: String? = null,
+    val tripBackId: String? = null,
+)
+
+@Serializable
+data class DriverTripPoint(
+    val pointId: String,
+    val pointName: String,
+    val studentsCount: Int,
+)
+
+@Serializable
+data class DriverCurrentTripSummary(
+    val phase: String? = null,
+    val tripId: String? = null,
+    val points: List<DriverTripPoint> = emptyList(),
+)
+
+@Serializable
+data class RouteCalendarResponse(
+    val scheduledDates: List<String> = emptyList(),
 )

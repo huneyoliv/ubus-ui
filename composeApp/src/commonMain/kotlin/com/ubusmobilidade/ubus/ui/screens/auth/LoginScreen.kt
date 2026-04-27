@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,7 +19,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
@@ -30,6 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -49,16 +49,28 @@ import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.ApiError
 import com.ubusmobilidade.ubus.data.api.AuthRepository
+import com.ubusmobilidade.ubus.data.model.LoginPayload
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(component: RootComponent) {
+    val stack by component.childStack.subscribeAsState()
+    val showBack = stack.backStack.isNotEmpty()
+
+    LaunchedEffect(Unit) {
+        if (component.authStorage.isAuthenticated) {
+            component.onLoginSuccess()
+        }
+    }
+
     val scope = rememberCoroutineScope()
     val authRepo = remember {
         AuthRepository(ApiClient(component.authStorage, onUnauthorized = { component.logout() }))
@@ -71,19 +83,22 @@ fun LoginScreen(component: RootComponent) {
     var error by remember { mutableStateOf("") }
 
     fun handleLogin() {
-        if (email.isBlank() || password.isBlank()) return
+        if (email.isBlank() || password.isBlank()) {
+            error = "Informe e-mail e senha para continuar."
+            return
+        }
         error = ""
         loading = true
         scope.launch {
             try {
-                val response = authRepo.login(email.trim(), password)
+                val response = authRepo.login(LoginPayload(email.trim(), password))
                 component.authStorage.setAuth(response.accessToken, response.user)
                 component.onLoginSuccess()
             } catch (e: ApiError) {
                 error = if (e.status == 401) "Email ou senha incorretos."
-                else "Erro ${e.status}: ${e.body ?: e.statusText}"
+                else e.toUserMessage("Não foi possível entrar agora. Tente novamente.")
             } catch (e: Exception) {
-                error = "Erro: ${e.message ?: "Falha na conexão"}"
+                error = e.toUserMessage("Não foi possível entrar agora. Tente novamente.")
             } finally {
                 loading = false
             }
@@ -101,41 +116,22 @@ fun LoginScreen(component: RootComponent) {
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
         ) {
-            // Back button
-            IconButton(
-                onClick = { component.goBack() },
-                modifier = Modifier.padding(top = 8.dp),
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Voltar",
-                    tint = MaterialTheme.colorScheme.onBackground,
-                )
+            if (showBack) {
+                IconButton(
+                    onClick = { component.goBack() },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Voltar",
+                        tint = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            } else {
+                Spacer(Modifier.height(48.dp))
             }
 
             Spacer(Modifier.height(16.dp))
-
-            // Logo
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(UbusPrimary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Default.DirectionsBus,
-                        contentDescription = null,
-                        tint = UbusPrimary,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-                Spacer(Modifier.width(10.dp))
-                Text("Ubus", color = UbusPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            }
-
-            Spacer(Modifier.height(32.dp))
 
             // Title
             Text(
@@ -245,7 +241,7 @@ fun LoginScreen(component: RootComponent) {
             ) {
                 Text("Ainda não tem conta? ", color = UbusText3, fontSize = 14.sp)
                 Text(
-                    "Cadastre-se",
+                    "Criar conta",
                     color = UbusPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
@@ -254,6 +250,16 @@ fun LoginScreen(component: RootComponent) {
                     },
                 )
             }
+
+            Spacer(Modifier.height(24.dp))
+
+            Text(
+                "© 2026 Ubus — Todos os direitos reservados",
+                color = UbusText3.copy(alpha = 0.65f),
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
             Spacer(Modifier.height(32.dp))
         }

@@ -164,7 +164,8 @@ fun MeusDadosScreen(component: RootComponent) {
                                     emailStep = 2
                                     emailMessage = "Código enviado para $newEmail"
                                     emailIsError = false
-                                } catch (_: Exception) {
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     emailMessage = "Erro ao enviar código."
                                     emailIsError = true
                                 }
@@ -209,7 +210,8 @@ fun MeusDadosScreen(component: RootComponent) {
                                         emailMessage = result.message ?: "Código inválido."
                                         emailIsError = true
                                     }
-                                } catch (_: Exception) {
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     emailMessage = "Erro ao verificar código."
                                     emailIsError = true
                                 }
@@ -241,7 +243,8 @@ fun MeusDadosScreen(component: RootComponent) {
                         component.authStorage.user = updated
                         message = "Dados atualizados!"
                         isError = false
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
                         message = "Erro ao atualizar."
                         isError = true
                     }

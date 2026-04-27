@@ -1,6 +1,7 @@
 package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 @Composable
 fun ManagerRoutesScreen(component: RootComponent) {
@@ -55,7 +57,8 @@ fun ManagerRoutesScreen(component: RootComponent) {
         try {
             routes = fleetRepo.listRoutes()
         } catch (e: Exception) {
-            error = e.message ?: "Erro ao carregar"
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Não foi possível carregar as rotas.")
         }
         loading = false
     }
@@ -98,7 +101,9 @@ fun ManagerRoutesScreen(component: RootComponent) {
             }
         } else {
             routes.forEach { route ->
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp)) {
+                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
+                    component.navigateTo(RootComponent.Config.ManagerRouteDetail(route.id))
+                }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Route, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))

@@ -7,9 +7,8 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.ubusmobilidade.ubus.ui.screens.auth.CadastroScreen
 import com.ubusmobilidade.ubus.ui.screens.auth.LoginScreen
 import com.ubusmobilidade.ubus.ui.screens.auth.RedefinirSenhaScreen
-import com.ubusmobilidade.ubus.ui.screens.auth.SplashScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.AvisosScreen
-import com.ubusmobilidade.ubus.ui.screens.driver.CadastroVeiculoScreen
+import com.ubusmobilidade.ubus.ui.screens.driver.CadastroVeiculoMultiStepScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.DriverConfigScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.MapaScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.MotoristaSplashScreen
@@ -24,6 +23,10 @@ import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRelatoriosScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRoutesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerValidationsScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.SuperAdminManagementScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerMotoristaDetailScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRouteDetailScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerBusDetailScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerStudentDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.student.AlterarSenhaScreen
 import com.ubusmobilidade.ubus.ui.screens.student.BaixaMobilidadeScreen
 import com.ubusmobilidade.ubus.ui.screens.student.BilheteScreen
@@ -47,7 +50,6 @@ fun RootContent(component: RootComponent) {
     ) { child ->
         when (val instance = child.instance) {
             // Auth
-            is RootComponent.Child.Splash -> SplashScreen(component)
             is RootComponent.Child.Login -> LoginScreen(component)
             is RootComponent.Child.Cadastro -> CadastroScreen(component)
             is RootComponent.Child.RedefinirSenha -> RedefinirSenhaScreen(component)
@@ -71,7 +73,7 @@ fun RootContent(component: RootComponent) {
             // Driver
             is RootComponent.Child.MotoristaSplash -> MotoristaSplashScreen(component)
             is RootComponent.Child.SelecionarVeiculo -> SelecionarVeiculoScreen(component)
-            is RootComponent.Child.CadastroVeiculo -> CadastroVeiculoScreen(component)
+            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component)
             is RootComponent.Child.Mapa -> MapaScreen(component)
             is RootComponent.Child.Avisos -> AvisosScreen(component)
             is RootComponent.Child.DriverConfig -> DriverConfigScreen(component)
@@ -87,6 +89,10 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.SuperAdminManagement -> SuperAdminManagementScreen(component)
             is RootComponent.Child.ManagerCadastroMotorista -> ManagerCadastroMotoristaScreen(component)
             is RootComponent.Child.ManagerNotificacoes -> ManagerNotificacoesScreen(component)
+            is RootComponent.Child.ManagerMotoristaDetail -> ManagerMotoristaDetailScreen(component, instance.userId)
+            is RootComponent.Child.ManagerRouteDetail -> ManagerRouteDetailScreen(component, instance.routeId)
+            is RootComponent.Child.ManagerBusDetail -> ManagerBusDetailScreen(component, instance.busId)
+            is RootComponent.Child.ManagerStudentDetail -> ManagerStudentDetailScreen(component, instance.userId)
         }
     }
 }

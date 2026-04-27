@@ -47,6 +47,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
+import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 private data class DashItem(val icon: ImageVector, val label: String, val config: RootComponent.Config)
 
@@ -66,11 +67,15 @@ fun ManagerDashboardScreen(component: RootComponent) {
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val metricsRepo = remember { MetricsRepository(apiClient) }
     var metrics by remember { mutableStateOf<DashboardMetrics?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         try {
             metrics = metricsRepo.getDashboard()
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            loadError = e.toUserMessage("Não foi possível carregar os indicadores.")
+        }
     }
 
     Column(
@@ -78,6 +83,16 @@ fun ManagerDashboardScreen(component: RootComponent) {
     ) {
         Text("Painel do gestor", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
         Text("Olá, ${user?.name ?: "Gestor"}!", style = MaterialTheme.typography.bodyMedium, color = UbusText3, modifier = Modifier.padding(bottom = 16.dp))
+
+        if (!loadError.isNullOrBlank()) {
+            BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
+                Text(
+                    loadError!!,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
 
         // Quick metrics row
         if (metrics != null) {

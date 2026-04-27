@@ -15,13 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -57,11 +59,12 @@ fun PerfilScreen(component: RootComponent) {
         bottomBar = {
             StudentBottomNavBar(
                 selectedTab = StudentTab.PERFIL,
+                showLeaderTab = component.authStorage.user?.role == RoleUsuario.LEADER,
                 onTabSelected = { tab ->
                     when (tab) {
                         StudentTab.HOME -> component.replaceWith(RootComponent.Config.StudentHome)
                         StudentTab.RESERVAR -> component.replaceWith(RootComponent.Config.Reservar)
-                        StudentTab.BILHETE -> component.replaceWith(RootComponent.Config.Bilhete)
+                        StudentTab.LIDER -> component.replaceWith(RootComponent.Config.Lider)
                         StudentTab.HISTORICO -> component.replaceWith(RootComponent.Config.Historico)
                         StudentTab.PERFIL -> {}
                     }
@@ -96,12 +99,28 @@ fun PerfilScreen(component: RootComponent) {
             }
 
             // Menu items
-            ProfileMenuItem(Icons.Default.Edit, "Meus dados") { component.navigateTo(RootComponent.Config.MeusDados) }
-            ProfileMenuItem(Icons.Default.Lock, "Alterar senha") { component.navigateTo(RootComponent.Config.AlterarSenha) }
-            ProfileMenuItem(Icons.Default.CalendarMonth, "Renovar semestre") { component.navigateTo(RootComponent.Config.RenovarSemestre) }
-            ProfileMenuItem(Icons.Default.Accessibility, "Acessibilidade") { component.navigateTo(RootComponent.Config.BaixaMobilidade) }
-            ProfileMenuItem(Icons.AutoMirrored.Filled.MenuBook, "Regras") { component.navigateTo(RootComponent.Config.Regras) }
-            ProfileMenuItem(Icons.Default.Person, "Carteirinha") { component.navigateTo(RootComponent.Config.Carteirinha) }
+            ProfileMenuItem(Icons.Default.Edit, "Meus dados") {
+                println("DEBUG: PerfilScreen - Navigating to MeusDados")
+                component.navigateTo(RootComponent.Config.MeusDados)
+            }
+            ProfileMenuItem(Icons.Default.Lock, "Alterar senha") {
+                println("DEBUG: PerfilScreen - Navigating to AlterarSenha")
+                component.navigateTo(RootComponent.Config.AlterarSenha)
+            }
+            ProfileMenuItem(Icons.Default.CalendarMonth, "Renovar semestre") {
+                println("DEBUG: PerfilScreen - Navigating to RenovarSemestre")
+                component.navigateTo(RootComponent.Config.RenovarSemestre)
+            }
+            ProfileMenuItem(Icons.Default.Person, "Carteirinha") {
+                println("DEBUG: PerfilScreen - Navigating to Carteirinha")
+                component.navigateTo(RootComponent.Config.Carteirinha)
+            }
+            if (component.authStorage.user?.role == RoleUsuario.LEADER) {
+                ProfileMenuItem(Icons.Default.Group, "Líder") {
+                println("DEBUG: PerfilScreen - Navigating to Lider")
+                component.navigateTo(RootComponent.Config.Lider)
+            }
+            }
 
             Spacer(Modifier.height(16.dp))
 

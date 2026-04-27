@@ -22,14 +22,13 @@ class RootComponent(
     val childStack: Value<ChildStack<Config, Child>> = childStack(
         source = navigation,
         serializer = Config.serializer(),
-        initialConfiguration = Config.Splash,
+        initialConfiguration = initialConfig(),
         handleBackButton = true,
         childFactory = ::createChild,
     )
 
     private fun createChild(config: Config, context: ComponentContext): Child = when (config) {
         // Auth
-        Config.Splash -> Child.Splash
         Config.Login -> Child.Login
         Config.Cadastro -> Child.Cadastro
         Config.RedefinirSenha -> Child.RedefinirSenha
@@ -53,7 +52,7 @@ class RootComponent(
         // Driver
         Config.MotoristaSplash -> Child.MotoristaSplash
         Config.SelecionarVeiculo -> Child.SelecionarVeiculo
-        Config.CadastroVeiculo -> Child.CadastroVeiculo
+        Config.CadastroVeiculoMultiStep -> Child.CadastroVeiculoMultiStep
         Config.Mapa -> Child.Mapa
         Config.Avisos -> Child.Avisos
         Config.DriverConfig -> Child.DriverConfig
@@ -69,12 +68,16 @@ class RootComponent(
         Config.SuperAdminManagement -> Child.SuperAdminManagement
         Config.ManagerCadastroMotorista -> Child.ManagerCadastroMotorista
         Config.ManagerNotificacoes -> Child.ManagerNotificacoes
+        is Config.ManagerMotoristaDetail -> Child.ManagerMotoristaDetail(config.userId)
+        is Config.ManagerRouteDetail -> Child.ManagerRouteDetail(config.routeId)
+        is Config.ManagerBusDetail -> Child.ManagerBusDetail(config.busId)
+        is Config.ManagerStudentDetail -> Child.ManagerStudentDetail(config.userId)
     }
 
     // ── Navigation actions ──
 
     fun navigateTo(config: Config) {
-        navigation.pushNew(config)
+        navigation.pushNew(guardRoute(config))
     }
 
     fun goBack() {
@@ -82,7 +85,7 @@ class RootComponent(
     }
 
     fun replaceWith(config: Config) {
-        navigation.replaceAll(config)
+        navigation.replaceAll(guardRoute(config))
     }
 
     fun onLoginSuccess() {
@@ -99,12 +102,61 @@ class RootComponent(
         replaceWith(Config.Login)
     }
 
+    private fun initialConfig(): Config {
+        if (!authStorage.isAuthenticated) return Config.Login
+        return homeForRole(authStorage.userRole)
+    }
+
+    private fun guardRoute(config: Config): Config {
+        println("DEBUG: guardRoute - config: $config")
+        if (!authStorage.isAuthenticated) {
+            return if (config in publicRoutes) config else Config.Login
+        }
+
+        if (config == Config.Lider && authStorage.userRole != RoleUsuario.LEADER) {
+            return homeForRole(authStorage.userRole)
+        }
+
+        if (config in authRoutes) {
+            return homeForRole(authStorage.userRole)
+        }
+
+        val allowed = isRoleAllowed(config, authStorage.userRole)
+        println("DEBUG: guardRoute - allowed: $allowed for role: ${authStorage.userRole}")
+        return if (allowed) config else homeForRole(authStorage.userRole)
+    }
+
+    private fun homeForRole(role: RoleUsuario?): Config = when (role) {
+        RoleUsuario.DRIVER -> Config.MotoristaSplash
+        RoleUsuario.MANAGER, RoleUsuario.SUPER_ADMIN -> Config.ManagerDashboard
+        else -> Config.StudentHome
+    }
+
+    private fun isRoleAllowed(config: Config, role: RoleUsuario?): Boolean = when (role) {
+        RoleUsuario.DRIVER -> config in driverRoutes
+        RoleUsuario.MANAGER -> when (config) {
+            is Config.ManagerMotoristaDetail -> true
+            is Config.ManagerRouteDetail -> true
+            is Config.ManagerBusDetail -> true
+            is Config.ManagerStudentDetail -> true
+            else -> config in managerRoutes
+        }
+        RoleUsuario.SUPER_ADMIN -> when (config) {
+            is Config.ManagerMotoristaDetail -> true
+            is Config.ManagerRouteDetail -> true
+            is Config.ManagerBusDetail -> true
+            is Config.ManagerStudentDetail -> true
+            Config.SuperAdminManagement -> true
+            else -> config in managerRoutes
+        }
+        else -> config in studentRoutes
+    }
+
     // ── Sealed configs ──
 
     @Serializable
     sealed class Config {
         // Auth
-        @Serializable data object Splash : Config()
         @Serializable data object Login : Config()
         @Serializable data object Cadastro : Config()
         @Serializable data object RedefinirSenha : Config()
@@ -128,7 +180,7 @@ class RootComponent(
         // Driver
         @Serializable data object MotoristaSplash : Config()
         @Serializable data object SelecionarVeiculo : Config()
-        @Serializable data object CadastroVeiculo : Config()
+        @Serializable data object CadastroVeiculoMultiStep : Config()
         @Serializable data object Mapa : Config()
         @Serializable data object Avisos : Config()
         @Serializable data object DriverConfig : Config()
@@ -144,13 +196,16 @@ class RootComponent(
         @Serializable data object SuperAdminManagement : Config()
         @Serializable data object ManagerCadastroMotorista : Config()
         @Serializable data object ManagerNotificacoes : Config()
+        @Serializable data class ManagerMotoristaDetail(val userId: String) : Config()
+        @Serializable data class ManagerRouteDetail(val routeId: String) : Config()
+        @Serializable data class ManagerBusDetail(val busId: String) : Config()
+        @Serializable data class ManagerStudentDetail(val userId: String) : Config()
     }
 
     // ── Sealed children ──
 
     sealed class Child {
         // Auth
-        data object Splash : Child()
         data object Login : Child()
         data object Cadastro : Child()
         data object RedefinirSenha : Child()
@@ -174,7 +229,7 @@ class RootComponent(
         // Driver
         data object MotoristaSplash : Child()
         data object SelecionarVeiculo : Child()
-        data object CadastroVeiculo : Child()
+        data object CadastroVeiculoMultiStep : Child()
         data object Mapa : Child()
         data object Avisos : Child()
         data object DriverConfig : Child()
@@ -190,5 +245,63 @@ class RootComponent(
         data object SuperAdminManagement : Child()
         data object ManagerCadastroMotorista : Child()
         data object ManagerNotificacoes : Child()
+        data class ManagerMotoristaDetail(val userId: String) : Child()
+        data class ManagerRouteDetail(val routeId: String) : Child()
+        data class ManagerBusDetail(val busId: String) : Child()
+        data class ManagerStudentDetail(val userId: String) : Child()
+    }
+
+    companion object {
+        private val authRoutes = setOf(
+            Config.Login,
+            Config.Cadastro,
+            Config.RedefinirSenha,
+        )
+
+        private val publicRoutes = authRoutes
+
+        private val studentRoutes = setOf(
+            Config.StudentHome,
+            Config.Reservar,
+            Config.Bilhete,
+            Config.Perfil,
+            Config.Historico,
+            Config.Carteirinha,
+            Config.Pagamentos,
+            Config.Lider,
+            Config.PontoEmbarque,
+            Config.MeusDados,
+            Config.AlterarSenha,
+            Config.RenovarSemestre,
+            Config.BaixaMobilidade,
+            Config.Regras,
+        )
+
+        private val driverRoutes = setOf(
+            Config.MotoristaSplash,
+            Config.SelecionarVeiculo,
+            Config.CadastroVeiculoMultiStep,
+            Config.Mapa,
+            Config.Avisos,
+            Config.DriverConfig,
+            Config.MeusDados,
+            Config.AlterarSenha,
+        )
+
+        private val managerRoutes = setOf(
+            Config.ManagerDashboard,
+            Config.ManagerRoutes,
+            Config.ManagerValidations,
+            Config.ManagerFrota,
+            Config.ManagerMotoristas,
+            Config.ManagerRelatorios,
+            Config.ManagerConfiguracoes,
+            Config.ManagerCadastroMotorista,
+            Config.ManagerNotificacoes,
+            Config.MeusDados,
+            Config.AlterarSenha,
+        )
+
+        private val superAdminRoutes = managerRoutes + Config.SuperAdminManagement
     }
 }
