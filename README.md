@@ -14,11 +14,6 @@ ubus/
 │
 ├── Android/                 # Android build docs
 ├── iOS/Xcode/               # iOS Xcode project
-├── web/                     # Web deployment (Docker, Nginx, CI/CD)
-│   ├── Dockerfile           # Multi-stage: Gradle → Nginx
-│   ├── nginx.conf           # SPA routing + WASM MIME types
-│   ├── .github/workflows/   # GitHub Actions CI/CD
-│   └── test-build.sh/bat    # Local test scripts
 │
 ├── DEPLOY.md                # Deployment guide (secrets, troubleshooting)
 └── settings.gradle.kts      # KMP build config
@@ -37,19 +32,6 @@ ubus/
 open iOS/Xcode/iosApp.xcodeproj
 # Build in Xcode
 ```
-
-### Build Web (wasmJs)
-```bash
-./gradlew :composeApp:wasmJsReleaseDistribution
-# Output: composeApp/build/dist/wasmJs/
-```
-
-### Deploy Web (Automated)
-Push to `main` → GitHub Actions automatically:
-1. Builds Docker image (multi-arch amd64 + arm64)
-2. Pushes to ghcr.io
-3. Deploys to VM via SSH
-
 ## 📚 Documentation
 
 - **[DEPLOY.md](./DEPLOY.md)** — Complete deployment guide
