@@ -51,6 +51,7 @@ import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
+import com.ubusmobilidade.ubus.ui.util.NotificationScheduler
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
@@ -58,6 +59,7 @@ import kotlinx.coroutines.launch
 fun ReservarScreen(component: RootComponent) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
+    val notificationScheduler = remember { NotificationScheduler() }
     val tripRepo = remember { TripRepository(apiClient) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
 
@@ -169,7 +171,7 @@ fun ReservarScreen(component: RootComponent) {
                                 scope.launch {
                                     try {
                                         val defaultPointId = component.authStorage.user?.defaultPointId
-                                        if (
+                                        val reservation = if (
                                             BackendCapabilities.supportsPickupPointConfirmationInReservation &&
                                             !defaultPointId.isNullOrBlank()
                                         ) {
@@ -180,6 +182,13 @@ fun ReservarScreen(component: RootComponent) {
                                         } else {
                                             reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
                                         }
+                                        val reservationWithTrip = if (reservation.trip == null) {
+                                            reservation.copy(trip = trip)
+                                        } else {
+                                            reservation
+                                        }
+                                        notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
+                                        notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
                                         successMessage = "Reserva confirmada!"
                                         errorMessage = ""
                                     } catch (e: Exception) {

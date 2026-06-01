@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AndroidApp.context = applicationContext
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
