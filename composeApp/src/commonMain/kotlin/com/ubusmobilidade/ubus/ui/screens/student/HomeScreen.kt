@@ -56,6 +56,11 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
+import com.ubusmobilidade.ubus.data.api.BackendCapabilities
+import com.ubusmobilidade.ubus.data.api.TripRatingRepository
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Star
+
 @Composable
 fun HomeScreen(component: RootComponent) {
     val user = component.authStorage.user
@@ -68,12 +73,14 @@ fun HomeScreen(component: RootComponent) {
 
     var openTrips by remember { mutableStateOf<List<Trip>>(emptyList()) }
     var myReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
+    var pendingRatings by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
 
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val tripRepo = remember { TripRepository(apiClient) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
+    val tripRatingRepo = remember { TripRatingRepository(apiClient) }
 
     LaunchedEffect(Unit) {
         try {
@@ -93,6 +100,11 @@ fun HomeScreen(component: RootComponent) {
                     loadError = e.toUserMessage("Não foi possível carregar os dados da tela inicial.")
                 }
             }
+            try {
+                if (BackendCapabilities.supportsTripRating) {
+                    pendingRatings = tripRatingRepo.listPendingRatings()
+                }
+            } catch (_: Exception) {}
         } finally {
             loading = false
         }
@@ -160,6 +172,46 @@ fun HomeScreen(component: RootComponent) {
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                         )
+                    }
+                }
+
+                if (BackendCapabilities.supportsTripRating && pendingRatings.isNotEmpty()) {
+                    val pending = pendingRatings.first()
+                    BentoCard(
+                        modifier = Modifier
+                            .clickable {
+                                component.navigateTo(
+                                    RootComponent.Config.AvaliarViagem(
+                                        reservationId = pending.id,
+                                        tripId = pending.tripId
+                                    )
+                                )
+                            }
+                            .padding(bottom = 12.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = null,
+                                tint = Color(0xFFFBBF24),
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Como foi sua viagem de ontem?",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                                Text(
+                                    "Ajude-nos a melhorar avaliando sua viagem de ${pending.trip?.tripDate ?: ""}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = UbusText3
+                                )
+                            }
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(20.dp))
+                        }
                     }
                 }
 

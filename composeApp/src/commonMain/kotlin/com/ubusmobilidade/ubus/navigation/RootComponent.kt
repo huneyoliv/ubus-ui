@@ -36,6 +36,7 @@ class RootComponent(
         // Student
         is Config.SelecionarAssento -> Child.SelecionarAssento(config.tripId)
         is Config.SelecionarPontoEmbarque -> Child.SelecionarPontoEmbarque(config.tripId, config.seatNumber)
+        is Config.AvaliarViagem -> Child.AvaliarViagem(config.reservationId, config.tripId)
         Config.StudentHome -> Child.StudentHome
         Config.Reservar -> Child.Reservar
         Config.Bilhete -> Child.Bilhete
@@ -155,6 +156,7 @@ class RootComponent(
     fun isStudentRoute(config: Config): Boolean = when (config) {
         is Config.SelecionarAssento -> true
         is Config.SelecionarPontoEmbarque -> true
+        is Config.AvaliarViagem -> true
         else -> config in studentRoutes
     }
 
@@ -183,6 +185,7 @@ class RootComponent(
         @Serializable data object BaixaMobilidade : Config()
         @Serializable data class SelecionarAssento(val tripId: String) : Config()
         @Serializable data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int) : Config()
+        @Serializable data class AvaliarViagem(val reservationId: String, val tripId: String) : Config()
         @Serializable data object Regras : Config()
 
         // Driver
@@ -234,6 +237,7 @@ class RootComponent(
         data object BaixaMobilidade : Child()
         data class SelecionarAssento(val tripId: String) : Child()
         data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int) : Child()
+        data class AvaliarViagem(val reservationId: String, val tripId: String) : Child()
         data object Regras : Child()
 
         // Driver
