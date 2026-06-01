@@ -130,20 +130,50 @@ class NotificationRepository(private val api: ApiClient) {
 }
 
 class FleetRepository(private val api: ApiClient) {
+    private val settings = com.russhwolf.settings.Settings()
+
     suspend fun listRoutes(): List<Route> = api.get("/fleet/routes")
 
     suspend fun getRoute(id: String): Route = listRoutes().find { it.id == id } 
         ?: throw ApiError(404, "Route Not Found", "Rota $id não encontrada na listagem local.")
 
-    suspend fun listBusesByRoute(routeId: String): List<Bus> =
-        listBuses().filter { it.routeId == routeId }
+    suspend fun listBusesByRoute(routeId: String): List<Bus> {
+        val busIdsStr = settings.getStringOrNull("route_buses_$routeId") ?: ""
+        if (busIdsStr.isEmpty()) return emptyList()
+        val busIds = busIdsStr.split(",").toSet()
+        return listBuses().filter { busIds.contains(it.id) }
+    }
 
     suspend fun assignBusToRoute(routeId: String, busId: String) {
-        updateBus(busId, UpdateBusPayload(routeId = routeId))
+        val busIdsStr = settings.getStringOrNull("route_buses_$routeId") ?: ""
+        val busIds = if (busIdsStr.isEmpty()) mutableSetOf() else busIdsStr.split(",").toMutableSet()
+        busIds.add(busId)
+        settings.putString("route_buses_$routeId", busIds.joinToString(","))
     }
 
     suspend fun removeBusFromRoute(routeId: String, busId: String) {
-        updateBus(busId, UpdateBusPayload(routeId = null))
+        val busIdsStr = settings.getStringOrNull("route_buses_$routeId") ?: ""
+        if (busIdsStr.isNotEmpty()) {
+            val busIds = busIdsStr.split(",").toMutableSet()
+            busIds.remove(busId)
+            if (busIds.isEmpty()) {
+                settings.remove("route_buses_$routeId")
+            } else {
+                settings.putString("route_buses_$routeId", busIds.joinToString(","))
+            }
+        }
+    }
+
+    fun getRouteDriver(routeId: String): String? {
+        return settings.getStringOrNull("route_driver_$routeId")
+    }
+
+    fun assignDriverToRoute(routeId: String, driverId: String?) {
+        if (driverId != null) {
+            settings.putString("route_driver_$routeId", driverId)
+        } else {
+            settings.remove("route_driver_$routeId")
+        }
     }
 
     suspend fun createRoute(payload: CreateRoutePayload): Route =
