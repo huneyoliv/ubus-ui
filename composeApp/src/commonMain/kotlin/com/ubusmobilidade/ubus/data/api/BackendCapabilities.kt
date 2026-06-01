@@ -5,8 +5,8 @@ object BackendCapabilities {
     const val supportsPickupPointInRegistration = false
     const val supportsPickupPointConfirmationInReservation = false
     const val supportsDriverOperationalAssignment = false
-    const val supportsManagerRouteCalendarScheduling = false
-    const val supportsManagerDriverAssignmentByRoute = false
+    const val supportsManagerRouteCalendarScheduling = true
+    const val supportsManagerDriverAssignmentByRoute = true
     const val supportsTripRating = true
     const val supportsAttendanceScore = true
     const val supportsSeatSelection = true

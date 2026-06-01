@@ -239,6 +239,22 @@ data class AssignTripDriverPayload(
     val driverId: String,
 )
 
+@Serializable
+data class CreateTripPayload(
+    val tripId: String,
+    val tripDate: String,
+    val shift: String,
+    val direction: TripDirection,
+    val routeId: String,
+    val busId: String,
+    val driverId: String? = null,
+    val realCapacity: Int,
+    val votingOpen: String,
+    val votingClose: String,
+    val leaderIds: List<String> = emptyList(),
+    val status: TripStatus = TripStatus.OPEN_FOR_RESERVATION,
+)
+
 /* ── Semester Renewal ── */
 
 @Serializable

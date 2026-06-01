@@ -5,6 +5,9 @@ import com.ubusmobilidade.ubus.data.model.*
 class TripRepository(private val api: ApiClient) {
     suspend fun getOpenTrips(): List<Trip> = api.get("/trips/open")
 
+    suspend fun createTrip(payload: CreateTripPayload): Trip =
+        api.post("/trips", payload)
+
     suspend fun getTrip(tripId: String): Trip = api.get("/trips/$tripId")
 
     suspend fun updateTrip(tripId: String, payload: UpdateTripPayload): Trip =
