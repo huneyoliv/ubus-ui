@@ -50,6 +50,26 @@ private fun getDayOfWeek(year: Int, month: Int, day: Int): Int {
     return (y + y / 4 - y / 100 + y / 400 + t[month - 1] + day) % 7
 }
 
+private fun getHolidayName(dateStr: String): String? {
+    return when (dateStr) {
+        "2026-01-01" -> "Confraternização Universal"
+        "2026-02-16" -> "Carnaval (Segunda-feira)"
+        "2026-02-17" -> "Carnaval (Terça-feira)"
+        "2026-02-18" -> "Quarta-feira de Cinzas"
+        "2026-04-03" -> "Sexta-feira Santa"
+        "2026-04-21" -> "Tiradentes"
+        "2026-05-01" -> "Dia do Trabalho"
+        "2026-06-04" -> "Corpus Christi"
+        "2026-09-07" -> "Independência do Brasil"
+        "2026-10-12" -> "Nossa Senhora Aparecida"
+        "2026-11-02" -> "Finados"
+        "2026-11-15" -> "Proclamação da República"
+        "2026-11-20" -> "Consciência Negra"
+        "2026-12-25" -> "Natal"
+        else -> null
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
@@ -101,9 +121,14 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 allDrivers = drivers
                 
                 // Pega o motorista do primeiro ônibus atribuído como padrão da rota
-                val busDriver = assignedBuses.firstOrNull()?.driverId
-                if (busDriver != null) {
-                    selectedDriverId = busDriver
+                val savedDriver = fleetRepo.getRouteDriver(routeId)
+                if (savedDriver != null) {
+                    selectedDriverId = savedDriver
+                } else {
+                    val busDriver = assignedBuses.firstOrNull()?.driverId
+                    if (busDriver != null) {
+                        selectedDriverId = busDriver
+                    }
                 }
                 
                 try {
@@ -132,6 +157,7 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     votingOpenTime = votingOpenTime,
                     votingCloseTime = votingCloseTime
                 ))
+                fleetRepo.assignDriverToRoute(routeId, selectedDriverId)
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -190,7 +216,11 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             val dateStr = "$year-$monthStr-$dayStr"
             
             val dayOfWeek = getDayOfWeek(year, month, day)
-            if (dayOfWeek in 1..5) {
+            val isWeekend = dayOfWeek == 0 || dayOfWeek == 6
+            val isScheduled = scheduledTripsDates.contains(dateStr)
+            val isHoliday = getHolidayName(dateStr) != null
+            
+            if (!isWeekend && !isScheduled && !isHoliday) {
                 newSelected.add(dateStr)
             }
         }
@@ -422,6 +452,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                     val isWeekend = dayOfWeek == 0 || dayOfWeek == 6
                                     val isSelected = selectedDates.contains(date)
                                     val isScheduled = scheduledTripsDates.contains(date)
+                                    val holidayName = getHolidayName(date)
+                                    val isHoliday = holidayName != null
                                     
                                     Box(
                                         modifier = Modifier
@@ -431,6 +463,7 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                                 when {
                                                     isScheduled -> UbusSuccess.copy(alpha = 0.2f)
                                                     isSelected -> UbusPrimary
+                                                    isHoliday -> Color(0xFFFEE2E2)
                                                     isWeekend -> Color(0xFFF8FAFC)
                                                     else -> Color(0xFFF1F5F9)
                                                 }
@@ -451,6 +484,7 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                                 text = "$dayNum",
                                                 color = when {
                                                     isSelected -> Color.White
+                                                    isHoliday -> Color(0xFFDC2626)
                                                     isWeekend -> UbusText3.copy(alpha = 0.4f)
                                                     else -> MaterialTheme.colorScheme.onSurface
                                                 },
@@ -467,6 +501,49 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                     Spacer(Modifier.size(36.dp))
                                 }
                             }
+                        }
+                    }
+
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(UbusSuccess.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Check, null, tint = UbusSuccess, modifier = Modifier.size(10.dp))
+                            }
+                            Text("Agendado", fontSize = 10.sp, color = UbusText3, fontWeight = FontWeight.Medium)
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFEE2E2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("F", color = Color(0xFFDC2626), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            }
+                            Text("Feriado", fontSize = 10.sp, color = UbusText3, fontWeight = FontWeight.Medium)
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF8FAFC))
+                            )
+                            Text("Fim de semana", fontSize = 10.sp, color = UbusText3, fontWeight = FontWeight.Medium)
                         }
                     }
 
