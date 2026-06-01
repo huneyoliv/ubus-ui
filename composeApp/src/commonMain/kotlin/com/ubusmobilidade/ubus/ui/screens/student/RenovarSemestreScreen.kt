@@ -77,14 +77,12 @@ fun RenovarSemestreScreen(component: RootComponent) {
 
     val gradePicker = rememberFilePickerLauncher { uri ->
         if (uri != null) {
-            println("DEBUG: RenovarSemestreScreen - Grade document selected: $uri")
             gradeUri = uri
             gradeSelected = true
         }
     }
     val residenciaPicker = rememberFilePickerLauncher { uri ->
         if (uri != null) {
-            println("DEBUG: RenovarSemestreScreen - Residencia document selected: $uri")
             residenciaUri = uri
             residenciaSelected = true
         }
@@ -154,7 +152,6 @@ fun RenovarSemestreScreen(component: RootComponent) {
             label = "Comprovante de matrícula",
             selected = gradeSelected,
             onSelect = { 
-                println("DEBUG: RenovarSemestreScreen - Opening grade file picker")
                 gradePicker()
             },
         )
@@ -164,7 +161,6 @@ fun RenovarSemestreScreen(component: RootComponent) {
             label = "Comprovante de residência",
             selected = residenciaSelected,
             onSelect = { 
-                println("DEBUG: RenovarSemestreScreen - Opening residencia file picker")
                 residenciaPicker()
             },
         )
@@ -181,21 +177,17 @@ fun RenovarSemestreScreen(component: RootComponent) {
             loading = loading,
             enabled = gradeSelected || residenciaSelected,
             onClick = {
-                println("DEBUG: RenovarSemestreScreen - Requesting semester renewal")
                 loading = true; message = ""
                 scope.launch {
                     try {
-                        println("DEBUG: RenovarSemestreScreen - Requesting renewal with docs: Grade=$gradeUri, Res=$residenciaUri")
                         val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
                             gradeFileUrl = gradeUri,
                             residenciaFileUrl = residenciaUri
                         ))
                         message = resp.message ?: "Solicitação enviada com sucesso!"
                         isError = false
-                        println("DEBUG: RenovarSemestreScreen - Success: ${resp.message}")
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
-                        println("DEBUG: RenovarSemestreScreen - Error: ${e.message}")
                         message = e.toUserMessage("Erro ao solicitar renovação.")
                         isError = true
                     }

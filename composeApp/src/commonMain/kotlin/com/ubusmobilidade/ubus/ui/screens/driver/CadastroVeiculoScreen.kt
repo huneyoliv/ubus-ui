@@ -57,7 +57,6 @@ fun CadastroVeiculoScreen(component: RootComponent) {
         }
 
         scope.launch {
-            println("DEBUG: CadastroVeiculoScreen - Registering vehicle: $placa")
             loading = true
             error = null
             try {
@@ -69,10 +68,8 @@ fun CadastroVeiculoScreen(component: RootComponent) {
                         standardCapacity = capInt
                     )
                 )
-                println("DEBUG: CadastroVeiculoScreen - Vehicle registered successfully")
                 component.goBack()
             } catch (e: Exception) {
-                println("DEBUG: CadastroVeiculoScreen - Error registering vehicle: ${e.message}")
                 error = "Erro ao cadastrar veículo. Tente novamente."
             } finally {
                 loading = false

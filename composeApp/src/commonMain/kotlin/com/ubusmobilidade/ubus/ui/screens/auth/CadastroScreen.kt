@@ -122,7 +122,6 @@ fun CadastroScreen(component: RootComponent) {
     var photoUri by remember { mutableStateOf<String?>(null) }
     val cameraLauncher = rememberCameraLauncher { uri ->
         if (uri != null) {
-            println("DEBUG: CadastroScreen - Photo captured: $uri")
             photoUri = uri
         }
     }
@@ -163,7 +162,6 @@ fun CadastroScreen(component: RootComponent) {
     // ── Auto open camera in step 1 ──
     LaunchedEffect(currentStep) {
         if (currentStep == 1 && photoUri == null) {
-            println("DEBUG: CadastroScreen - Auto opening camera")
             cameraLauncher()
         }
     }
@@ -382,7 +380,6 @@ fun CadastroScreen(component: RootComponent) {
                         1 -> StepTirarFoto(
                             photoUri = photoUri,
                             onTakePhoto = { 
-                                println("DEBUG: CadastroScreen - Requesting camera")
                                 cameraLauncher() 
                             }
                         )

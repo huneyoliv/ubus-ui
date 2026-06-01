@@ -29,6 +29,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ import com.ubusmobilidade.ubus.ui.components.UbusOutlinedButton
 
 @Composable
 fun SelecionarVeiculoScreen(component: RootComponent) {
+    val scope = rememberCoroutineScope()
     var vehicles by remember { mutableStateOf<List<Bus>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -54,12 +57,9 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
     val driverRepo = remember { DriverRepository(apiClient) }
 
     LaunchedEffect(Unit) {
-        println("DEBUG: SelecionarVeiculoScreen - Loading vehicles")
         try {
             vehicles = fleetRepo.listMyBuses()
-            println("DEBUG: SelecionarVeiculoScreen - Loaded ${vehicles.size} vehicles")
         } catch (e: Exception) {
-            println("DEBUG: SelecionarVeiculoScreen - Error loading vehicles: ${e.message}")
             error = "Erro ao carregar veículos. Tente novamente."
         } finally {
             loading = false
@@ -115,16 +115,15 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .clickable {
-                            println("DEBUG: SelecionarVeiculoScreen - Selected vehicle: ${bus.plate}")
                             if (BackendCapabilities.supportsDriverOperationalAssignment) {
-                                try {
-                                    // TODO: replace with actual local date provider when platform bridge is added.
-                                    driverRepo.assignForToday(busId = bus.id, serviceDate = "1970-01-01")
-                                } catch (e: Exception) {
-                                    println("DEBUG: SelecionarVeiculoScreen - Driver assignment failed, fallback to legacy flow: ${e.message}")
+                                scope.launch {
+                                    try {
+                                        // TODO: replace with actual local date provider when platform bridge is added.
+                                        driverRepo.assignForToday(busId = bus.id, serviceDate = "1970-01-01")
+                                    } catch (e: Exception) {
+                                        // Fallback to legacy flow
+                                    }
                                 }
-                            } else {
-                                println("DEBUG: SelecionarVeiculoScreen - Driver assignment endpoint disabled, using legacy flow")
                             }
                             component.navigateTo(RootComponent.Config.Mapa)
                         }

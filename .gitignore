@@ -36,6 +36,7 @@ Thumbs.db
 
 # ── Legacy ───────────────────────────────────────
 /ubus-frontend.old/
+/unpacked_apk/
 
 # ── Claude ───────────────────────────────────────
 *.md
@@ -44,8 +45,7 @@ Thumbs.db
 .claude/
 .antigravity/
 .vscode/
-prompt.txt
-IMPORTANTE.txt
-ENDPOINTS_NAO_DOCUMENTADOS.md
-BACKEND_PATHS_PENDENTES_APP.md
+.agent/
 *.ps1
+*.txt
+/clickbus_reference_backup/

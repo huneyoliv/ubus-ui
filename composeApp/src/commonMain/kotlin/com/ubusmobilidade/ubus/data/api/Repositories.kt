@@ -3,20 +3,13 @@ package com.ubusmobilidade.ubus.data.api
 import com.ubusmobilidade.ubus.data.model.*
 
 class TripRepository(private val api: ApiClient) {
-    suspend fun getOpenTrips(): List<Trip> {
-        println("DEBUG: TripRepository - getOpenTrips")
-        return api.get("/trips/open")
-    }
+    suspend fun getOpenTrips(): List<Trip> = api.get("/trips/open")
 
     suspend fun getTrip(tripId: String): Trip = api.get("/trips/$tripId")
 
     suspend fun updateTrip(tripId: String, payload: UpdateTripPayload): Trip =
         api.patch("/trips/$tripId", payload)
 
-    suspend fun sendConfirmationAlert(tripId: String) {
-        println("DEBUG: TripRepository - sendConfirmationAlert for trip: $tripId")
-        api.post<String>("/trips/$tripId/confirmation-alert", null)
-    }
 
     suspend fun finishAndPunish(tripId: String) {
         api.post<String>("/trips/$tripId/finish-and-punish", null)
@@ -29,42 +22,32 @@ class TripRepository(private val api: ApiClient) {
     suspend fun getLocation(tripId: String): TripLocation =
         api.get("/trips/$tripId/location")
 
-    suspend fun updateLocation(tripId: String, lat: Double, lng: Double): TripLocation {
-        println("DEBUG: TripRepository - updateLocation: $lat, $lng")
-        return api.patch("/trips/$tripId/location", TripLocation(lat, lng))
-    }
+    suspend fun updateLocation(tripId: String, lat: Double, lng: Double): TripLocation =
+        api.patch("/trips/$tripId/location", TripLocation(lat, lng))
 
     suspend fun getAlertStatus(tripId: String): Map<String, Boolean> =
         api.get("/trips/$tripId/alert-status")
 }
 
 class ReservationRepository(private val api: ApiClient) {
-    suspend fun create(payload: CreateReservationPayload): Reservation {
-        println("DEBUG: ReservationRepository - create reservation for trip: ${payload.tripId}")
-        return api.post("/reservations", payload)
-    }
+    suspend fun create(payload: CreateReservationPayload): Reservation =
+        api.post("/reservations", payload)
 
     suspend fun createWithPickupPoint(
         tripId: String,
         pickupPointId: String,
         seatNumber: Int? = null,
         isRideShare: Boolean? = null,
-    ): Reservation {
-        println("DEBUG: ReservationRepository - createWithPickupPoint trip=$tripId point=$pickupPointId")
-        return create(
-            CreateReservationPayload(
-                tripId = tripId,
-                pickupPointId = pickupPointId,
-                seatNumber = seatNumber,
-                isRideShare = isRideShare,
-            )
+    ): Reservation = create(
+        CreateReservationPayload(
+            tripId = tripId,
+            pickupPointId = pickupPointId,
+            seatNumber = seatNumber,
+            isRideShare = isRideShare,
         )
-    }
+    )
 
-    suspend fun getMyReservations(): List<Reservation> {
-        println("DEBUG: ReservationRepository - getMyReservations")
-        return api.get("/reservations/mine")
-    }
+    suspend fun getMyReservations(): List<Reservation> = api.get("/reservations/mine")
 
     suspend fun listByTrip(tripId: String): List<Reservation> =
         api.get("/reservations/trip/$tripId")
@@ -93,7 +76,6 @@ class UserRepository(private val api: ApiClient) {
         return try {
             api.get("/users", params)
         } catch (e: Exception) {
-            println("DEBUG: UserRepository - /users failed, trying /users/pending as fallback: ${e.message}")
             // Fallback to listPending if /users is not available
             val pending = listPending()
             if (role != null) pending.filter { it.role == role } else pending
@@ -107,7 +89,6 @@ class UserRepository(private val api: ApiClient) {
         api.patch("/users/$id", payload)
 
     suspend fun deleteUser(id: String) {
-        println("DEBUG: UserRepository - deleteUser (soft delete via status REJECTED)")
         updateStatus(id, RegistrationStatus.REJECTED)
     }
 
@@ -117,13 +98,9 @@ class UserRepository(private val api: ApiClient) {
     suspend fun updateMyPoint(pointId: String): User =
         api.patch("/users/me/point", UpdatePointPayload(pointId))
 
-    suspend fun getMe(): User {
-        println("DEBUG: UserRepository - getMe (using storage with fallback)")
-        return api.authStorage.user ?: api.get("/users/me")
-    }
+    suspend fun getMe(): User = api.authStorage.user ?: api.get("/users/me")
 
     suspend fun updateMe(data: UpdateProfilePayload): User {
-        println("DEBUG: UserRepository - updateMe")
         val updated = api.patch<User>("/users/me", data)
         api.authStorage.user = updated
         return updated
@@ -134,47 +111,35 @@ class UserRepository(private val api: ApiClient) {
         api.patch("/users/me", data)
 
     suspend fun changePassword(currentPassword: String, newPassword: String) {
-        println("DEBUG: UserRepository - changePassword")
         api.patch<String>(
             "/users/me/password",
             ChangePasswordPayload(currentPassword, newPassword)
         )
     }
 
-    suspend fun requestSemesterRenewal(payload: SemesterRenewalPayload): SemesterRenewalResponse {
-        println("DEBUG: UserRepository - requestSemesterRenewal")
-        return api.post("/users/me/semester-renewal", payload)
-    }
+    suspend fun requestSemesterRenewal(payload: SemesterRenewalPayload): SemesterRenewalResponse =
+        api.post("/users/me/semester-renewal", payload)
 }
 
 class NotificationRepository(private val api: ApiClient) {
-    suspend fun send(payload: SendNotificationPayload): NotificationResponse {
-        println("DEBUG: NotificationRepository - send notification: ${payload.title}")
-        return api.post("/notifications/send", payload)
-    }
+    suspend fun send(payload: SendNotificationPayload): NotificationResponse =
+        api.post("/notifications/send", payload)
 }
 
 class FleetRepository(private val api: ApiClient) {
     suspend fun listRoutes(): List<Route> = api.get("/fleet/routes")
 
-    suspend fun getRoute(id: String): Route {
-        println("DEBUG: FleetRepository - getRoute (local filter)")
-        return listRoutes().find { it.id == id } 
-            ?: throw ApiError(404, "Route Not Found", "Rota $id não encontrada na listagem local.")
-    }
+    suspend fun getRoute(id: String): Route = listRoutes().find { it.id == id } 
+        ?: throw ApiError(404, "Route Not Found", "Rota $id não encontrada na listagem local.")
 
-    suspend fun listBusesByRoute(routeId: String): List<Bus> {
-        println("DEBUG: FleetRepository - listBusesByRoute (local filter)")
-        return listBuses().filter { it.routeId == routeId }
-    }
+    suspend fun listBusesByRoute(routeId: String): List<Bus> =
+        listBuses().filter { it.routeId == routeId }
 
     suspend fun assignBusToRoute(routeId: String, busId: String) {
-        println("DEBUG: FleetRepository - assignBusToRoute using PATCH /buses/$busId")
         updateBus(busId, UpdateBusPayload(routeId = routeId))
     }
 
     suspend fun removeBusFromRoute(routeId: String, busId: String) {
-        println("DEBUG: FleetRepository - removeBusFromRoute using PATCH /buses/$busId")
         updateBus(busId, UpdateBusPayload(routeId = null))
     }
 
@@ -189,27 +154,16 @@ class FleetRepository(private val api: ApiClient) {
 
     suspend fun listBuses(): List<Bus> = api.get("/fleet/buses")
 
-    suspend fun getBus(id: String): Bus {
-        println("DEBUG: FleetRepository - getBus (local filter)")
-        return listBuses().find { it.id == id }
-            ?: throw ApiError(404, "Bus Not Found", "Ônibus $id não encontrado na listagem local.")
-    }
+    suspend fun getBus(id: String): Bus = listBuses().find { it.id == id }
+        ?: throw ApiError(404, "Bus Not Found", "Ônibus $id não encontrado na listagem local.")
 
-    suspend fun getBusLayout(id: String, tripId: String? = null): List<OccupiedSeat> {
-        println("DEBUG: FleetRepository - getBusLayout (frontend logic placeholder)")
-        // No futuro, isso será calculado dinamicamente cruzando dados de ocupação
-        return api.get("/reservations/trip/$tripId/occupied-seats")
-    }
+    suspend fun getBusLayout(id: String, tripId: String? = null): List<OccupiedSeat> =
+        api.get("/reservations/trip/$tripId/occupied-seats")
 
-    suspend fun createBus(payload: CreateBusPayload): Bus {
-        println("DEBUG: FleetRepository - createBus: ${payload.plate}")
-        return api.post("/fleet/buses", payload)
-    }
+    suspend fun createBus(payload: CreateBusPayload): Bus =
+        api.post("/fleet/buses", payload)
 
-    suspend fun listMyBuses(): List<Bus> {
-        println("DEBUG: FleetRepository - listMyBuses")
-        return api.get("/fleet/buses/mine")
-    }
+    suspend fun listMyBuses(): List<Bus> = api.get("/fleet/buses/mine")
 
     suspend fun updateBus(id: String, payload: UpdateBusPayload): Bus =
         api.patch("/fleet/buses/$id", payload)

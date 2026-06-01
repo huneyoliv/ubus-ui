@@ -42,7 +42,6 @@ actual fun rememberCameraLauncher(onResult: (String?) -> Unit): () -> Unit {
             photoUri = uri
             launcher.launch(uri)
         } catch (e: Exception) {
-            println("DEBUG: Error launching camera: ${e.message}")
             onResult(null)
         }
     }

@@ -116,7 +116,6 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
         error = null
         scope.launch {
             try {
-                println("DEBUG: CadastroVeiculoMultiStepScreen - Saving bus: $plate, capacity: $finalCapacity")
                 fleetRepo.createBus(
                     CreateBusPayload(
                         municipalityId = component.authStorage.user?.municipalityId,

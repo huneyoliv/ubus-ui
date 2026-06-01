@@ -108,7 +108,6 @@ class RootComponent(
     }
 
     private fun guardRoute(config: Config): Config {
-        println("DEBUG: guardRoute - config: $config")
         if (!authStorage.isAuthenticated) {
             return if (config in publicRoutes) config else Config.Login
         }
@@ -122,7 +121,6 @@ class RootComponent(
         }
 
         val allowed = isRoleAllowed(config, authStorage.userRole)
-        println("DEBUG: guardRoute - allowed: $allowed for role: ${authStorage.userRole}")
         return if (allowed) config else homeForRole(authStorage.userRole)
     }
 

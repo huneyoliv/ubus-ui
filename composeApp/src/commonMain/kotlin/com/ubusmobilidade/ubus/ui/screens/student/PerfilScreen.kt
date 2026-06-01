@@ -100,26 +100,21 @@ fun PerfilScreen(component: RootComponent) {
 
             // Menu items
             ProfileMenuItem(Icons.Default.Edit, "Meus dados") {
-                println("DEBUG: PerfilScreen - Navigating to MeusDados")
                 component.navigateTo(RootComponent.Config.MeusDados)
             }
             ProfileMenuItem(Icons.Default.Lock, "Alterar senha") {
-                println("DEBUG: PerfilScreen - Navigating to AlterarSenha")
                 component.navigateTo(RootComponent.Config.AlterarSenha)
             }
             ProfileMenuItem(Icons.Default.CalendarMonth, "Renovar semestre") {
-                println("DEBUG: PerfilScreen - Navigating to RenovarSemestre")
                 component.navigateTo(RootComponent.Config.RenovarSemestre)
             }
             ProfileMenuItem(Icons.Default.Person, "Carteirinha") {
-                println("DEBUG: PerfilScreen - Navigating to Carteirinha")
                 component.navigateTo(RootComponent.Config.Carteirinha)
             }
             if (component.authStorage.user?.role == RoleUsuario.LEADER) {
                 ProfileMenuItem(Icons.Default.Group, "Líder") {
-                println("DEBUG: PerfilScreen - Navigating to Lider")
-                component.navigateTo(RootComponent.Config.Lider)
-            }
+                    component.navigateTo(RootComponent.Config.Lider)
+                }
             }
 
             Spacer(Modifier.height(16.dp))
