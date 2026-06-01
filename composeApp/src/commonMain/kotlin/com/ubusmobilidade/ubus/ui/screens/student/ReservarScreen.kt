@@ -164,38 +164,42 @@ fun ReservarScreen(component: RootComponent) {
                         }
                         Spacer(Modifier.height(12.dp))
                         UbusButton(
-                            text = "Reservar",
+                            text = if (BackendCapabilities.supportsSeatSelection) "Escolher Assento" else "Reservar",
                             loading = reservingId == trip.tripId,
                             onClick = {
-                                reservingId = trip.tripId
-                                scope.launch {
-                                    try {
-                                        val defaultPointId = component.authStorage.user?.defaultPointId
-                                        val reservation = if (
-                                            BackendCapabilities.supportsPickupPointConfirmationInReservation &&
-                                            !defaultPointId.isNullOrBlank()
-                                        ) {
-                                            reservationRepo.createWithPickupPoint(
-                                                tripId = trip.tripId,
-                                                pickupPointId = defaultPointId,
-                                            )
-                                        } else {
-                                            reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
+                                if (BackendCapabilities.supportsSeatSelection) {
+                                    component.replaceWith(RootComponent.Config.SelecionarAssento(trip.tripId))
+                                } else {
+                                    reservingId = trip.tripId
+                                    scope.launch {
+                                        try {
+                                            val defaultPointId = component.authStorage.user?.defaultPointId
+                                            val reservation = if (
+                                                BackendCapabilities.supportsPickupPointConfirmationInReservation &&
+                                                !defaultPointId.isNullOrBlank()
+                                            ) {
+                                                reservationRepo.createWithPickupPoint(
+                                                    tripId = trip.tripId,
+                                                    pickupPointId = defaultPointId,
+                                                )
+                                            } else {
+                                                reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
+                                            }
+                                            val reservationWithTrip = if (reservation.trip == null) {
+                                                reservation.copy(trip = trip)
+                                            } else {
+                                                reservation
+                                            }
+                                            notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
+                                            notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
+                                            successMessage = "Reserva confirmada!"
+                                            errorMessage = ""
+                                        } catch (e: Exception) {
+                                            if (e is kotlinx.coroutines.CancellationException) throw e
+                                            errorMessage = e.toUserMessage("Não foi possível concluir a reserva.")
                                         }
-                                        val reservationWithTrip = if (reservation.trip == null) {
-                                            reservation.copy(trip = trip)
-                                        } else {
-                                            reservation
-                                        }
-                                        notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
-                                        notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
-                                        successMessage = "Reserva confirmada!"
-                                        errorMessage = ""
-                                    } catch (e: Exception) {
-                                        if (e is kotlinx.coroutines.CancellationException) throw e
-                                        errorMessage = e.toUserMessage("Não foi possível concluir a reserva.")
+                                        reservingId = null
                                     }
-                                    reservingId = null
                                 }
                             },
                         )

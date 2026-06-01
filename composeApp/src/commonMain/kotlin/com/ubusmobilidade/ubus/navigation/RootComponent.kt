@@ -34,6 +34,7 @@ class RootComponent(
         Config.RedefinirSenha -> Child.RedefinirSenha
 
         // Student
+        is Config.SelecionarAssento -> Child.SelecionarAssento(config.tripId)
         Config.StudentHome -> Child.StudentHome
         Config.Reservar -> Child.Reservar
         Config.Bilhete -> Child.Bilhete
@@ -147,6 +148,11 @@ class RootComponent(
             Config.SuperAdminManagement -> true
             else -> config in managerRoutes
         }
+        else -> isStudentRoute(config)
+    }
+
+    fun isStudentRoute(config: Config): Boolean = when (config) {
+        is Config.SelecionarAssento -> true
         else -> config in studentRoutes
     }
 
@@ -173,6 +179,7 @@ class RootComponent(
         @Serializable data object AlterarSenha : Config()
         @Serializable data object RenovarSemestre : Config()
         @Serializable data object BaixaMobilidade : Config()
+        @Serializable data class SelecionarAssento(val tripId: String) : Config()
         @Serializable data object Regras : Config()
 
         // Driver
@@ -222,6 +229,7 @@ class RootComponent(
         data object AlterarSenha : Child()
         data object RenovarSemestre : Child()
         data object BaixaMobilidade : Child()
+        data class SelecionarAssento(val tripId: String) : Child()
         data object Regras : Child()
 
         // Driver
