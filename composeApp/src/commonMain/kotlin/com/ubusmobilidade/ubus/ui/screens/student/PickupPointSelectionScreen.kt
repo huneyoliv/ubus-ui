@@ -1,22 +1,16 @@
 package com.ubusmobilidade.ubus.ui.screens.student
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,45 +27,46 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
+import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.CreateReservationPayload
+import com.ubusmobilidade.ubus.data.model.PickupPoint
 import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.data.model.Trip
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
-import com.ubusmobilidade.ubus.ui.components.SeatCell
-import com.ubusmobilidade.ubus.ui.components.SeatState
+import com.ubusmobilidade.ubus.ui.components.PickupPointTimeline
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
-import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.util.NotificationScheduler
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
-fun SeatSelectionScreen(component: RootComponent, tripId: String) {
+fun PickupPointSelectionScreen(
+    component: RootComponent,
+    tripId: String,
+    seatNumber: Int
+) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     val tripRepo = remember { TripRepository(apiClient) }
+    val fleetRepo = remember { FleetRepository(apiClient) }
     val notificationScheduler = remember { NotificationScheduler() }
 
     var trip by remember { mutableStateOf<Trip?>(null) }
-    var occupiedSeats by remember { mutableStateOf<List<Int>>(emptyList()) }
-    var selectedSeat by remember { mutableStateOf<Int?>(null) }
+    var points by remember { mutableStateOf<List<PickupPoint>>(emptyList()) }
+    var selectedPoint by remember { mutableStateOf<PickupPoint?>(null) }
     var loading by remember { mutableStateOf(true) }
     var reserving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -80,27 +75,18 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
         try {
             val fetchedTrip = tripRepo.getTrip(tripId)
             trip = fetchedTrip
-            val occupied = reservationRepo.getOccupiedSeats(tripId)
-            occupiedSeats = occupied.map { it.seatNumber }
+            val fetchedPoints = fleetRepo.listPickupPoints(fetchedTrip.routeId)
+            points = fetchedPoints
+
+            val defaultPointId = component.authStorage.user?.defaultPointId
+            if (!defaultPointId.isNullOrBlank()) {
+                selectedPoint = fetchedPoints.find { it.id == defaultPointId }
+            }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            errorMessage = e.toUserMessage("Não foi possível carregar os assentos.")
+            errorMessage = e.toUserMessage("Não foi possível carregar os pontos de embarque.")
         }
         loading = false
-    }
-
-    val seatsCount = 44
-    val itemsList = remember {
-        val list = mutableListOf<Int?>()
-        var seatNum = 1
-        for (i in 0 until (seatsCount + seatsCount / 4)) {
-            if (i % 5 == 2) {
-                list.add(null)
-            } else {
-                list.add(seatNum++)
-            }
-        }
-        list
     }
 
     AppScaffold(
@@ -129,12 +115,12 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
                     .padding(top = 24.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { component.replaceWith(RootComponent.Config.Reservar) }) {
+                IconButton(onClick = { component.replaceWith(RootComponent.Config.SelecionarAssento(tripId)) }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                 }
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Escolher Assento",
+                    text = "Ponto de Embarque",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -167,95 +153,78 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "${activeTrip.tripDate} · ${activeTrip.shift} · ${if (activeTrip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) "Ida" else "Volta"}",
+                            text = "Assento Escolhido: #$seatNumber",
                             style = MaterialTheme.typography.bodySmall,
-                            color = UbusText3
+                            color = UbusPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "Selecione o ponto onde irá embarcar:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = UbusText3,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    if (points.isEmpty()) {
+                        Text(
+                            text = "Nenhum ponto de embarque cadastrado para esta rota.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = UbusText3,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    } else {
+                        PickupPointTimeline(
+                            points = points,
+                            selectedPointId = selectedPoint?.id,
+                            onPointSelect = { selectedPoint = it }
                         )
                     }
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFF1F5F9)))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Livre", fontSize = 11.sp, color = UbusText3)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(UbusPrimary))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Selecionado", fontSize = 11.sp, color = UbusText3)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFE2E8F0)))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Ocupado", fontSize = 11.sp, color = UbusText3)
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFDCFCE7)))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Acessível", fontSize = 11.sp, color = UbusText3)
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFFF8FAFC))
-                        .padding(16.dp)
-                ) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(5),
-                        contentPadding = PaddingValues(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(itemsList) { seatNumber ->
-                            if (seatNumber == null) {
-                                Box(Modifier.size(46.dp))
-                            } else {
-                                val isOccupied = occupiedSeats.contains(seatNumber)
-                                val isSelected = selectedSeat == seatNumber
-                                val isAccessible = seatNumber <= 4
-
-                                val state = when {
-                                    isSelected -> SeatState.SELECTED
-                                    isOccupied -> SeatState.OCCUPIED
-                                    isAccessible -> SeatState.ACCESSIBLE
-                                    else -> SeatState.FREE
-                                }
-
-                                SeatCell(
-                                    number = seatNumber,
-                                    state = state,
-                                    onClick = {
-                                        selectedSeat = if (isSelected) null else seatNumber
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
                 UbusButton(
-                    text = if (selectedSeat != null) "Avançar (Assento #$selectedSeat)" else "Selecione um assento",
-                    enabled = selectedSeat != null,
+                    text = if (selectedPoint != null) "Confirmar Reserva" else "Selecione um ponto",
+                    enabled = selectedPoint != null && !reserving,
+                    loading = reserving,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     onClick = {
-                        val seat = selectedSeat ?: return@UbusButton
-                        component.replaceWith(RootComponent.Config.SelecionarPontoEmbarque(tripId, seat))
+                        val point = selectedPoint ?: return@UbusButton
+                        reserving = true
+                        scope.launch {
+                            try {
+                                val payload = CreateReservationPayload(
+                                    tripId = tripId,
+                                    pickupPointId = point.id,
+                                    seatNumber = seatNumber
+                                )
+                                val reservation = reservationRepo.create(payload)
+                                val reservationWithTrip = if (reservation.trip == null) {
+                                    reservation.copy(trip = activeTrip)
+                                } else {
+                                    reservation
+                                }
+                                notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
+                                notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
+
+                                component.replaceWith(RootComponent.Config.StudentHome)
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                errorMessage = e.toUserMessage("Erro ao concluir a reserva.")
+                                reserving = false
+                            }
+                        }
                     }
                 )
             }
