@@ -29,7 +29,7 @@ import com.ubusmobilidade.ubus.ui.screens.manager.ManagerBusDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerStudentDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.student.AlterarSenhaScreen
 import com.ubusmobilidade.ubus.ui.screens.student.BaixaMobilidadeScreen
-import com.ubusmobilidade.ubus.ui.screens.student.BilheteScreen
+import com.ubusmobilidade.ubus.ui.screens.student.SmartTicketScreen
 import com.ubusmobilidade.ubus.ui.screens.student.CarteirinhaScreen
 import com.ubusmobilidade.ubus.ui.screens.student.HistoricoScreen
 import com.ubusmobilidade.ubus.ui.screens.student.HomeScreen
@@ -57,7 +57,7 @@ fun RootContent(component: RootComponent) {
             // Student
             is RootComponent.Child.StudentHome -> HomeScreen(component)
             is RootComponent.Child.Reservar -> ReservarScreen(component)
-            is RootComponent.Child.Bilhete -> BilheteScreen(component)
+            is RootComponent.Child.Bilhete -> SmartTicketScreen(component)
             is RootComponent.Child.Perfil -> PerfilScreen(component)
             is RootComponent.Child.Historico -> HistoricoScreen(component)
             is RootComponent.Child.Carteirinha -> CarteirinhaScreen(component)
