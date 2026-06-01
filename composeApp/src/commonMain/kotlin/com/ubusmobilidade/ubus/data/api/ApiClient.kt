@@ -3,21 +3,15 @@ package com.ubusmobilidade.ubus.data.api
 import com.ubusmobilidade.ubus.data.storage.AuthStorage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 class ApiError(
@@ -38,17 +32,7 @@ class ApiClient(
         coerceInputValues = true
     }
 
-    val httpClient = HttpClient {
-        install(ContentNegotiation) {
-            json(this@ApiClient.json)
-        }
-        defaultRequest {
-            contentType(ContentType.Application.Json)
-            authStorage.token?.let { token ->
-                header("Authorization", "Bearer $token")
-            }
-        }
-    }
+    val httpClient = buildHttpClient(json, authStorage)
 
     @PublishedApi
     internal fun fullUrl(path: String): String = "$baseUrl$path"
