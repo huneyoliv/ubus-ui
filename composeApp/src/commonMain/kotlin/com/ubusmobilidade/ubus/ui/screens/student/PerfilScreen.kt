@@ -46,6 +46,17 @@ import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.ubusmobilidade.ubus.data.api.ApiClient
+import com.ubusmobilidade.ubus.data.api.BackendCapabilities
+import com.ubusmobilidade.ubus.data.api.AttendanceRepository
+import com.ubusmobilidade.ubus.data.model.AttendanceScore
+import com.ubusmobilidade.ubus.ui.components.AttendanceBadgeCard
+
 @Composable
 fun PerfilScreen(component: RootComponent) {
     val user = component.authStorage.user
@@ -54,6 +65,18 @@ fun PerfilScreen(component: RootComponent) {
         ?.mapNotNull { it.firstOrNull()?.uppercaseChar()?.toString() }
         ?.take(2)
         ?.joinToString("") ?: "?"
+
+    val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
+    val attendanceRepo = remember { AttendanceRepository(apiClient) }
+    var attendanceScore by remember { mutableStateOf<AttendanceScore?>(null) }
+
+    LaunchedEffect(Unit) {
+        try {
+            if (BackendCapabilities.supportsAttendanceScore) {
+                attendanceScore = attendanceRepo.getScore()
+            }
+        } catch (_: Exception) {}
+    }
 
     AppScaffold(
         bottomBar = {
@@ -96,6 +119,13 @@ fun PerfilScreen(component: RootComponent) {
                 Spacer(Modifier.height(12.dp))
                 Text(user?.name ?: "", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
+            }
+
+            if (BackendCapabilities.supportsAttendanceScore && attendanceScore != null) {
+                AttendanceBadgeCard(
+                    score = attendanceScore!!,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
 
             // Menu items

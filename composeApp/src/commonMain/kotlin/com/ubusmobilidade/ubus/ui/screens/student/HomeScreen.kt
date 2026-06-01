@@ -58,6 +58,9 @@ import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.TripRatingRepository
+import com.ubusmobilidade.ubus.data.api.AttendanceRepository
+import com.ubusmobilidade.ubus.data.model.AttendanceScore
+import com.ubusmobilidade.ubus.ui.components.AttendanceBadgeCard
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Star
 
@@ -74,6 +77,7 @@ fun HomeScreen(component: RootComponent) {
     var openTrips by remember { mutableStateOf<List<Trip>>(emptyList()) }
     var myReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var pendingRatings by remember { mutableStateOf<List<Reservation>>(emptyList()) }
+    var attendanceScore by remember { mutableStateOf<AttendanceScore?>(null) }
     var loading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
 
@@ -81,6 +85,7 @@ fun HomeScreen(component: RootComponent) {
     val tripRepo = remember { TripRepository(apiClient) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     val tripRatingRepo = remember { TripRatingRepository(apiClient) }
+    val attendanceRepo = remember { AttendanceRepository(apiClient) }
 
     LaunchedEffect(Unit) {
         try {
@@ -103,6 +108,11 @@ fun HomeScreen(component: RootComponent) {
             try {
                 if (BackendCapabilities.supportsTripRating) {
                     pendingRatings = tripRatingRepo.listPendingRatings()
+                }
+            } catch (_: Exception) {}
+            try {
+                if (BackendCapabilities.supportsAttendanceScore) {
+                    attendanceScore = attendanceRepo.getScore()
                 }
             } catch (_: Exception) {}
         } finally {
@@ -213,6 +223,13 @@ fun HomeScreen(component: RootComponent) {
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(20.dp))
                         }
                     }
+                }
+
+                if (BackendCapabilities.supportsAttendanceScore && attendanceScore != null) {
+                    AttendanceBadgeCard(
+                        score = attendanceScore!!,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
                 }
 
                 // Quick action: Reserve
