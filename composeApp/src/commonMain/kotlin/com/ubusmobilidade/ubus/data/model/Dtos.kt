@@ -252,3 +252,15 @@ data class SemesterRenewalResponse(
     val message: String? = null,
     val status: String? = null,
 )
+
+/* ── Ratings and Gamification Dtos ── */
+
+@Serializable
+data class CreateTripRatingPayload(
+    val reservationId: String,
+    val cleanlinessRating: Int,
+    val punctualityRating: Int,
+    val driverRating: Int,
+    val comment: String? = null,
+)
+

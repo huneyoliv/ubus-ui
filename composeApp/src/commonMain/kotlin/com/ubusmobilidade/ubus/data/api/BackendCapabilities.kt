@@ -7,5 +7,8 @@ object BackendCapabilities {
     const val supportsDriverOperationalAssignment = false
     const val supportsManagerRouteCalendarScheduling = false
     const val supportsManagerDriverAssignmentByRoute = false
+    const val supportsTripRating = true
+    const val supportsAttendanceScore = true
+    const val supportsSeatSelection = true
 }
 

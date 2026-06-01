@@ -31,3 +31,9 @@ enum class ReservationStatus {
 enum class TripShift {
     MORNING, AFTERNOON, NIGHT
 }
+
+@Serializable
+enum class AttendanceBadge {
+    PUNCTUAL, FREQUENT_RIDER, ECO_FRIENDLY, PERFECT_WEEK, PERFECT_MONTH
+}
+

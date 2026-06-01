@@ -218,3 +218,17 @@ class DriverRepository(private val api: ApiClient) {
     suspend fun notifyDeparting(tripId: String): String =
         api.post("/driver/trips/$tripId/departing", DriverDepartingPayload(departingNow = true))
 }
+
+class TripRatingRepository(private val api: ApiClient) {
+    suspend fun createRating(payload: CreateTripRatingPayload): TripRating =
+        api.post("/ratings", payload)
+
+    suspend fun listPendingRatings(): List<Reservation> =
+        api.get("/ratings/pending")
+}
+
+class AttendanceRepository(private val api: ApiClient) {
+    suspend fun getScore(): AttendanceScore =
+        api.get("/attendance/score")
+}
+

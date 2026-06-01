@@ -77,9 +77,7 @@ android {
     namespace = "com.ubusmobilidade.ubus"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
-    androidResources {
-        crunchPngs = false
-    }
+
 
     defaultConfig {
         applicationId = "com.ubusmobilidade.ubus"
