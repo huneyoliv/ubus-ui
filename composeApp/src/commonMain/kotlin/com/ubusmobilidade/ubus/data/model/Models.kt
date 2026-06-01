@@ -175,3 +175,26 @@ data class DriverCurrentTripSummary(
 data class RouteCalendarResponse(
     val scheduledDates: List<String> = emptyList(),
 )
+
+/* ── Ratings and Gamification ── */
+
+@Serializable
+data class TripRating(
+    val id: String,
+    val reservationId: String,
+    val tripId: String,
+    val userId: String,
+    val cleanlinessRating: Int,
+    val punctualityRating: Int,
+    val driverRating: Int,
+    val comment: String? = null,
+    val createdAt: String? = null,
+)
+
+@Serializable
+data class AttendanceScore(
+    val userId: String,
+    val score: Double,
+    val badges: List<AttendanceBadge> = emptyList(),
+)
+
