@@ -14,10 +14,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.semantics
 
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun BentoCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 24.dp,
+    padding: Dp = 16.dp,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Card(
@@ -29,9 +33,9 @@ fun BentoCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, borderColor),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(padding)) {
             content()
         }
     }
