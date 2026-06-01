@@ -2,6 +2,7 @@ package com.ubusmobilidade.ubus.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,7 +39,7 @@ fun UbusButton(
             CircularProgressIndicator(
                 color = MaterialTheme.colorScheme.onPrimary,
                 strokeWidth = 2.dp,
-                modifier = Modifier.height(20.dp).semantics {
+                modifier = Modifier.size(20.dp).semantics {
                     contentDescription = "Processando"
                 },
             )

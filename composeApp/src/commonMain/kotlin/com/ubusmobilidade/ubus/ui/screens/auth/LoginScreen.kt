@@ -99,9 +99,11 @@ fun LoginScreen(component: RootComponent) {
                 component.authStorage.setAuth(response.accessToken, response.user)
                 component.onLoginSuccess()
             } catch (e: ApiError) {
+                e.printStackTrace()
                 error = if (e.status == 401) "Email ou senha incorretos."
                 else e.toUserMessage("Não foi possível entrar agora. Tente novamente.")
             } catch (e: Exception) {
+                e.printStackTrace()
                 error = e.toUserMessage("Não foi possível entrar agora. Tente novamente.")
             } finally {
                 loading = false

@@ -248,6 +248,7 @@ fun ReservarScreen(component: RootComponent) {
                                             errorMessage = ""
                                         } catch (e: Exception) {
                                             if (e is kotlinx.coroutines.CancellationException) throw e
+                                            e.printStackTrace()
                                             errorMessage = e.toUserMessage("Não foi possível concluir a reserva.")
                                         }
                                         reservingId = null

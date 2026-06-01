@@ -221,6 +221,7 @@ fun PickupPointSelectionScreen(
                                 component.replaceWith(RootComponent.Config.StudentHome)
                             } catch (e: Exception) {
                                 if (e is kotlinx.coroutines.CancellationException) throw e
+                                e.printStackTrace()
                                 errorMessage = e.toUserMessage("Erro ao concluir a reserva.")
                                 reserving = false
                             }

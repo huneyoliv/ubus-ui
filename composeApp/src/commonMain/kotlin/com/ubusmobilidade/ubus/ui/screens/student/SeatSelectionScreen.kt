@@ -84,6 +84,7 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
             occupiedSeats = occupied.map { it.seatNumber }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
+            e.printStackTrace()
             errorMessage = e.toUserMessage("Não foi possível carregar os assentos.")
         }
         loading = false
