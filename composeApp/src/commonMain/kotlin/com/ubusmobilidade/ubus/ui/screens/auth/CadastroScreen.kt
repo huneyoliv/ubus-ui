@@ -340,13 +340,14 @@ fun CadastroScreen(component: RootComponent) {
 
             Text(
                 stepTitles[currentStep],
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 stepSubtitles[currentStep],
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 color = UbusText3,
             )
 
@@ -359,7 +360,7 @@ fun CadastroScreen(component: RootComponent) {
                 )
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(28.dp))
 
             AnimatedContent(
                 targetState = currentStep,
@@ -466,14 +467,27 @@ private fun StepTirarFoto(
             modifier = Modifier
                 .size(160.dp)
                 .clip(CircleShape)
-                .background(UbusBorder)
-                .clickable { onTakePhoto() },
+                .background(
+                    androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = if (photoUri != null) listOf(UbusSuccess, Color(0xFF10B981)) else listOf(UbusPrimary, Color(0xFF6366F1))
+                    )
+                )
+                .clickable { onTakePhoto() }
+                .padding(4.dp),
             contentAlignment = Alignment.Center,
         ) {
-            if (photoUri != null) {
-                Icon(Icons.Default.CheckCircle, null, tint = UbusSuccess, modifier = Modifier.size(64.dp))
-            } else {
-                Icon(Icons.Default.Person, null, tint = UbusText3, modifier = Modifier.size(64.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
+                if (photoUri != null) {
+                    Icon(Icons.Default.CheckCircle, null, tint = UbusSuccess, modifier = Modifier.size(64.dp))
+                } else {
+                    Icon(Icons.Default.CameraAlt, null, tint = UbusPrimary, modifier = Modifier.size(54.dp))
+                }
             }
         }
         Spacer(Modifier.height(24.dp))

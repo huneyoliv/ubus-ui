@@ -31,3 +31,24 @@ actual fun getTripDepartureMillis(tripDate: String, shift: String): Long {
     val date = calendar.dateFromComponents(components) ?: return 0L
     return (date.timeIntervalSince1970 * 1000.0).toLong()
 }
+
+actual fun isToday(dateString: String): Boolean {
+    val parts = dateString.split("-")
+    if (parts.size != 3) return false
+    val year = parts[0].toLongOrNull() ?: return false
+    val month = parts[1].toLongOrNull() ?: return false
+    val day = parts[2].toLongOrNull() ?: return false
+
+    val calendar = NSCalendar.currentCalendar
+    val today = platform.Foundation.NSDate()
+    val todayComponents = calendar.components(
+        platform.Foundation.NSCalendarUnitYear or
+        platform.Foundation.NSCalendarUnitMonth or
+        platform.Foundation.NSCalendarUnitDay,
+        fromDate = today
+    )
+
+    return todayComponents.year == year &&
+           todayComponents.month == month &&
+           todayComponents.day == day
+}

@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -107,18 +108,23 @@ fun PerfilScreen(component: RootComponent) {
             ) {
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(88.dp)
                         .clip(CircleShape)
                         .background(
-                            Brush.linearGradient(listOf(UbusPrimary, MaterialTheme.colorScheme.tertiary))
+                            Brush.linearGradient(listOf(UbusPrimary, Color(0xFF6366F1)))
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(initials, color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Text(initials, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 28.sp)
                 }
                 Spacer(Modifier.height(12.dp))
-                Text(user?.name ?: "", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+                Text(user?.name ?: "", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
+                
+                user?.status?.let { status ->
+                    Spacer(Modifier.height(10.dp))
+                    com.ubusmobilidade.ubus.ui.components.StatusChip(status = status)
+                }
             }
 
             if (BackendCapabilities.supportsAttendanceScore && attendanceScore != null) {
@@ -152,11 +158,12 @@ fun PerfilScreen(component: RootComponent) {
             // Logout
             BentoCard(
                 modifier = Modifier.clickable { component.logout() },
+                borderColor = UbusDestructive.copy(alpha = 0.3f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = UbusDestructive, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
-                    Text("Sair da conta", color = UbusDestructive, style = MaterialTheme.typography.titleSmall)
+                    Text("Sair da conta", color = UbusDestructive, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 }
             }
         }

@@ -29,15 +29,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.navigation.RootComponent
-import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
-import com.ubusmobilidade.ubus.ui.theme.UbusPrimaryContainer
-import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import kotlin.math.abs
 
 @Composable
@@ -59,88 +57,135 @@ fun CarteirinhaScreen(component: RootComponent) {
 
         Text(
             "Carteirinha",
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
         )
 
-        BentoCard(cornerRadius = 24.dp) {
+        // Cartão Físico com Gradiente Premium
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(UbusPrimary, Color(0xFF6366F1), Color(0xFF4F46E5))
+                    )
+                )
+                .padding(24.dp)
+        ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                // Avatar — first letter of name
+                // Header do Cartão
+                Text(
+                    "TRANSPORTE ESCOLAR MUNICIPAL",
+                    color = Color.White.copy(alpha = 0.8f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                // Avatar
                 Box(
                     modifier = Modifier
-                        .size(88.dp)
+                        .size(92.dp)
                         .clip(CircleShape)
-                        .background(UbusPrimary),
+                        .background(Color.White)
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        initial,
-                        color = Color.White,
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(Color(0xFF818CF8), Color(0xFF6366F1))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            initial,
+                            color = Color.White,
+                            fontSize = 38.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(16.dp))
 
+                // Nome do estudante e detalhes
                 Text(
                     userName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = Color.White,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(user?.email ?: "", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
-                Text("CPF: ${user?.cpf ?: ""}", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                Text(
+                    user?.email ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+                Text(
+                    "CPF: ${user?.cpf ?: ""}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.6f)
+                )
+
+                user?.status?.let { status ->
+                    Spacer(Modifier.height(12.dp))
+                    com.ubusmobilidade.ubus.ui.components.StatusChip(status = status)
+                }
 
                 Spacer(Modifier.height(24.dp))
 
-                // QR-like pattern generated from user ID
+                // QR Code
                 val userId = user?.id ?: ""
                 val hashCode = remember(userId) { abs(userId.hashCode()) }
                 Box(
                     modifier = Modifier
                         .size(160.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(2.dp, UbusPrimary, RoundedCornerShape(12.dp))
-                        .background(Color.White),
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .padding(12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Canvas(modifier = Modifier.size(140.dp)) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
                         val gridSize = 11
                         val cellSize = size.width / gridSize
                         val seed = hashCode
                         for (row in 0 until gridSize) {
                             for (col in 0 until gridSize) {
-                                // Border cells always filled (finder pattern)
                                 val isBorder = row == 0 || row == gridSize - 1 || col == 0 || col == gridSize - 1
-                                // Corner squares (3×3 finder patterns)
                                 val isTopLeftFinder = row < 3 && col < 3
                                 val isTopRightFinder = row < 3 && col >= gridSize - 3
                                 val isBottomLeftFinder = row >= gridSize - 3 && col < 3
                                 val isFinder = isTopLeftFinder || isTopRightFinder || isBottomLeftFinder
 
                                 val filled = if (isFinder) {
-                                    // Solid corners with inner empty
                                     val lr = if (isTopLeftFinder) row else if (isBottomLeftFinder) row - (gridSize - 3) else row
                                     val lc = if (isTopLeftFinder || isBottomLeftFinder) col else col - (gridSize - 3)
                                     !(lr == 1 && lc == 1)
                                 } else if (isBorder) {
                                     (row + col) % 2 == 0
                                 } else {
-                                    // Pseudo-random from hash
                                     val bit = (seed xor (row * 31 + col * 17 + row * col * 7))
                                     bit % 3 != 0
                                 }
 
                                 if (filled) {
                                     drawRect(
-                                        color = UbusPrimary,
+                                        color = Color.Black,
                                         topLeft = Offset(col * cellSize, row * cellSize),
                                         size = Size(cellSize, cellSize),
                                     )
@@ -155,28 +200,29 @@ fun CarteirinhaScreen(component: RootComponent) {
                     Text(
                         userId,
                         style = MaterialTheme.typography.labelSmall,
-                        color = UbusText3,
+                        color = Color.White.copy(alpha = 0.5f),
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                     )
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
-                // ESTUDANTE badge
+                // Badge ESTUDANTE
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(UbusPrimaryContainer)
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                        .background(Color.White.copy(alpha = 0.15f))
+                        .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 28.dp, vertical = 8.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         "ESTUDANTE",
-                        color = UbusPrimary,
+                        color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
-                        letterSpacing = 2.sp,
+                        fontSize = 12.sp,
+                        letterSpacing = 2.5.sp,
                     )
                 }
             }

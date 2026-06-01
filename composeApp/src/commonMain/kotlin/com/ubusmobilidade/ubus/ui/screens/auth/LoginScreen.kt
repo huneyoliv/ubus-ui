@@ -1,9 +1,13 @@
 package com.ubusmobilidade.ubus.ui.screens.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -113,155 +117,209 @@ fun LoginScreen(component: RootComponent) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .verticalScroll(rememberScrollState()),
         ) {
-            if (showBack) {
-                IconButton(
-                    onClick = { component.goBack() },
-                    modifier = Modifier.padding(top = 8.dp),
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Voltar",
-                        tint = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
-            } else {
-                Spacer(Modifier.height(48.dp))
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Title
-            Text(
-                "Entrar",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                "Informe suas credenciais para acessar.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = UbusText3,
-            )
-
-            Spacer(Modifier.height(32.dp))
-
-            // Email
-            UbusTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = "Email",
-                placeholder = "seu@email.com",
-                leadingIcon = {
-                    Icon(Icons.Default.Email, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Password
-            UbusTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Senha",
-                placeholder = "Sua senha",
-                leadingIcon = {
-                    Icon(Icons.Default.Lock, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
-                },
-                trailingIcon = {
-                    IconButton(onClick = { showPassword = !showPassword }) {
+            // Hero Area no Topo (Design Premium)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp)
+                    .background(
+                        Brush.linearGradient(
+                            colors = listOf(UbusPrimary, Color(0xFF6366F1))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (showBack) {
+                    IconButton(
+                        onClick = { component.goBack() },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 16.dp, start = 16.dp)
+                            .background(Color.White.copy(alpha = 0.15f), CircleShape),
+                    ) {
                         Icon(
-                            if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (showPassword) "Ocultar" else "Mostrar",
-                            tint = if (showPassword) UbusPrimary else UbusText3,
-                            modifier = Modifier.size(18.dp),
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar",
+                            tint = Color.White,
                         )
                     }
-                },
-                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions(onDone = { handleLogin() }),
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            // Forgot password
-            Text(
-                "Esqueci minha senha",
-                color = UbusPrimary,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { component.navigateTo(RootComponent.Config.RedefinirSenha) }
-                    .padding(vertical = 4.dp),
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Error
-            if (error.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(UbusDestructive.copy(alpha = 0.08f))
-                        .padding(12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(error, color = UbusDestructive, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                 }
-                Spacer(Modifier.height(16.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.DirectionsBus,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(38.dp)
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Ubus",
+                        color = Color.White,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp
+                    )
+                    Text(
+                        "Transporte Estudantil Inteligente",
+                        color = Color.White.copy(alpha = 0.75f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
 
-            // Login button
-            UbusButton(
-                text = "Acessar plataforma",
-                onClick = { handleLogin() },
-                loading = loading,
-            )
-
-            Spacer(Modifier.height(32.dp))
-
-            // Register link
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
             ) {
-                Text("Ainda não tem conta? ", color = UbusText3, fontSize = 14.sp)
+                // Title
                 Text(
-                    "Criar conta",
+                    "Entrar na conta",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                Text(
+                    "Informe suas credenciais para acessar a plataforma.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = UbusText3,
+                )
+
+                Spacer(Modifier.height(28.dp))
+
+                // Email
+                UbusTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = "Email",
+                    placeholder = "seu@email.com",
+                    leadingIcon = {
+                        Icon(Icons.Default.Email, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                // Password
+                UbusTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Senha",
+                    placeholder = "Sua senha",
+                    leadingIcon = {
+                        Icon(Icons.Default.Lock, contentDescription = null, tint = UbusText3, modifier = Modifier.size(18.dp))
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { showPassword = !showPassword }) {
+                            Icon(
+                                if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (showPassword) "Ocultar" else "Mostrar",
+                                tint = if (showPassword) UbusPrimary else UbusText3,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    },
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                    keyboardActions = KeyboardActions(onDone = { handleLogin() }),
+                )
+
+                Spacer(Modifier.height(10.dp))
+
+                // Forgot password
+                Text(
+                    "Esqueci minha senha",
                     color = UbusPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable {
-                        component.navigateTo(RootComponent.Config.Cadastro)
-                    },
+                    fontSize = 13.sp,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .clickable { component.navigateTo(RootComponent.Config.RedefinirSenha) }
+                        .padding(vertical = 4.dp),
                 )
+
+                Spacer(Modifier.height(24.dp))
+
+                // Error
+                if (error.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(UbusDestructive.copy(alpha = 0.08f))
+                            .border(1.dp, UbusDestructive.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                            .padding(12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(error, color = UbusDestructive, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                // Login button
+                UbusButton(
+                    text = "Acessar plataforma",
+                    onClick = { handleLogin() },
+                    loading = loading,
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                // Register link
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Text("Ainda não tem conta? ", color = UbusText3, fontSize = 14.sp)
+                    Text(
+                        "Criar conta",
+                        color = UbusPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable {
+                            component.navigateTo(RootComponent.Config.Cadastro)
+                        },
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
+
+                Text(
+                    "© 2026 Ubus — Todos os direitos reservados",
+                    color = UbusText3.copy(alpha = 0.5f),
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Spacer(Modifier.height(24.dp))
             }
-
-            Spacer(Modifier.height(24.dp))
-
-            Text(
-                "© 2026 Ubus — Todos os direitos reservados",
-                color = UbusText3.copy(alpha = 0.65f),
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

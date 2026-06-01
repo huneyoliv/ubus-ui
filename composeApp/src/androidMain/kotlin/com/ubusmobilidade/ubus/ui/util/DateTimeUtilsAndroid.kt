@@ -27,3 +27,16 @@ actual fun getTripDepartureMillis(tripDate: String, shift: String): Long {
 
     return calendar.timeInMillis
 }
+
+actual fun isToday(dateString: String): Boolean {
+    val parts = dateString.split("-")
+    if (parts.size != 3) return false
+    val year = parts[0].toIntOrNull() ?: return false
+    val month = parts[1].toIntOrNull()?.minus(1) ?: return false
+    val day = parts[2].toIntOrNull() ?: return false
+
+    val today = Calendar.getInstance()
+    return today.get(Calendar.YEAR) == year &&
+           today.get(Calendar.MONTH) == month &&
+           today.get(Calendar.DAY_OF_MONTH) == day
+}
