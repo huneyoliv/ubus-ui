@@ -50,24 +50,99 @@ private fun getDayOfWeek(year: Int, month: Int, day: Int): Int {
     return (y + y / 4 - y / 100 + y / 400 + t[month - 1] + day) % 7
 }
 
+private fun getEasterDate(year: Int): Pair<Int, Int> {
+    val a = year % 19
+    val b = year / 100
+    val c = year % 100
+    val d = b / 4
+    val e = b % 4
+    val f = (b + 8) / 25
+    val g = (b - f + 1) / 3
+    val h = (19 * a + b - d - g + 15) % 30
+    val i = c / 4
+    val k = c % 4
+    val l = (32 + 2 * e + 2 * i - h - k) % 7
+    val m = (a + 11 * h + 22 * l) / 451
+    val month = (h + l - 7 * m + 114) / 31
+    val day = ((h + l - 7 * m + 114) % 31) + 1
+    return Pair(month, day)
+}
+
+private fun dateToEpochDays(year: Int, month: Int, day: Int): Int {
+    var y = year
+    var m = month
+    if (m <= 2) {
+        y -= 1
+        m += 12
+    }
+    val era = (if (y >= 0) y else y - 399) / 400
+    val yoe = y - era * 400
+    val doy = (153 * (m - 3) + 2) / 5 + day - 1
+    val doe = yoe * 365 + yoe / 4 - yoe / 100 + doy
+    return era * 146097 + doe - 719468
+}
+
+private fun epochDaysToDate(epochDays: Int): Triple<Int, Int, Int> {
+    val z = epochDays + 719468
+    val era = (if (z >= 0) z else z - 146096) / 146097
+    val doe = z - era * 146097
+    val yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365
+    val y = yoe + era * 400
+    val doy = doe - (365 * yoe + yoe / 4 - yoe / 100)
+    val mp = (5 * doy + 2) / 153
+    val d = doy - (153 * mp + 2) / 5 + 1
+    val m = mp + (if (mp < 10) 3 else -9)
+    return Triple(y, m + if (m <= 2) 1 else 0, d)
+}
+
+private fun getVariableHolidays(year: Int): Map<String, String> {
+    val (easterMonth, easterDay) = getEasterDate(year)
+    val easterEpoch = dateToEpochDays(year, easterMonth, easterDay)
+    
+    val carnivalMonday = epochDaysToDate(easterEpoch - 48)
+    val carnivalTuesday = epochDaysToDate(easterEpoch - 47)
+    val ashWednesday = epochDaysToDate(easterEpoch - 46)
+    val goodFriday = epochDaysToDate(easterEpoch - 2)
+    val corpusChristi = epochDaysToDate(easterEpoch + 60)
+    
+    fun formatDate(t: Triple<Int, Int, Int>): String {
+        val y = t.first
+        val m = if (t.second < 10) "0${t.second}" else "${t.second}"
+        val d = if (t.third < 10) "0${t.third}" else "${t.third}"
+        return "$y-$m-$d"
+    }
+    
+    return mapOf(
+        formatDate(carnivalMonday) to "Carnaval (Segunda-feira)",
+        formatDate(carnivalTuesday) to "Carnaval (Terça-feira)",
+        formatDate(ashWednesday) to "Quarta-feira de Cinzas",
+        formatDate(goodFriday) to "Sexta-feira Santa",
+        formatDate(corpusChristi) to "Corpus Christi"
+    )
+}
+
 private fun getHolidayName(dateStr: String): String? {
-    return when (dateStr) {
-        "2026-01-01" -> "Confraternização Universal"
-        "2026-02-16" -> "Carnaval (Segunda-feira)"
-        "2026-02-17" -> "Carnaval (Terça-feira)"
-        "2026-02-18" -> "Quarta-feira de Cinzas"
-        "2026-04-03" -> "Sexta-feira Santa"
-        "2026-04-21" -> "Tiradentes"
-        "2026-05-01" -> "Dia do Trabalho"
-        "2026-06-04" -> "Corpus Christi"
-        "2026-09-07" -> "Independência do Brasil"
-        "2026-10-12" -> "Nossa Senhora Aparecida"
-        "2026-11-02" -> "Finados"
-        "2026-11-15" -> "Proclamação da República"
-        "2026-11-20" -> "Consciência Negra"
-        "2026-12-25" -> "Natal"
+    val parts = dateStr.split("-")
+    if (parts.size != 3) return null
+    val year = parts[0].toIntOrNull() ?: return null
+    val month = parts[1]
+    val day = parts[2]
+    
+    val fixedHoliday = when ("$month-$day") {
+        "01-01" -> "Confraternização Universal"
+        "04-21" -> "Tiradentes"
+        "05-01" -> "Dia do Trabalho"
+        "09-07" -> "Independência do Brasil"
+        "10-12" -> "Nossa Senhora Aparecida"
+        "11-02" -> "Finados"
+        "11-15" -> "Proclamação da República"
+        "11-20" -> "Consciência Negra"
+        "12-25" -> "Natal"
         else -> null
     }
+    if (fixedHoliday != null) return fixedHoliday
+    
+    return getVariableHolidays(year)[dateStr]
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -121,14 +196,9 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 allDrivers = drivers
                 
                 // Pega o motorista do primeiro ônibus atribuído como padrão da rota
-                val savedDriver = fleetRepo.getRouteDriver(routeId)
-                if (savedDriver != null) {
-                    selectedDriverId = savedDriver
-                } else {
-                    val busDriver = assignedBuses.firstOrNull()?.driverId
-                    if (busDriver != null) {
-                        selectedDriverId = busDriver
-                    }
+                val busDriver = assignedBuses.firstOrNull()?.driverId
+                if (busDriver != null) {
+                    selectedDriverId = busDriver
                 }
                 
                 try {
@@ -157,7 +227,6 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     votingOpenTime = votingOpenTime,
                     votingCloseTime = votingCloseTime
                 ))
-                fleetRepo.assignDriverToRoute(routeId, selectedDriverId)
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
