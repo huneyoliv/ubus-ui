@@ -1,6 +1,7 @@
 package com.ubusmobilidade.ubus.data.model
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
 /* ── User ── */
 
@@ -80,7 +81,7 @@ data class Bus(
 
 @Serializable
 data class Trip(
-    val tripId: String,
+    @SerialName("id") val tripId: String,
     val tripDate: String,
     val shift: String,
     val direction: TripDirection,
@@ -88,9 +89,9 @@ data class Trip(
     val routeId: String,
     val busId: String,
     val driverId: String? = null,
-    val realCapacity: Int,
-    val votingOpen: String,
-    val votingClose: String,
+    @SerialName("actualCapacity") val realCapacity: Int,
+    @SerialName("votingOpenAt") val votingOpen: String,
+    @SerialName("votingCloseAt") val votingClose: String,
     val leaderIds: List<String>? = null,
     val route: Route? = null,
     val bus: Bus? = null,
