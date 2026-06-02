@@ -45,7 +45,7 @@ Thumbs.db
 .claude/
 .antigravity/
 .vscode/
-.agent/
+/.agent/
 *.ps1
 *.txt
 /clickbus_reference_backup/

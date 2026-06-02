@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.model.RoleUsuario
+import com.ubusmobilidade.ubus.data.model.AccessibilityStatus
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -46,6 +47,7 @@ import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -144,6 +146,13 @@ fun PerfilScreen(component: RootComponent) {
             ProfileMenuItem(Icons.Default.CalendarMonth, "Renovar semestre") {
                 component.navigateTo(RootComponent.Config.RenovarSemestre)
             }
+            val accessibilityApproved = user?.accessibilityStatus == AccessibilityStatus.APPROVED
+            ProfileMenuItemWithBadge(
+                icon = Icons.Default.Accessibility,
+                label = "Acessibilidade",
+                badgeActive = accessibilityApproved,
+                onClick = { component.navigateTo(RootComponent.Config.BaixaMobilidade) },
+            )
             ProfileMenuItem(Icons.Default.Person, "Carteirinha") {
                 component.navigateTo(RootComponent.Config.Carteirinha)
             }
@@ -181,3 +190,45 @@ private fun ProfileMenuItem(icon: ImageVector, label: String, onClick: () -> Uni
         }
     }
 }
+
+@Composable
+private fun ProfileMenuItemWithBadge(
+    icon: ImageVector,
+    label: String,
+    badgeActive: Boolean,
+    onClick: () -> Unit,
+) {
+    BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable(onClick = onClick)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box {
+                Icon(icon, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
+                if (badgeActive) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(UbusSuccess)
+                            .align(Alignment.TopEnd)
+                    )
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
+            )
+            if (badgeActive) {
+                Text(
+                    "Aprovado",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = UbusSuccess,
+                )
+                Spacer(Modifier.width(8.dp))
+            }
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+

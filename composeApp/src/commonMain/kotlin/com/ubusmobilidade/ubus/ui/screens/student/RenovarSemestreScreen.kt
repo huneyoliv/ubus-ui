@@ -35,8 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.UserRepository
+import com.ubusmobilidade.ubus.data.api.UploadRepository
+import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.model.RegistrationStatus
 import com.ubusmobilidade.ubus.data.model.SemesterRenewalPayload
+import com.ubusmobilidade.ubus.data.model.UploadType
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.UbusButton
@@ -180,9 +183,29 @@ fun RenovarSemestreScreen(component: RootComponent) {
                 loading = true; message = ""
                 scope.launch {
                     try {
+                        val uploadRepo = UploadRepository(apiClient)
+                        var finalGradeUrl: String? = gradeUri
+                        var finalResidenciaUrl: String? = residenciaUri
+
+                        if (BackendCapabilities.supportsUnifiedUpload) {
+                            gradeUri?.let { uri ->
+                                val fileBytes = ByteArray(0)
+                                finalGradeUrl = uploadRepo.upload(fileBytes, "grade.pdf", UploadType.GRADE_DOCUMENT).fileUrl
+                            }
+                            residenciaUri?.let { uri ->
+                                val fileBytes = ByteArray(0)
+                                finalResidenciaUrl = uploadRepo.upload(fileBytes, "residencia.pdf", UploadType.RESIDENCIA_DOCUMENT).fileUrl
+                            }
+                        } else {
+                            message = "⏳ Upload de documentos disponível em breve"
+                            isError = false
+                            loading = false
+                            return@launch
+                        }
+
                         val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
-                            gradeFileUrl = gradeUri,
-                            residenciaFileUrl = residenciaUri
+                            gradeFileUrl = finalGradeUrl,
+                            residenciaFileUrl = finalResidenciaUrl,
                         ))
                         message = resp.message ?: "Solicitação enviada com sucesso!"
                         isError = false

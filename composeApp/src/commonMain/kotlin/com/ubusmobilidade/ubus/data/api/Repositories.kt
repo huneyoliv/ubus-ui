@@ -122,6 +122,9 @@ class UserRepository(private val api: ApiClient) {
 
     suspend fun requestSemesterRenewal(payload: SemesterRenewalPayload): SemesterRenewalResponse =
         api.post("/users/me/semester-renewal", payload)
+
+    suspend fun submitAccessibilityRequest(payload: AccessibilityRequestPayload): User =
+        api.patch("/users/me/accessibility", payload)
 }
 
 class NotificationRepository(private val api: ApiClient) {
@@ -179,6 +182,9 @@ class FleetRepository(private val api: ApiClient) {
 
     suspend fun assignDriverToTrip(tripId: String, driverId: String): Trip =
         api.patch("/trips/$tripId/driver", AssignTripDriverPayload(driverId))
+
+    suspend fun updateBusLayout(busId: String, payload: BusLayoutPayload): Bus =
+        api.patch("/fleet/buses/$busId/layout", payload)
 }
 
 class ManagementRepository(private val api: ApiClient) {
@@ -234,4 +240,18 @@ class AttendanceRepository(private val api: ApiClient) {
     suspend fun getScore(): AttendanceScore =
         api.get("/attendance/score")
 }
+
+class UploadRepository(private val api: ApiClient) {
+    suspend fun upload(
+        fileBytes: ByteArray,
+        fileName: String,
+        type: UploadType,
+    ): UploadResponse {
+        if (!BackendCapabilities.supportsUnifiedUpload) {
+            throw UnsupportedOperationException("POST /v1/uploads ainda não implementado no backend")
+        }
+        throw UnsupportedOperationException("POST /v1/uploads ainda não implementado no backend")
+    }
+}
+
 

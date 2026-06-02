@@ -123,7 +123,8 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
                         plate = plate.uppercase(),
                         standardCapacity = finalCapacity,
                         hasBathroom = hasBathroom,
-                        hasAirConditioning = false // Default
+                        hasAirConditioning = false,
+                        hasElevator = hasElevator
                     )
                 )
                 component.goBack()

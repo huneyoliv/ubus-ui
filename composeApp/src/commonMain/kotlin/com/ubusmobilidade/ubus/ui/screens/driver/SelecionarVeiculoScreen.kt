@@ -34,6 +34,9 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.DriverRepository
@@ -118,8 +121,11 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
                             if (BackendCapabilities.supportsDriverOperationalAssignment) {
                                 scope.launch {
                                     try {
-                                        // TODO: replace with actual local date provider when platform bridge is added.
-                                        driverRepo.assignForToday(busId = bus.id, serviceDate = "1970-01-01")
+                                        val today = Clock.System.now()
+                                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                                            .date
+                                            .toString()
+                                        driverRepo.assignForToday(busId = bus.id, serviceDate = today)
                                     } catch (e: Exception) {
                                         // Fallback to legacy flow
                                     }

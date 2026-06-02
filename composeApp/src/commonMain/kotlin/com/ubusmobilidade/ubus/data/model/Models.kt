@@ -19,6 +19,12 @@ data class User(
     val defaultRouteId: String? = null,
     val defaultPointId: String? = null,
     val needsWheelchair: Boolean? = null,
+    val accessibilityReason: AccessibilityReason? = null,
+    val accessibilityDocUrl: String? = null,
+    val accessibilityStatus: AccessibilityStatus? = null,
+    val accessibilityApprovedAt: String? = null,
+    val accessibilityReviewNote: String? = null,
+    val accessibilityConsecutivePeriods: Int = 0,
     val photoUrl: String? = null,
     val gradeFileUrl: String? = null,
     val residenciaFileUrl: String? = null,
@@ -48,6 +54,7 @@ data class Route(
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
     val active: Boolean = true,
+    val requiresElevator: Boolean = false,
 )
 
 /* ── PickupPoint ── */
@@ -73,6 +80,8 @@ data class Bus(
     val driverId: String? = null,
     val hasBathroom: Boolean = false,
     val hasAirConditioning: Boolean = false,
+    val hasElevator: Boolean = false,
+    val preferentialSeats: List<Int>? = null,
     val routeId: String? = null,
     val active: Boolean = true,
 )

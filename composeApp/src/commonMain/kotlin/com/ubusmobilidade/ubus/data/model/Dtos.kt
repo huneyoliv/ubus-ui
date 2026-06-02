@@ -86,6 +86,7 @@ data class CreateBusPayload(
     val standardCapacity: Int,
     val hasBathroom: Boolean? = null,
     val hasAirConditioning: Boolean? = null,
+    val hasElevator: Boolean? = null,
 )
 
 @Serializable
@@ -267,6 +268,34 @@ data class SemesterRenewalPayload(
 data class SemesterRenewalResponse(
     val message: String? = null,
     val status: String? = null,
+)
+
+enum class UploadType {
+    PROFILE_PHOTO,
+    GRADE_DOCUMENT,
+    RESIDENCIA_DOCUMENT,
+    ACCESSIBILITY_PROOF,
+}
+
+@Serializable
+data class UploadResponse(
+    val fileUrl: String,
+    val type: String,
+    val path: String? = null,
+    val expiresAt: String? = null,
+)
+
+@Serializable
+data class AccessibilityRequestPayload(
+    val reason: AccessibilityReason,
+    val needsWheelchair: Boolean = false,
+    val accessibilityDocUrl: String,
+)
+
+@Serializable
+data class BusLayoutPayload(
+    val hasElevator: Boolean,
+    val preferentialSeats: List<Int>,
 )
 
 /* ── Ratings and Gamification Dtos ── */
