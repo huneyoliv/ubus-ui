@@ -46,18 +46,31 @@ open iOS/Xcode/iosApp.xcodeproj
 
 - **[web/README.md](./web/README.md)** — Web deployment guide
 
+## 🚀 Latest Features (v3.1)
+
+### ♿ Accessibility & Seat Preference Wizard
+* **4-Step Wizard:** Fully interactive setup inside the application guiding users through category selection, conditional wheelchair configuration (elevator requirement), and native document upload.
+* **Legal Compliance:** Implementation of preference categories (PCD, TEA, Elderly, Pregnant, Lactating, Reduced Mobility) in accordance with Federal Law nº 10.048/2000.
+* **Unified Upload Architecture:** Decoupled file handling with fallback pending states integrated directly into user registration and semester renewal.
+* **Bus & Route Integration:** Routes automatically flag fleet requirements (such as wheelchair elevators) and prioritize preferential seats dynamically.
+
+### 🚗 Driver Fixes
+* **Dynamic Date Assignment:** Driver vehicle selection now dynamically resolves the correct local service date (via `kotlinx-datetime`), fixing the legacy static `"1970-01-01"` bug.
+* **Fleet Creation:** Creation of new buses now correctly payload properties like `hasElevator` to the backend.
+
 ## 🛠️ Tech Stack
 
 - **Language**: Kotlin 2.3.20
 - **UI Framework**: Compose Multiplatform 1.10.3
 - **Navigation**: Decompose 3.3.0
 - **HTTP Client**: Ktor 3.1.3
+- **Date/Time**: kotlinx-datetime 0.6.0
 - **API**: https://api.ubus.me/v1
 - **Build System**: Gradle 8.14.3
 
 ## 🔧 Requirements
 
-- **JDK 21** (Temurin recommended, NOT JDK 25+)
+- **JDK 21** (Temurin recommended)
 - **Android SDK** API 34+ (for Android builds)
 - **Xcode 14+** (for iOS builds, macOS only)
 - **Docker** (for web deployment testing)
@@ -84,7 +97,11 @@ open iOS/Xcode/iosApp.xcodeproj
 ## 🆘 Troubleshooting
 
 ### Build Issues
-- **JDK version error**: Use JDK 21 (not 25+)
+- **JDK 25 Compatibility**: If compiling on a host running JDK 25+, run Gradle passing the JVM compatibility flag:
+  ```bash
+  ./gradlew :composeApp:assembleDebug -Djava.version=21.0.0
+  ```
+- **JDK version error**: Use JDK 21 (or use the compat flag above on JDK 25)
 - **Gradle cache**: `rm -rf .gradle/configuration-cache`
 - **Gradle timeout**: Try `./gradlew --no-daemon`
 
