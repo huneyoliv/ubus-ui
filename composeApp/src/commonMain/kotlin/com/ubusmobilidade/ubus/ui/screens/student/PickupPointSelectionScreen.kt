@@ -55,7 +55,8 @@ import kotlinx.coroutines.launch
 fun PickupPointSelectionScreen(
     component: RootComponent,
     tripId: String,
-    seatNumber: Int
+    seatNumber: Int,
+    pendingInboundTripId: String? = null
 ) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
@@ -115,12 +116,13 @@ fun PickupPointSelectionScreen(
                     .padding(top = 24.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { component.replaceWith(RootComponent.Config.SelecionarAssento(tripId)) }) {
+                IconButton(onClick = { component.replaceWith(RootComponent.Config.SelecionarAssento(tripId, pendingInboundTripId)) }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                 }
                 Spacer(Modifier.width(8.dp))
+                val activeTrip = trip
                 Text(
-                    text = "Ponto de Embarque",
+                    text = if (activeTrip == null) "Ponto de Embarque" else "Ponto de Embarque${if (pendingInboundTripId != null || activeTrip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) " (Ida)" else " (Volta)"}",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -218,7 +220,11 @@ fun PickupPointSelectionScreen(
                                 notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
                                 notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
 
-                                component.replaceWith(RootComponent.Config.StudentHome)
+                                if (pendingInboundTripId != null) {
+                                    component.navigateTo(RootComponent.Config.SelecionarAssento(pendingInboundTripId, null))
+                                } else {
+                                    component.replaceWith(RootComponent.Config.Historico)
+                                }
                             } catch (e: Exception) {
                                 if (e is kotlinx.coroutines.CancellationException) throw e
                                 e.printStackTrace()

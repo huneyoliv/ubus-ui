@@ -49,15 +49,27 @@ import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.LocalDate
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun HistoricoScreen(component: RootComponent) {
+    val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     var reservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
     var selectedFilter by remember { mutableStateOf("TODAS") }
+    var resToCancel by remember { mutableStateOf<Reservation?>(null) }
+    var cancelingId by remember { mutableStateOf<String?>(null) }
+
+    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
 
     val filteredReservations = remember(reservations, selectedFilter) {
         when (selectedFilter) {
@@ -112,6 +124,20 @@ fun HistoricoScreen(component: RootComponent) {
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(top = 32.dp, bottom = 20.dp),
             )
+
+            if (!successMessage.isNullOrBlank()) {
+                BentoCard(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    borderColor = Color(0xFF22C55E).copy(alpha = 0.5f)
+                ) {
+                    Text(
+                        successMessage!!,
+                        color = Color(0xFF22C55E),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -170,42 +196,69 @@ fun HistoricoScreen(component: RootComponent) {
                             modifier = Modifier.padding(bottom = 12.dp),
                             borderColor = UbusPrimary.copy(alpha = 0.1f)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(UbusPrimary.copy(alpha = 0.05f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.DirectionsBus,
-                                            contentDescription = null,
-                                            tint = UbusPrimary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(40.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(UbusPrimary.copy(alpha = 0.05f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.DirectionsBus,
+                                                contentDescription = null,
+                                                tint = UbusPrimary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = if (res.trip?.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) "Ida" else "Volta",
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onBackground
+                                            )
+                                            Text(
+                                                text = "${res.trip?.tripDate ?: ""} · ${if (res.trip?.shift == "MORNING") "Manhã" else if (res.trip?.shift == "AFTERNOON") "Tarde" else "Noite"}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = UbusText3
+                                            )
+                                        }
                                     }
-                                    Spacer(Modifier.width(12.dp))
-                                    Column {
-                                        Text(
-                                            text = if (res.trip?.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) "Ida" else "Volta",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-                                        Text(
-                                            text = "${res.trip?.tripDate ?: ""} · ${if (res.trip?.shift == "MORNING") "Manhã" else if (res.trip?.shift == "AFTERNOON") "Tarde" else "Noite"}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = UbusText3
-                                        )
+                                    com.ubusmobilidade.ubus.ui.components.StatusChip(status = res.status)
+                                }
+
+                                val tripDate = res.trip?.tripDate?.let { try { LocalDate.parse(it) } catch (e: Exception) { null } }
+                                val isFutureOrToday = tripDate != null && tripDate >= today
+                                val isConfirmed = res.status == com.ubusmobilidade.ubus.data.model.ReservationStatus.CONFIRMED
+
+                                if (isConfirmed && isFutureOrToday) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        androidx.compose.material3.TextButton(
+                                            onClick = { resToCancel = res },
+                                            enabled = cancelingId != res.id,
+                                            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                                                contentColor = MaterialTheme.colorScheme.error
+                                            )
+                                        ) {
+                                            Text(
+                                                if (cancelingId == res.id) "Cancelando..." else "Cancelar",
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
                                 }
-                                com.ubusmobilidade.ubus.ui.components.StatusChip(status = res.status)
                             }
                         }
                     }
@@ -213,5 +266,43 @@ fun HistoricoScreen(component: RootComponent) {
             }
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    if (resToCancel != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { resToCancel = null },
+            title = { Text("Cancelar Reserva") },
+            text = { Text("Deseja realmente cancelar esta reserva?") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        val res = resToCancel ?: return@TextButton
+                        resToCancel = null
+                        scope.launch {
+                            try {
+                                cancelingId = res.id
+                                reservationRepo.cancel(res.id)
+                                reservations = reservationRepo.getMyReservations()
+                                successMessage = "Reserva cancelada com sucesso!"
+                                errorMessage = null
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                errorMessage = e.toUserMessage("Não foi possível cancelar a reserva.")
+                                successMessage = null
+                            } finally {
+                                cancelingId = null
+                            }
+                        }
+                    }
+                ) {
+                    Text("Confirmar", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { resToCancel = null }) {
+                    Text("Voltar")
+                }
+            }
+        )
     }
 }

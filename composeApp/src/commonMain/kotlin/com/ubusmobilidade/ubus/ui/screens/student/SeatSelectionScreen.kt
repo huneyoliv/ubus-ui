@@ -62,7 +62,7 @@ import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
-fun SeatSelectionScreen(component: RootComponent, tripId: String) {
+fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInboundTripId: String? = null) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
@@ -130,12 +130,13 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
                     .padding(top = 24.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { component.replaceWith(RootComponent.Config.Reservar) }) {
+                IconButton(onClick = { component.goBack() }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                 }
                 Spacer(Modifier.width(8.dp))
+                val activeTrip = trip
                 Text(
-                    text = "Escolher Assento",
+                    text = if (activeTrip == null) "Escolher Assento" else "Escolher Assento${if (pendingInboundTripId != null || activeTrip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) " (Ida)" else " (Volta)"}",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
@@ -256,7 +257,7 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String) {
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     onClick = {
                         val seat = selectedSeat ?: return@UbusButton
-                        component.replaceWith(RootComponent.Config.SelecionarPontoEmbarque(tripId, seat))
+                        component.replaceWith(RootComponent.Config.SelecionarPontoEmbarque(tripId, seat, pendingInboundTripId))
                     }
                 )
             }

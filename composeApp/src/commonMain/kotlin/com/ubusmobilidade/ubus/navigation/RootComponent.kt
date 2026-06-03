@@ -34,8 +34,9 @@ class RootComponent(
         Config.RedefinirSenha -> Child.RedefinirSenha
 
         // Student
-        is Config.SelecionarAssento -> Child.SelecionarAssento(config.tripId)
-        is Config.SelecionarPontoEmbarque -> Child.SelecionarPontoEmbarque(config.tripId, config.seatNumber)
+        is Config.SelecionarAssento -> Child.SelecionarAssento(config.tripId, config.pendingInboundTripId)
+        is Config.SelecionarPontoEmbarque -> Child.SelecionarPontoEmbarque(config.tripId, config.seatNumber, config.pendingInboundTripId)
+        is Config.SelecionarDirecao -> Child.SelecionarDirecao(config.routeId, config.tripDate, config.shift, config.outboundTripId, config.inboundTripId)
         is Config.AvaliarViagem -> Child.AvaliarViagem(config.reservationId, config.tripId)
         Config.StudentHome -> Child.StudentHome
         Config.Reservar -> Child.Reservar
@@ -157,6 +158,7 @@ class RootComponent(
         is Config.SelecionarAssento -> true
         is Config.SelecionarPontoEmbarque -> true
         is Config.AvaliarViagem -> true
+        is Config.SelecionarDirecao -> true
         else -> config in studentRoutes
     }
 
@@ -183,8 +185,9 @@ class RootComponent(
         @Serializable data object AlterarSenha : Config()
         @Serializable data object RenovarSemestre : Config()
         @Serializable data object BaixaMobilidade : Config()
-        @Serializable data class SelecionarAssento(val tripId: String) : Config()
-        @Serializable data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int) : Config()
+        @Serializable data class SelecionarAssento(val tripId: String, val pendingInboundTripId: String? = null) : Config()
+        @Serializable data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int, val pendingInboundTripId: String? = null) : Config()
+        @Serializable data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Config()
         @Serializable data class AvaliarViagem(val reservationId: String, val tripId: String) : Config()
         @Serializable data object Regras : Config()
 
@@ -235,8 +238,9 @@ class RootComponent(
         data object AlterarSenha : Child()
         data object RenovarSemestre : Child()
         data object BaixaMobilidade : Child()
-        data class SelecionarAssento(val tripId: String) : Child()
-        data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int) : Child()
+        data class SelecionarAssento(val tripId: String, val pendingInboundTripId: String? = null) : Child()
+        data class SelecionarPontoEmbarque(val tripId: String, val seatNumber: Int, val pendingInboundTripId: String? = null) : Child()
+        data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Child()
         data class AvaliarViagem(val reservationId: String, val tripId: String) : Child()
         data object Regras : Child()
 

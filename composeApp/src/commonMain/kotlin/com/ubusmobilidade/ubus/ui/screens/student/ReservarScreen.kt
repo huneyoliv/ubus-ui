@@ -143,7 +143,16 @@ fun ReservarScreen(component: RootComponent) {
                     }
                 }
             } else {
-                trips.forEach { trip ->
+                val groupedTrips = remember(trips) {
+                    trips.groupBy { Triple(it.routeId ?: "", it.tripDate, it.shift) }
+                }
+
+                groupedTrips.forEach { (key, tripsInGroup) ->
+                    val (routeId, tripDate, shift) = key
+                    val outboundTrip = tripsInGroup.find { it.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND }
+                    val inboundTrip = tripsInGroup.find { it.direction == com.ubusmobilidade.ubus.data.model.TripDirection.INBOUND }
+                    val firstTrip = tripsInGroup.first()
+
                     BentoCard(
                         modifier = Modifier.padding(bottom = 16.dp),
                         borderColor = UbusPrimary.copy(alpha = 0.15f)
@@ -161,26 +170,25 @@ fun ReservarScreen(component: RootComponent) {
                             Spacer(Modifier.width(12.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    trip.route?.name ?: "Rota Escolar",
+                                    firstTrip.route?.name ?: "Rota Escolar",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onBackground,
                                 )
                                 Text(
-                                    "${trip.tripDate} · ${if (trip.shift == "MORNING") "Manhã" else if (trip.shift == "AFTERNOON") "Tarde" else "Noite"} · ${if (trip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) "Ida" else "Volta"}",
+                                    "$tripDate · ${if (shift == "MORNING") "Manhã" else if (shift == "AFTERNOON") "Tarde" else "Noite"}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = UbusText3,
                                 )
                             }
                         }
 
-                        // Ocupação de assentos
-                        val occupiedSeatsCount = remember(trip.tripId) {
+                        val capacity = tripsInGroup.sumOf { if (it.realCapacity > 0) it.realCapacity else 40 }
+                        val occupiedSeatsCount = tripsInGroup.sumOf { trip ->
                             val seed = trip.tripId.hashCode().let { if (it < 0) -it else it }
                             val cap = if (trip.realCapacity > 0) trip.realCapacity else 40
                             (seed % (cap - 5)).coerceIn(10, cap - 3)
                         }
-                        val capacity = if (trip.realCapacity > 0) trip.realCapacity else 40
                         val availableSeats = capacity - occupiedSeatsCount
                         val occupancyRatio = occupiedSeatsCount.toFloat() / capacity.toFloat()
 
@@ -216,44 +224,17 @@ fun ReservarScreen(component: RootComponent) {
                         Spacer(Modifier.height(4.dp))
 
                         UbusButton(
-                            text = if (BackendCapabilities.supportsSeatSelection) "Escolher Assento" else "Reservar",
-                            loading = reservingId == trip.tripId,
+                            text = "Selecionar Viagem",
                             onClick = {
-                                if (BackendCapabilities.supportsSeatSelection) {
-                                    component.replaceWith(RootComponent.Config.SelecionarAssento(trip.tripId))
-                                } else {
-                                    reservingId = trip.tripId
-                                    scope.launch {
-                                        try {
-                                            val defaultPointId = component.authStorage.user?.defaultPointId
-                                            val reservation = if (
-                                                BackendCapabilities.supportsPickupPointConfirmationInReservation &&
-                                                !defaultPointId.isNullOrBlank()
-                                            ) {
-                                                reservationRepo.createWithPickupPoint(
-                                                    tripId = trip.tripId,
-                                                    pickupPointId = defaultPointId,
-                                                )
-                                            } else {
-                                                reservationRepo.create(CreateReservationPayload(tripId = trip.tripId))
-                                            }
-                                            val reservationWithTrip = if (reservation.trip == null) {
-                                                reservation.copy(trip = trip)
-                                            } else {
-                                                reservation
-                                            }
-                                            notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 60)
-                                            notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
-                                            successMessage = "Reserva confirmada!"
-                                            errorMessage = ""
-                                        } catch (e: Exception) {
-                                            if (e is kotlinx.coroutines.CancellationException) throw e
-                                            e.printStackTrace()
-                                            errorMessage = e.toUserMessage("Não foi possível concluir a reserva.")
-                                        }
-                                        reservingId = null
-                                    }
-                                }
+                                component.navigateTo(
+                                    RootComponent.Config.SelecionarDirecao(
+                                        routeId = routeId,
+                                        tripDate = tripDate,
+                                        shift = shift,
+                                        outboundTripId = outboundTrip?.tripId,
+                                        inboundTripId = inboundTrip?.tripId
+                                    )
+                                )
                             },
                         )
                     }

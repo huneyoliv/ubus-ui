@@ -74,7 +74,6 @@ fun HomeScreen(component: RootComponent) {
         ?.take(2)
         ?.joinToString("") ?: "?"
 
-    var openTrips by remember { mutableStateOf<List<Trip>>(emptyList()) }
     var myReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var pendingRatings by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var attendanceScore by remember { mutableStateOf<AttendanceScore?>(null) }
@@ -82,20 +81,12 @@ fun HomeScreen(component: RootComponent) {
     var loadError by remember { mutableStateOf<String?>(null) }
 
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
-    val tripRepo = remember { TripRepository(apiClient) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     val tripRatingRepo = remember { TripRatingRepository(apiClient) }
     val attendanceRepo = remember { AttendanceRepository(apiClient) }
 
     LaunchedEffect(Unit) {
         try {
-            try {
-                openTrips = tripRepo.getOpenTrips()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                openTrips = emptyList()
-                loadError = e.toUserMessage("Não foi possível carregar os dados da tela inicial.")
-            }
             try {
                 myReservations = reservationRepo.getMyReservations()
             } catch (e: Exception) {
@@ -242,40 +233,7 @@ fun HomeScreen(component: RootComponent) {
                     )
                 }
 
-                // Bento de Reserva
-                BentoCard(
-                    modifier = Modifier
-                        .clickable { component.navigateTo(RootComponent.Config.Reservar) }
-                        .padding(bottom = 16.dp),
-                    borderColor = UbusPrimary.copy(alpha = 0.2f)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(UbusPrimary.copy(alpha = 0.1f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                "Reservar Viagem",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Text(
-                                "${openTrips.size} viagens disponíveis",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = UbusText3,
-                            )
-                        }
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = UbusText3, modifier = Modifier.size(20.dp))
-                    }
-                }
+
 
                 // Active reservations
                 val futureReservations = myReservations.filter { it.id != reservationToday?.id }
