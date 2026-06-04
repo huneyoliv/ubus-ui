@@ -14,30 +14,12 @@ actual class NotificationScheduler actual constructor() {
 
     actual fun scheduleEmbarkAlert(reservation: Reservation, minutesBefore: Int) {
         val trip = reservation.trip ?: return
-        val dateParts = trip.tripDate.split("-")
-        if (dateParts.size != 3) return
-        val year = dateParts[0].toIntOrNull() ?: return
-        val month = dateParts[1].toIntOrNull()?.minus(1) ?: return
-        val day = dateParts[2].toIntOrNull() ?: return
-
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.YEAR, year)
-            set(Calendar.MONTH, month)
-            set(Calendar.DAY_OF_MONTH, day)
-            val isOutbound = trip.direction.name.uppercase() != "INBOUND"
-            val (hour, minute) = when (trip.shift.uppercase()) {
-                "MORNING", "MANHA" -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
-                "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12, 0) else Pair(18, 0)
-                "NIGHT", "NOITE" -> if (isOutbound) Pair(18, 0) else Pair(22, 0)
-                else -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
-            }
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+        val customDepartureTime = if (trip.direction.name.uppercase() == "OUTBOUND") {
+            trip.route?.departureTimeOutbound
+        } else {
+            trip.route?.departureTimeInbound
         }
-
-        val departureTime = calendar.timeInMillis
+        val departureTime = getTripDepartureMillis(trip.tripDate, trip.shift, trip.direction.name, customDepartureTime)
         val triggerTime = departureTime - (minutesBefore * 60 * 1000)
 
         if (triggerTime <= System.currentTimeMillis()) return

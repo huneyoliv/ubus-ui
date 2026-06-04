@@ -59,6 +59,7 @@ fun TripProgressCard(
                 tripDate = trip.tripDate,
                 shift = trip.shift,
                 direction = trip.direction.name,
+                customDepartureTime = if (trip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.OUTBOUND) trip.route?.departureTimeOutbound else trip.route?.departureTimeInbound,
                 textColor = Color.White
             )
         }

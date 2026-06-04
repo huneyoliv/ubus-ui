@@ -45,6 +45,8 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun ManagerRoutesScreen(component: RootComponent) {
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
@@ -63,69 +65,68 @@ fun ManagerRoutesScreen(component: RootComponent) {
         loading = false
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
-    ) {
-        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
-        }
-        Text(
-            "Rotas",
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-        )
-        Text(
-            "Gerencie as linhas de transporte",
-            style = MaterialTheme.typography.bodyMedium,
-            color = UbusText3,
-            modifier = Modifier.padding(bottom = 20.dp),
-        )
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        ) {
+            IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
+            }
+            Text(
+                "Rotas",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+            )
+            Text(
+                "Gerencie as linhas de transporte",
+                style = MaterialTheme.typography.bodyMedium,
+                color = UbusText3,
+                modifier = Modifier.padding(bottom = 20.dp),
+            )
 
-        if (loading) {
-            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = UbusPrimary)
-            }
-        } else if (error.isNotEmpty()) {
-            BentoCard {
-                Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodyMedium)
-            }
-        } else if (routes.isEmpty()) {
-            BentoCard {
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Route, null, tint = UbusText3, modifier = Modifier.size(48.dp))
-                    Spacer(Modifier.height(12.dp))
-                    Text("Nenhuma rota cadastrada", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
+            if (loading) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = UbusPrimary)
                 }
-            }
-        } else {
-            routes.forEach { route ->
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
-                    component.navigateTo(RootComponent.Config.ManagerRouteDetail(route.id))
-                }) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Route, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(route.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
-                            if (route.description != null) {
-                                Text(route.description, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+            } else if (error.isNotEmpty()) {
+                BentoCard {
+                    Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodyMedium)
+                }
+            } else if (routes.isEmpty()) {
+                BentoCard {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Route, null, tint = UbusText3, modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text("Nenhuma rota cadastrada", style = MaterialTheme.typography.titleMedium, color = UbusText3, textAlign = TextAlign.Center)
+                    }
+                }
+            } else {
+                routes.forEach { route ->
+                    BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
+                        component.navigateTo(RootComponent.Config.ManagerRouteDetail(route.id))
+                    }) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Route, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(route.name, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onBackground)
+                                if (route.description != null) {
+                                    Text(route.description, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                                }
+                                val weekDaysText = route.weekDays?.joinToString(", ") { dayName(it) } ?: ""
+                                if (weekDaysText.isNotEmpty()) {
+                                    Text(weekDaysText, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                                }
                             }
-                            val weekDaysText = route.weekDays?.joinToString(", ") { dayName(it) } ?: ""
-                            if (weekDaysText.isNotEmpty()) {
-                                Text(weekDaysText, style = MaterialTheme.typography.bodySmall, color = UbusText3)
-                            }
+                            Text(
+                                if (route.active) "Ativa" else "Inativa",
+                                color = if (route.active) UbusSuccess else UbusDestructive,
+                                style = MaterialTheme.typography.labelSmall,
+                            )
                         }
                         Text(
-                            if (route.active) "Ativa" else "Inativa",
-                            color = if (route.active) UbusSuccess else UbusDestructive,
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    }
-                    if (route.votingOpenTime != null && route.votingCloseTime != null) {
-                        Text(
-                            "Votação: ${route.votingOpenTime} - ${route.votingCloseTime}",
+                            "Ida: ${route.departureTimeOutbound ?: "--:--"} · Volta: ${route.departureTimeInbound ?: "--:--"}",
                             style = MaterialTheme.typography.bodySmall,
                             color = UbusText3,
                             modifier = Modifier.padding(top = 4.dp),
@@ -133,8 +134,19 @@ fun ManagerRoutesScreen(component: RootComponent) {
                     }
                 }
             }
+            Spacer(Modifier.height(80.dp))
         }
-        Spacer(Modifier.height(16.dp))
+
+        FloatingActionButton(
+            onClick = { component.navigateTo(RootComponent.Config.ManagerRouteForm) },
+            containerColor = UbusPrimary,
+            contentColor = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+        ) {
+            Icon(Icons.Default.Add, "Criar Rota")
+        }
     }
 }
 

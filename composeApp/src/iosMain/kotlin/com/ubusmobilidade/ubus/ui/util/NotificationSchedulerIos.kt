@@ -16,32 +16,17 @@ import platform.Foundation.timeIntervalSinceNow
 actual class NotificationScheduler actual constructor() {
     actual fun scheduleEmbarkAlert(reservation: Reservation, minutesBefore: Int) {
         val trip = reservation.trip ?: return
-        val dateParts = trip.tripDate.split("-")
-        if (dateParts.size != 3) return
-        val year = dateParts[0].toLongOrNull() ?: return
-        val month = dateParts[1].toLongOrNull() ?: return
-        val day = dateParts[2].toLongOrNull() ?: return
-
-        val isOutbound = trip.direction.name.uppercase() != "INBOUND"
-        val (hour, minute) = when (trip.shift.uppercase()) {
-            "MORNING", "MANHA" -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
-            "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12L, 0L) else Pair(18L, 0L)
-            "NIGHT", "NOITE" -> if (isOutbound) Pair(18L, 0L) else Pair(22L, 0L)
-            else -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
+        val customDepartureTime = if (trip.direction.name.uppercase() == "OUTBOUND") {
+            trip.route?.departureTimeOutbound
+        } else {
+            trip.route?.departureTimeInbound
         }
+        val departureTime = getTripDepartureMillis(trip.tripDate, trip.shift, trip.direction.name, customDepartureTime)
+        if (departureTime == 0L) return
 
-        val components = NSDateComponents().apply {
-            setYear(year)
-            setMonth(month)
-            setDay(day)
-            setHour(hour)
-            setMinute(minute)
-        }
-
-        val calendar = NSCalendar.currentCalendar
-        val departureDate = calendar.dateFromComponents(components) ?: return
+        val departureDate = NSDate.dateWithTimeIntervalSince1970(departureTime / 1000.0)
         val triggerTimeInterval = - (minutesBefore.toDouble() * 60.0)
-        val triggerDate = NSDate(departureDate.timeIntervalSinceReferenceDate + triggerTimeInterval)
+        val triggerDate = NSDate(departureDate.timeIntervalSince1970 + triggerTimeInterval)
 
         if (triggerDate.timeIntervalSinceNow <= 0.0) return
 

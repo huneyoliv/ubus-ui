@@ -53,6 +53,8 @@ data class Route(
     val weekDays: List<Int>? = null,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
+    val departureTimeOutbound: String? = null,
+    val departureTimeInbound: String? = null,
     val active: Boolean = true,
     val requiresElevator: Boolean = false,
 )

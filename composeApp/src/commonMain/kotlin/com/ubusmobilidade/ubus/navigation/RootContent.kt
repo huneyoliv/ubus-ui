@@ -28,6 +28,7 @@ import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRouteDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerBusDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerStudentDetailScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerPickupPointFormScreen
+import com.ubusmobilidade.ubus.ui.screens.manager.ManagerRouteFormScreen
 import com.ubusmobilidade.ubus.ui.screens.student.AlterarSenhaScreen
 import com.ubusmobilidade.ubus.ui.screens.student.BaixaMobilidadeScreen
 import com.ubusmobilidade.ubus.ui.screens.student.SmartTicketScreen
@@ -103,6 +104,7 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.ManagerBusDetail -> ManagerBusDetailScreen(component, instance.busId)
             is RootComponent.Child.ManagerStudentDetail -> ManagerStudentDetailScreen(component, instance.userId)
             is RootComponent.Child.ManagerPickupPointForm -> ManagerPickupPointFormScreen(component, instance.routeId, instance.pointId)
+            is RootComponent.Child.ManagerRouteForm -> ManagerRouteFormScreen(component)
         }
     }
 }

@@ -166,8 +166,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
     // Form states
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var votingOpenTime by remember { mutableStateOf("") }
-    var votingCloseTime by remember { mutableStateOf("") }
+    var departureTimeOutbound by remember { mutableStateOf("") }
+    var departureTimeInbound by remember { mutableStateOf("") }
     var selectedDriverId by remember { mutableStateOf<String?>(null) }
     var driverDropdownExpanded by remember { mutableStateOf(false) }
     
@@ -186,8 +186,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 route = r
                 name = r.name
                 description = r.description ?: ""
-                votingOpenTime = r.votingOpenTime ?: ""
-                votingCloseTime = r.votingCloseTime ?: ""
+                departureTimeOutbound = r.departureTimeOutbound ?: "06:30"
+                departureTimeInbound = r.departureTimeInbound ?: "18:00"
                 
                 assignedBuses = fleetRepo.listBusesByRoute(routeId)
                 allBuses = fleetRepo.listBuses()
@@ -224,8 +224,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 fleetRepo.updateRoute(routeId, UpdateRoutePayload(
                     name = name,
                     description = description,
-                    votingOpenTime = votingOpenTime,
-                    votingCloseTime = votingCloseTime
+                    departureTimeOutbound = departureTimeOutbound,
+                    departureTimeInbound = departureTimeInbound
                 ))
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {
@@ -312,8 +312,6 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     return@launch
                 }
                 val busId = assignedBuses.first().id
-                val rOpenTime = votingOpenTime.ifEmpty { "06:00" }
-                val rCloseTime = votingCloseTime.ifEmpty { "18:00" }
                 
                 var count = 0
                 datesToGenerate.forEach { date ->
@@ -331,8 +329,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                             busId = busId,
                             driverId = selectedDriverId,
                             realCapacity = assignedBuses.first().standardCapacity,
-                            votingOpen = "${date}T${rOpenTime}:00Z",
-                            votingClose = "${date}T${rCloseTime}:00Z",
+                            votingOpen = "${date}T00:00:00Z",
+                            votingClose = "${date}T23:59:59Z",
                         )
                     )
                     
@@ -348,8 +346,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                             busId = busId,
                             driverId = selectedDriverId,
                             realCapacity = assignedBuses.first().standardCapacity,
-                            votingOpen = "${date}T${rOpenTime}:00Z",
-                            votingClose = "${date}T${rCloseTime}:00Z",
+                            votingOpen = "${date}T00:00:00Z",
+                            votingClose = "${date}T23:59:59Z",
                         )
                     )
                     count++
@@ -401,8 +399,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     UbusTextField(value = name, onValueChange = { name = it }, label = "Nome da Rota")
                     UbusTextField(value = description, onValueChange = { description = it }, label = "Descrição")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        UbusTextField(value = votingOpenTime, onValueChange = { votingOpenTime = it }, label = "Abertura Votação", modifier = Modifier.weight(1f), placeholder = "06:00")
-                        UbusTextField(value = votingCloseTime, onValueChange = { votingCloseTime = it }, label = "Fechamento Votação", modifier = Modifier.weight(1f), placeholder = "18:00")
+                        UbusTextField(value = departureTimeOutbound, onValueChange = { departureTimeOutbound = it }, label = "Horário de Ida", modifier = Modifier.weight(1f), placeholder = "06:30")
+                        UbusTextField(value = departureTimeInbound, onValueChange = { departureTimeInbound = it }, label = "Horário de Volta", modifier = Modifier.weight(1f), placeholder = "18:00")
                     }
                 }
             }

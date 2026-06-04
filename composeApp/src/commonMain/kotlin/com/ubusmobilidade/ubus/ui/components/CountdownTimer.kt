@@ -29,10 +29,11 @@ fun CountdownTimer(
     tripDate: String,
     shift: String,
     direction: String = "OUTBOUND",
+    customDepartureTime: String? = null,
     modifier: Modifier = Modifier,
     textColor: Color = MaterialTheme.colorScheme.onBackground
 ) {
-    val departureMillis = remember(tripDate, shift, direction) { getTripDepartureMillis(tripDate, shift, direction) }
+    val departureMillis = remember(tripDate, shift, direction, customDepartureTime) { getTripDepartureMillis(tripDate, shift, direction, customDepartureTime) }
     var timeRemaining by remember { mutableStateOf(departureMillis - System.currentTimeMillis()) }
 
     LaunchedEffect(departureMillis) {

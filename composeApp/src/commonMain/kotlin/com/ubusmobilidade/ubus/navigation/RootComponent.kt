@@ -77,6 +77,7 @@ class RootComponent(
         is Config.ManagerBusDetail -> Child.ManagerBusDetail(config.busId)
         is Config.ManagerStudentDetail -> Child.ManagerStudentDetail(config.userId)
         is Config.ManagerPickupPointForm -> Child.ManagerPickupPointForm(config.routeId, config.pointId)
+        Config.ManagerRouteForm -> Child.ManagerRouteForm
     }
 
     // ── Navigation actions ──
@@ -143,6 +144,7 @@ class RootComponent(
             is Config.ManagerBusDetail -> true
             is Config.ManagerStudentDetail -> true
             is Config.ManagerPickupPointForm -> true
+            Config.ManagerRouteForm -> true
             else -> config in managerRoutes
         }
         RoleUsuario.SUPER_ADMIN -> when (config) {
@@ -151,6 +153,7 @@ class RootComponent(
             is Config.ManagerBusDetail -> true
             is Config.ManagerStudentDetail -> true
             is Config.ManagerPickupPointForm -> true
+            Config.ManagerRouteForm -> true
             Config.SuperAdminManagement -> true
             else -> config in managerRoutes
         }
@@ -218,6 +221,7 @@ class RootComponent(
         @Serializable data class ManagerBusDetail(val busId: String) : Config()
         @Serializable data class ManagerStudentDetail(val userId: String) : Config()
         @Serializable data class ManagerPickupPointForm(val routeId: String, val pointId: String? = null) : Config()
+        @Serializable data object ManagerRouteForm : Config()
     }
 
     // ── Sealed children ──
@@ -272,6 +276,7 @@ class RootComponent(
         data class ManagerBusDetail(val busId: String) : Child()
         data class ManagerStudentDetail(val userId: String) : Child()
         data class ManagerPickupPointForm(val routeId: String, val pointId: String? = null) : Child()
+        data object ManagerRouteForm : Child()
     }
 
     companion object {
