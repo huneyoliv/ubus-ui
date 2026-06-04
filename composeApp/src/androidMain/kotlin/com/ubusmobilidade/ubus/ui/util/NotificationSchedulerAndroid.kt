@@ -24,11 +24,12 @@ actual class NotificationScheduler actual constructor() {
             set(Calendar.YEAR, year)
             set(Calendar.MONTH, month)
             set(Calendar.DAY_OF_MONTH, day)
-            val (hour, minute) = when (trip.shift) {
-                "MORNING" -> Pair(6, 30)
-                "AFTERNOON" -> Pair(12, 0)
-                "NIGHT" -> Pair(18, 0)
-                else -> Pair(6, 30)
+            val isOutbound = trip.direction.name.uppercase() != "INBOUND"
+            val (hour, minute) = when (trip.shift.uppercase()) {
+                "MORNING", "MANHA" -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
+                "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12, 0) else Pair(18, 0)
+                "NIGHT", "NOITE" -> if (isOutbound) Pair(18, 0) else Pair(22, 0)
+                else -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
             }
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)

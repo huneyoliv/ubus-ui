@@ -2,7 +2,7 @@ package com.ubusmobilidade.ubus.ui.util
 
 import java.util.Calendar
 
-actual fun getTripDepartureMillis(tripDate: String, shift: String): Long {
+actual fun getTripDepartureMillis(tripDate: String, shift: String, direction: String): Long {
     val parts = tripDate.split("-")
     if (parts.size != 3) return 0L
     val year = parts[0].toIntOrNull() ?: return 0L
@@ -13,11 +13,12 @@ actual fun getTripDepartureMillis(tripDate: String, shift: String): Long {
         set(Calendar.YEAR, year)
         set(Calendar.MONTH, month)
         set(Calendar.DAY_OF_MONTH, day)
-        val (hour, minute) = when (shift) {
-            "MORNING" -> Pair(6, 30)
-            "AFTERNOON" -> Pair(12, 0)
-            "NIGHT" -> Pair(18, 0)
-            else -> Pair(6, 30)
+        val isOutbound = direction.uppercase() != "INBOUND"
+        val (hour, minute) = when (shift.uppercase()) {
+            "MORNING", "MANHA" -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
+            "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12, 0) else Pair(18, 0)
+            "NIGHT", "NOITE" -> if (isOutbound) Pair(18, 0) else Pair(22, 0)
+            else -> if (isOutbound) Pair(6, 30) else Pair(12, 0)
         }
         set(Calendar.HOUR_OF_DAY, hour)
         set(Calendar.MINUTE, minute)

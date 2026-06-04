@@ -22,11 +22,12 @@ actual class NotificationScheduler actual constructor() {
         val month = dateParts[1].toLongOrNull() ?: return
         val day = dateParts[2].toLongOrNull() ?: return
 
-        val (hour, minute) = when (trip.shift) {
-            "MORNING" -> Pair(6L, 30L)
-            "AFTERNOON" -> Pair(12L, 0L)
-            "NIGHT" -> Pair(18L, 0L)
-            else -> Pair(6L, 30L)
+        val isOutbound = trip.direction.name.uppercase() != "INBOUND"
+        val (hour, minute) = when (trip.shift.uppercase()) {
+            "MORNING", "MANHA" -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
+            "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12L, 0L) else Pair(18L, 0L)
+            "NIGHT", "NOITE" -> if (isOutbound) Pair(18L, 0L) else Pair(22L, 0L)
+            else -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
         }
 
         val components = NSDateComponents().apply {

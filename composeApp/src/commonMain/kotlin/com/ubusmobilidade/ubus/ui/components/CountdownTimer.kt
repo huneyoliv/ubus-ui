@@ -28,10 +28,11 @@ import kotlinx.coroutines.delay
 fun CountdownTimer(
     tripDate: String,
     shift: String,
+    direction: String = "OUTBOUND",
     modifier: Modifier = Modifier,
     textColor: Color = MaterialTheme.colorScheme.onBackground
 ) {
-    val departureMillis = remember(tripDate, shift) { getTripDepartureMillis(tripDate, shift) }
+    val departureMillis = remember(tripDate, shift, direction) { getTripDepartureMillis(tripDate, shift, direction) }
     var timeRemaining by remember { mutableStateOf(departureMillis - System.currentTimeMillis()) }
 
     LaunchedEffect(departureMillis) {

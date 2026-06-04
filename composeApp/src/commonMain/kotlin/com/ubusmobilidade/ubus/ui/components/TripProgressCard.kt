@@ -58,6 +58,7 @@ fun TripProgressCard(
             CountdownTimer(
                 tripDate = trip.tripDate,
                 shift = trip.shift,
+                direction = trip.direction.name,
                 textColor = Color.White
             )
         }

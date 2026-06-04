@@ -5,18 +5,19 @@ import platform.Foundation.NSDateComponents
 import platform.Foundation.timeIntervalSinceReferenceDate
 import platform.Foundation.timeIntervalSince1970
 
-actual fun getTripDepartureMillis(tripDate: String, shift: String): Long {
+actual fun getTripDepartureMillis(tripDate: String, shift: String, direction: String): Long {
     val parts = tripDate.split("-")
     if (parts.size != 3) return 0L
     val year = parts[0].toLongOrNull() ?: return 0L
     val month = parts[1].toLongOrNull() ?: return 0L
     val day = parts[2].toLongOrNull() ?: return 0L
 
-    val (hour, minute) = when (shift) {
-        "MORNING" -> Pair(6L, 30L)
-        "AFTERNOON" -> Pair(12L, 0L)
-        "NIGHT" -> Pair(18L, 0L)
-        else -> Pair(6L, 30L)
+    val isOutbound = direction.uppercase() != "INBOUND"
+    val (hour, minute) = when (shift.uppercase()) {
+        "MORNING", "MANHA" -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
+        "AFTERNOON", "TARDE" -> if (isOutbound) Pair(12L, 0L) else Pair(18L, 0L)
+        "NIGHT", "NOITE" -> if (isOutbound) Pair(18L, 0L) else Pair(22L, 0L)
+        else -> if (isOutbound) Pair(6L, 30L) else Pair(12L, 0L)
     }
 
     val components = NSDateComponents().apply {
