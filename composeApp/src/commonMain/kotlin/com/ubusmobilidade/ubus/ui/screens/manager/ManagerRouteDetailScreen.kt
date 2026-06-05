@@ -218,12 +218,20 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
     }
 
     fun handleSave() {
+        val timeRegex = "^([01]\\d|2[0-3]):[0-5]\\d$".toRegex()
+        if (!departureTimeOutbound.matches(timeRegex) || !departureTimeInbound.matches(timeRegex)) {
+            error = "Os horários de partida devem estar no formato HH:mm."
+            return
+        }
+
         saving = true
         scope.launch {
             try {
                 fleetRepo.updateRoute(routeId, UpdateRoutePayload(
                     name = name,
-                    description = description
+                    description = description,
+                    departureTimeOutbound = departureTimeOutbound,
+                    departureTimeInbound = departureTimeInbound
                 ))
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {

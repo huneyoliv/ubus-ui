@@ -59,7 +59,9 @@ fun ManagerRouteFormScreen(component: RootComponent) {
                         description = description.ifBlank { null },
                         weekDays = listOf(1, 2, 3, 4, 5),
                         votingOpenTime = "06:00",
-                        votingCloseTime = "18:00"
+                        votingCloseTime = "18:00",
+                        departureTimeOutbound = departureTimeOutbound,
+                        departureTimeInbound = departureTimeInbound
                     )
                 )
                 component.navigateTo(RootComponent.Config.ManagerRouteDetail(newRoute.id))

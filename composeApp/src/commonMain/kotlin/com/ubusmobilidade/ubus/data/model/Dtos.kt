@@ -71,6 +71,8 @@ data class CreateRoutePayload(
     val weekDays: List<Int>,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
+    val departureTimeOutbound: String? = null,
+    val departureTimeInbound: String? = null,
 )
 
 @Serializable
@@ -81,6 +83,8 @@ data class UpdateRoutePayload(
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
     val active: Boolean? = null,
+    val departureTimeOutbound: String? = null,
+    val departureTimeInbound: String? = null,
 )
 
 @Serializable
