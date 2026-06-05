@@ -114,10 +114,6 @@ fun ManagerRoutesScreen(component: RootComponent) {
                                 if (route.description != null) {
                                     Text(route.description, style = MaterialTheme.typography.bodySmall, color = UbusText3)
                                 }
-                                val weekDaysText = route.weekDays?.joinToString(", ") { dayName(it) } ?: ""
-                                if (weekDaysText.isNotEmpty()) {
-                                    Text(weekDaysText, style = MaterialTheme.typography.bodySmall, color = UbusText3)
-                                }
                             }
                             Text(
                                 if (route.active) "Ativa" else "Inativa",
@@ -148,15 +144,4 @@ fun ManagerRoutesScreen(component: RootComponent) {
             Icon(Icons.Default.Add, "Criar Rota")
         }
     }
-}
-
-private fun dayName(day: Int): String = when (day) {
-    0 -> "Dom"
-    1 -> "Seg"
-    2 -> "Ter"
-    3 -> "Qua"
-    4 -> "Qui"
-    5 -> "Sex"
-    6 -> "Sáb"
-    else -> "$day"
 }

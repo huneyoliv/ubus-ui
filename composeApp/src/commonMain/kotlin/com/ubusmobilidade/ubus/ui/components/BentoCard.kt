@@ -16,6 +16,9 @@ import androidx.compose.ui.semantics.semantics
 
 import androidx.compose.ui.graphics.Color
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+
 @Composable
 fun BentoCard(
     modifier: Modifier = Modifier,
@@ -24,9 +27,10 @@ fun BentoCard(
     borderColor: Color = MaterialTheme.colorScheme.outline,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val shape = RoundedCornerShape(cornerRadius)
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.clip(shape).then(modifier).fillMaxWidth(),
+        shape = shape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
