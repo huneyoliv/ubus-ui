@@ -6,10 +6,10 @@ import com.ubusmobilidade.ubus.data.model.*
 class AuthRepository(private val api: ApiClient) {
 
     suspend fun login(payload: LoginPayload): LoginResponse {
-        val tokenOnly = api.post<LoginTokenResponse>("/auth/login", payload)
-        api.authStorage.token = tokenOnly.accessToken
-        val user = api.get<User>("/users/me")
-        return LoginResponse(accessToken = tokenOnly.accessToken, user = user)
+        val response = api.post<LoginResponse>("/auth/login", payload)
+        api.authStorage.token = response.accessToken
+        api.authStorage.user = response.user
+        return response
     }
 
     suspend fun register(payload: RegisterPayload): User =

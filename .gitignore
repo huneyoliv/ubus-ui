@@ -3,6 +3,7 @@
 .kotlin/
 **/.agent/
 **/build/
+**/.teste/
 !src/**/build/
 local.properties
 kotlin-js-store/
