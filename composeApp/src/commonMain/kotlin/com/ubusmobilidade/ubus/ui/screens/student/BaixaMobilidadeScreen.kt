@@ -506,15 +506,13 @@ private fun SelectReasonStep(
             }
 
             BentoCard(
+                onClick = { onSelect(reason) },
+                cornerRadius = 16.dp,
+                borderWidth = if (isSelected) 2.dp else 1.dp,
+                borderColor = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.outlineVariant,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .clickable { onSelect(reason) }
-                    .border(
-                        width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.outlineVariant,
-                        shape = RoundedCornerShape(16.dp)
-                    )
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -111,7 +111,7 @@ fun ManagerDashboardScreen(component: RootComponent) {
             modifier = Modifier.weight(1f),
         ) {
             items(dashItems) { item ->
-                BentoCard(modifier = Modifier.clickable { component.navigateTo(item.config) }) {
+                BentoCard(onClick = { component.navigateTo(item.config) }) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),

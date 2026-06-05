@@ -114,9 +114,12 @@ fun ManagerValidationsScreen(component: RootComponent) {
         } else {
             pendingUsers.forEach { user ->
                 var processing by remember { mutableStateOf(false) }
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
-                    component.navigateTo(RootComponent.Config.ManagerStudentDetail(user.id))
-                }) {
+                BentoCard(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    onClick = {
+                        component.navigateTo(RootComponent.Config.ManagerStudentDetail(user.id))
+                    }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))

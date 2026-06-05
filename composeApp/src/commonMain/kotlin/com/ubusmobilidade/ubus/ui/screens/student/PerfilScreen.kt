@@ -166,7 +166,7 @@ fun PerfilScreen(component: RootComponent) {
 
             // Logout
             BentoCard(
-                modifier = Modifier.clickable { component.logout() },
+                onClick = { component.logout() },
                 borderColor = UbusDestructive.copy(alpha = 0.3f)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -181,7 +181,10 @@ fun PerfilScreen(component: RootComponent) {
 
 @Composable
 private fun ProfileMenuItem(icon: ImageVector, label: String, onClick: () -> Unit) {
-    BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable(onClick = onClick)) {
+    BentoCard(
+        modifier = Modifier.padding(bottom = 8.dp),
+        onClick = onClick
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(12.dp))
@@ -198,7 +201,10 @@ private fun ProfileMenuItemWithBadge(
     badgeActive: Boolean,
     onClick: () -> Unit,
 ) {
-    BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable(onClick = onClick)) {
+    BentoCard(
+        modifier = Modifier.padding(bottom = 8.dp),
+        onClick = onClick
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box {
                 Icon(icon, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))

@@ -125,9 +125,12 @@ fun ManagerMotoristasScreen(component: RootComponent) {
         } else {
             drivers.forEach { driver ->
                 var processing by remember { mutableStateOf(false) }
-                BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable { 
-                    component.navigateTo(RootComponent.Config.ManagerMotoristaDetail(driver.id)) 
-                }) {
+                BentoCard(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    onClick = {
+                        component.navigateTo(RootComponent.Config.ManagerMotoristaDetail(driver.id))
+                    }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                         Spacer(Modifier.width(12.dp))

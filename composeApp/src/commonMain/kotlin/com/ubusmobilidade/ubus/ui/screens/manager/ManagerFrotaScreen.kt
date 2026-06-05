@@ -117,9 +117,12 @@ fun ManagerFrotaScreen(component: RootComponent) {
                 }
             } else {
                 buses.forEach { bus ->
-                    BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
-                        component.navigateTo(RootComponent.Config.ManagerBusDetail(bus.id))
-                    }) {
+                    BentoCard(
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        onClick = {
+                            component.navigateTo(RootComponent.Config.ManagerBusDetail(bus.id))
+                        }
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.DirectionsBus, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                             Spacer(Modifier.width(12.dp))

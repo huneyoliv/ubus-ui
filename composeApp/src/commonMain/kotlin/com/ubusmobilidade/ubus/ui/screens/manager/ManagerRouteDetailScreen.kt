@@ -803,7 +803,10 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             
             val availableBuses = allBuses.filter { ab -> assignedBuses.none { it.id == ab.id } }
             availableBuses.forEach { bus ->
-                BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { assignBus(bus.id) }) {
+                BentoCard(
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    onClick = { assignBus(bus.id) }
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Add, null, tint = UbusPrimary)
                         Spacer(Modifier.width(12.dp))

@@ -166,7 +166,10 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun DocumentCard(label: String, url: String) {
-    BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { /* Abrir URL no browser */ }) {
+    BentoCard(
+        modifier = Modifier.padding(bottom = 8.dp),
+        onClick = { /* Abrir URL no browser */ }
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Description, null, tint = UbusPrimary)
             Spacer(Modifier.width(12.dp))

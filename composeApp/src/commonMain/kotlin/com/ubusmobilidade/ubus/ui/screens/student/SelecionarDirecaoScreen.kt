@@ -100,16 +100,16 @@ fun SelecionarDirecaoScreen(
                 BentoCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .clickable {
-                            component.navigateTo(
-                                RootComponent.Config.SelecionarAssento(
-                                    tripId = outboundTripId,
-                                    pendingInboundTripId = null
-                                )
+                        .padding(bottom = 16.dp),
+                    borderColor = UbusPrimary.copy(alpha = 0.15f),
+                    onClick = {
+                        component.navigateTo(
+                            RootComponent.Config.SelecionarAssento(
+                                tripId = outboundTripId,
+                                pendingInboundTripId = null
                             )
-                        },
-                    borderColor = UbusPrimary.copy(alpha = 0.15f)
+                        )
+                    }
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -146,16 +146,16 @@ fun SelecionarDirecaoScreen(
                 BentoCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .clickable {
-                            component.navigateTo(
-                                RootComponent.Config.SelecionarAssento(
-                                    tripId = inboundTripId,
-                                    pendingInboundTripId = null
-                                )
+                        .padding(bottom = 16.dp),
+                    borderColor = UbusPrimary.copy(alpha = 0.15f),
+                    onClick = {
+                        component.navigateTo(
+                            RootComponent.Config.SelecionarAssento(
+                                tripId = inboundTripId,
+                                pendingInboundTripId = null
                             )
-                        },
-                    borderColor = UbusPrimary.copy(alpha = 0.15f)
+                        )
+                    }
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -192,16 +192,16 @@ fun SelecionarDirecaoScreen(
                 BentoCard(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                        .clickable {
-                            component.navigateTo(
-                                RootComponent.Config.SelecionarAssento(
-                                    tripId = outboundTripId,
-                                    pendingInboundTripId = inboundTripId
-                                )
+                        .padding(bottom = 16.dp),
+                    borderColor = UbusPrimary.copy(alpha = 0.15f),
+                    onClick = {
+                        component.navigateTo(
+                            RootComponent.Config.SelecionarAssento(
+                                tripId = outboundTripId,
+                                pendingInboundTripId = inboundTripId
                             )
-                        },
-                    borderColor = UbusPrimary.copy(alpha = 0.15f)
+                        )
+                    }
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

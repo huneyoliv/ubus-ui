@@ -48,7 +48,10 @@ fun DriverConfigScreen(component: RootComponent) {
         Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(horizontal = 20.dp)) {
             Text("Configurações", style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.padding(top = 32.dp, bottom = 24.dp))
 
-            BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { component.navigateTo(RootComponent.Config.MeusDados) }) {
+            BentoCard(
+                modifier = Modifier.padding(bottom = 8.dp),
+                onClick = { component.navigateTo(RootComponent.Config.MeusDados) }
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
@@ -56,7 +59,10 @@ fun DriverConfigScreen(component: RootComponent) {
                 }
             }
 
-            BentoCard(modifier = Modifier.padding(bottom = 8.dp).clickable { component.navigateTo(RootComponent.Config.AlterarSenha) }) {
+            BentoCard(
+                modifier = Modifier.padding(bottom = 8.dp),
+                onClick = { component.navigateTo(RootComponent.Config.AlterarSenha) }
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Lock, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))
@@ -65,7 +71,9 @@ fun DriverConfigScreen(component: RootComponent) {
             }
 
             Spacer(Modifier.height(8.dp))
-            BentoCard(modifier = Modifier.clickable { component.logout() }) {
+            BentoCard(
+                onClick = { component.logout() }
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = UbusDestructive, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(12.dp))

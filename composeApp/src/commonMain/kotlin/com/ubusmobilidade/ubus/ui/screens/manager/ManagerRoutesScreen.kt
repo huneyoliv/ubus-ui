@@ -103,9 +103,12 @@ fun ManagerRoutesScreen(component: RootComponent) {
                 }
             } else {
                 routes.forEach { route ->
-                    BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable {
-                        component.navigateTo(RootComponent.Config.ManagerRouteDetail(route.id))
-                    }) {
+                    BentoCard(
+                        modifier = Modifier.padding(bottom = 12.dp),
+                        onClick = {
+                            component.navigateTo(RootComponent.Config.ManagerRouteDetail(route.id))
+                        }
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Route, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                             Spacer(Modifier.width(12.dp))

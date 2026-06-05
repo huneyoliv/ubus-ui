@@ -84,7 +84,10 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         }
 
         // Meus dados
-        BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable { component.navigateTo(RootComponent.Config.MeusDados) }) {
+        BentoCard(
+            modifier = Modifier.padding(bottom = 12.dp),
+            onClick = { component.navigateTo(RootComponent.Config.MeusDados) }
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Person, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(12.dp))
@@ -93,7 +96,10 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         }
 
         // Alterar senha
-        BentoCard(modifier = Modifier.padding(bottom = 12.dp).clickable { component.navigateTo(RootComponent.Config.AlterarSenha) }) {
+        BentoCard(
+            modifier = Modifier.padding(bottom = 12.dp),
+            onClick = { component.navigateTo(RootComponent.Config.AlterarSenha) }
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Lock, null, tint = UbusPrimary, modifier = Modifier.size(24.dp))
                 Spacer(Modifier.width(12.dp))
@@ -116,7 +122,9 @@ fun ManagerConfiguracoesScreen(component: RootComponent) {
         Spacer(Modifier.height(24.dp))
 
         // Logout
-        BentoCard(modifier = Modifier.clickable { component.logout() }) {
+        BentoCard(
+            onClick = { component.logout() }
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.AutoMirrored.Filled.ExitToApp, null, tint = UbusDestructive, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(12.dp))
