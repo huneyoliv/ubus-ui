@@ -24,13 +24,13 @@ actual class NotificationScheduler actual constructor() {
         val departureTime = getTripDepartureMillis(trip.tripDate, trip.shift, trip.direction.name, customDepartureTime)
         if (departureTime == 0L) return
 
-        val departureDate = NSDate.dateWithTimeIntervalSince1970(departureTime / 1000.0)
+        val secondsSince2001 = (departureTime / 1000.0) - 978307200.0
         val triggerTimeInterval = - (minutesBefore.toDouble() * 60.0)
-        val triggerDate = NSDate(departureDate.timeIntervalSince1970 + triggerTimeInterval)
+        val triggerDate = NSDate(timeIntervalSinceReferenceDate = secondsSince2001 + triggerTimeInterval)
 
         if (triggerDate.timeIntervalSinceNow <= 0.0) return
 
-        val triggerComponents = calendar.components(
+        val triggerComponents = NSCalendar.currentCalendar.components(
             NSCalendarUnitYear or NSCalendarUnitMonth or NSCalendarUnitDay or NSCalendarUnitHour or NSCalendarUnitMinute,
             fromDate = triggerDate
         )

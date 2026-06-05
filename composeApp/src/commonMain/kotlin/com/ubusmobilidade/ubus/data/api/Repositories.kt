@@ -122,10 +122,10 @@ class UserRepository(private val api: ApiClient) {
     }
 
     suspend fun requestSemesterRenewal(payload: SemesterRenewalPayload): SemesterRenewalResponse =
-        api.post("/users/me/semester-renewal", payload)
+        api.post("/users/me/renewal", payload)
 
     suspend fun submitAccessibilityRequest(payload: AccessibilityRequestPayload): User =
-        api.patch("/users/me/accessibility", payload)
+        api.post("/users/me/accessibility", payload)
 }
 
 class NotificationRepository(private val api: ApiClient) {
@@ -163,10 +163,10 @@ class FleetRepository(private val api: ApiClient) {
         api.post("/fleet/routes/$routeId/points", payload)
 
     suspend fun updatePickupPoint(routeId: String, pointId: String, payload: UpdatePickupPointPayload): PickupPoint =
-        api.patch("/fleet/routes/$routeId/points/$pointId", payload)
+        api.patch("/fleet/points/$pointId", payload)
 
     suspend fun deletePickupPoint(routeId: String, pointId: String) {
-        api.delete<Unit>("/fleet/routes/$routeId/points/$pointId")
+        api.delete<Unit>("/fleet/points/$pointId")
     }
 
     suspend fun listBuses(): List<Bus> = api.get("/fleet/buses")
@@ -185,8 +185,13 @@ class FleetRepository(private val api: ApiClient) {
     suspend fun updateBus(id: String, payload: UpdateBusPayload): Bus =
         api.patch("/fleet/buses/$id", payload)
 
-    suspend fun getRouteCalendar(routeId: String, month: String): RouteCalendarResponse =
-        api.get("/trips/route/$routeId/calendar", params = mapOf("month" to month))
+    suspend fun getRouteCalendar(routeId: String, month: String): RouteCalendarResponse {
+        val (year, monthNum) = month.split("-")
+        return api.get(
+            "/trips/route/$routeId/calendar",
+            params = mapOf("year" to year, "month" to monthNum.trimStart('0').ifEmpty { "0" })
+        )
+    }
 
     suspend fun scheduleTrips(payload: ScheduleTripsPayload): String =
         api.post("/trips/schedule", payload)
@@ -257,12 +262,8 @@ class UploadRepository(private val api: ApiClient) {
         fileBytes: ByteArray,
         fileName: String,
         type: UploadType,
-    ): UploadResponse {
-        if (!BackendCapabilities.supportsUnifiedUpload) {
-            throw UnsupportedOperationException("POST /v1/uploads ainda não implementado no backend")
-        }
-        throw UnsupportedOperationException("POST /v1/uploads ainda não implementado no backend")
-    }
+    ): UploadResponse =
+        api.uploadMultipart("/uploads/${type.name}", fileBytes, fileName)
 }
 
 

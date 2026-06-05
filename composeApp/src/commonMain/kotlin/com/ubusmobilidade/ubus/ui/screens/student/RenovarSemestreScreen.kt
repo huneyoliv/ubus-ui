@@ -53,6 +53,8 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusWarning
 import com.ubusmobilidade.ubus.ui.util.rememberFilePickerLauncher
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
+import com.ubusmobilidade.ubus.ui.util.readFileBytes
+import com.ubusmobilidade.ubus.ui.util.getFileNameFromUri
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
@@ -189,12 +191,14 @@ fun RenovarSemestreScreen(component: RootComponent) {
 
                         if (BackendCapabilities.supportsUnifiedUpload) {
                             gradeUri?.let { uri ->
-                                val fileBytes = ByteArray(0)
-                                finalGradeUrl = uploadRepo.upload(fileBytes, "grade.pdf", UploadType.GRADE_DOCUMENT).fileUrl
+                                val fileBytes = readFileBytes(uri)
+                                val fileName = getFileNameFromUri(uri)
+                                finalGradeUrl = uploadRepo.upload(fileBytes, fileName, UploadType.GRADE_DOCUMENT).fileUrl
                             }
                             residenciaUri?.let { uri ->
-                                val fileBytes = ByteArray(0)
-                                finalResidenciaUrl = uploadRepo.upload(fileBytes, "residencia.pdf", UploadType.RESIDENCIA_DOCUMENT).fileUrl
+                                val fileBytes = readFileBytes(uri)
+                                val fileName = getFileNameFromUri(uri)
+                                finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
                             }
                         } else {
                             message = "⏳ Upload de documentos disponível em breve"

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.util.getTripDepartureMillis
 import kotlinx.coroutines.delay
+import kotlinx.datetime.Clock
 
 @Composable
 fun CountdownTimer(
@@ -34,11 +35,11 @@ fun CountdownTimer(
     textColor: Color = MaterialTheme.colorScheme.onBackground
 ) {
     val departureMillis = remember(tripDate, shift, direction, customDepartureTime) { getTripDepartureMillis(tripDate, shift, direction, customDepartureTime) }
-    var timeRemaining by remember { mutableStateOf(departureMillis - System.currentTimeMillis()) }
+    var timeRemaining by remember { mutableStateOf(departureMillis - com.ubusmobilidade.ubus.ui.util.getCurrentTimeMillis()) }
 
     LaunchedEffect(departureMillis) {
         while (timeRemaining > 0) {
-            timeRemaining = departureMillis - System.currentTimeMillis()
+            timeRemaining = departureMillis - com.ubusmobilidade.ubus.ui.util.getCurrentTimeMillis()
             delay(1000L)
         }
     }

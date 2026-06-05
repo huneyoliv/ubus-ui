@@ -10,6 +10,6 @@ object BackendCapabilities {
     const val supportsTripRating = true
     const val supportsAttendanceScore = true
     const val supportsSeatSelection = true
-    const val supportsUnifiedUpload = false
+    const val supportsUnifiedUpload = true
 }
 

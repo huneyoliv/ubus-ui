@@ -11,6 +11,11 @@ data class LoginPayload(
 )
 
 @Serializable
+data class LoginTokenResponse(
+    val accessToken: String,
+)
+
+@Serializable
 data class LoginResponse(
     val accessToken: String,
     val user: User,
@@ -66,8 +71,6 @@ data class CreateRoutePayload(
     val weekDays: List<Int>,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
-    val departureTimeOutbound: String? = null,
-    val departureTimeInbound: String? = null,
 )
 
 @Serializable
@@ -77,8 +80,6 @@ data class UpdateRoutePayload(
     val weekDays: List<Int>? = null,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
-    val departureTimeOutbound: String? = null,
-    val departureTimeInbound: String? = null,
     val active: Boolean? = null,
 )
 
@@ -306,8 +307,7 @@ data class UploadResponse(
 @Serializable
 data class AccessibilityRequestPayload(
     val reason: AccessibilityReason,
-    val needsWheelchair: Boolean = false,
-    val accessibilityDocUrl: String,
+    val proofDocUrl: String,
 )
 
 @Serializable

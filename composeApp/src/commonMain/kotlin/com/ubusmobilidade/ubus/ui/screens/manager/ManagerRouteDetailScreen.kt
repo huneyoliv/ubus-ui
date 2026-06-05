@@ -223,9 +223,7 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             try {
                 fleetRepo.updateRoute(routeId, UpdateRoutePayload(
                     name = name,
-                    description = description,
-                    departureTimeOutbound = departureTimeOutbound,
-                    departureTimeInbound = departureTimeInbound
+                    description = description
                 ))
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {
@@ -555,7 +553,7 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                 Text(point.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                                 if (point.lat != null && point.lng != null) {
                                     Text(
-                                        "%.5f, %.5f".format(point.lat, point.lng),
+                                        "${point.lat}, ${point.lng}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = UbusText3,
                                     )

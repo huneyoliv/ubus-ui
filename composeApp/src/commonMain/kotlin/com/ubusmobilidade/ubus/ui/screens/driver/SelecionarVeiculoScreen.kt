@@ -121,10 +121,7 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
                             if (BackendCapabilities.supportsDriverOperationalAssignment) {
                                 scope.launch {
                                     try {
-                                        val today = Clock.System.now()
-                                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                                            .date
-                                            .toString()
+                                        val today = com.ubusmobilidade.ubus.ui.util.getTodayDateString()
                                         driverRepo.assignForToday(busId = bus.id, serviceDate = today)
                                     } catch (e: Exception) {
                                         // Fallback to legacy flow

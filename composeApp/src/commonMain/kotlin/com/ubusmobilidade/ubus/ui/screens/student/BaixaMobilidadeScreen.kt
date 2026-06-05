@@ -67,16 +67,17 @@ fun BaixaMobilidadeScreen(component: RootComponent) {
 
     val filePicker = rememberFilePickerLauncher { uri ->
         if (uri != null) {
-            selectedFileName = uri.substringAfterLast("/")
             scope.launch {
                 try {
                     uploadPending = false
                     error = null
-                    val fileBytes = ByteArray(0) // Simulação local
+                    val fileBytes = com.ubusmobilidade.ubus.ui.util.readFileBytes(uri)
+                    selectedFileName = com.ubusmobilidade.ubus.ui.util.getFileNameFromUri(uri)
                     val result = uploadRepo.upload(fileBytes, selectedFileName!!, UploadType.ACCESSIBILITY_PROOF)
                     uploadedFileUrl = result.fileUrl
                 } catch (e: UnsupportedOperationException) {
                     uploadPending = true
+                    selectedFileName = uri.substringAfterLast("/")
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     error = "Erro ao carregar arquivo."
@@ -170,11 +171,13 @@ fun BaixaMobilidadeScreen(component: RootComponent) {
                             loading = true
                             error = null
                             try {
+                                if (needsWheelchair != user?.needsWheelchair) {
+                                    userRepo.updateMe(UpdateProfilePayload(needsWheelchair = needsWheelchair))
+                                }
                                 val updated = userRepo.submitAccessibilityRequest(
                                     AccessibilityRequestPayload(
                                         reason = selectedReason!!,
-                                        needsWheelchair = needsWheelchair,
-                                        accessibilityDocUrl = uploadedFileUrl ?: ""
+                                        proofDocUrl = uploadedFileUrl ?: ""
                                     )
                                 )
                                 component.authStorage.user = updated

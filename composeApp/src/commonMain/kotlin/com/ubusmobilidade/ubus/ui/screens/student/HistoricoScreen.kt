@@ -69,7 +69,7 @@ fun HistoricoScreen(component: RootComponent) {
     var resToCancel by remember { mutableStateOf<Reservation?>(null) }
     var cancelingId by remember { mutableStateOf<String?>(null) }
 
-    val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
+    val today = remember { kotlinx.datetime.LocalDate.parse(com.ubusmobilidade.ubus.ui.util.getTodayDateString()) }
 
     val filteredReservations = remember(reservations, selectedFilter) {
         when (selectedFilter) {

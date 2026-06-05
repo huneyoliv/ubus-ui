@@ -13,6 +13,11 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
+import com.ubusmobilidade.ubus.data.model.UploadResponse
 
 class ApiError(
     val status: Int,
@@ -81,5 +86,29 @@ class ApiClient(
         val response = httpClient.delete(fullUrl(path))
         handleResponse(response)
         return if (T::class == Unit::class) Unit as T else response.body()
+    }
+
+    suspend fun uploadMultipart(path: String, fileBytes: ByteArray, fileName: String): UploadResponse {
+        val response = httpClient.post(fullUrl(path)) {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("file", fileBytes, Headers.build {
+                            append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                            append(HttpHeaders.ContentType, guessContentType(fileName))
+                        })
+                    }
+                )
+            )
+        }
+        handleResponse(response)
+        return response.body()
+    }
+
+    private fun guessContentType(fileName: String): String = when {
+        fileName.endsWith(".pdf", ignoreCase = true) -> "application/pdf"
+        fileName.endsWith(".png", ignoreCase = true) -> "image/png"
+        fileName.endsWith(".jpg", ignoreCase = true) || fileName.endsWith(".jpeg", ignoreCase = true) -> "image/jpeg"
+        else -> "application/octet-stream"
     }
 }
