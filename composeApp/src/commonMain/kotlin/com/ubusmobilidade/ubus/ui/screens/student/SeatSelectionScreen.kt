@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.CreateReservationPayload

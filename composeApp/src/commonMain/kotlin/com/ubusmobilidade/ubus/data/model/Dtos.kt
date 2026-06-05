@@ -11,11 +11,6 @@ data class LoginPayload(
 )
 
 @Serializable
-data class LoginTokenResponse(
-    val accessToken: String,
-)
-
-@Serializable
 data class LoginResponse(
     val accessToken: String,
     val user: User,
@@ -194,23 +189,28 @@ data class ChangePasswordPayload(
     val newPassword: String,
 )
 
-/* ── Email Verification ── */
+enum class VerificationChannel { EMAIL, WHATSAPP }
+enum class VerificationContext { CHANGE_EMAIL, RESET_PASSWORD, REGISTER }
 
 @Serializable
-data class SendEmailCodePayload(
-    val email: String,
-    val context: String, // "REGISTER" or "CHANGE_EMAIL"
+data class SendVerificationCodePayload(
+    val identifier: String,
+    val channel: VerificationChannel,
+    val context: VerificationContext,
 )
 
 @Serializable
-data class VerifyEmailCodePayload(
-    val email: String,
+data class VerifyCodePayload(
+    val identifier: String,
     val code: String,
+    val channel: VerificationChannel,
+    val context: VerificationContext,
 )
 
 @Serializable
-data class VerifyEmailCodeResponse(
+data class VerifyCodeResponse(
     val verified: Boolean,
+    val token: String? = null,
     val message: String? = null,
 )
 
@@ -312,19 +312,13 @@ data class UploadResponse(
 data class AccessibilityRequestPayload(
     val reason: AccessibilityReason,
     val proofDocUrl: String,
+    val needsWheelchair: Boolean? = null,
 )
-
-@Serializable
-data class BusLayoutPayload(
-    val hasElevator: Boolean,
-    val preferentialSeats: List<Int>,
-)
-
-/* ── Ratings and Gamification Dtos ── */
 
 @Serializable
 data class CreateTripRatingPayload(
     val reservationId: String,
+    val tripId: String,
     val cleanlinessRating: Int,
     val punctualityRating: Int,
     val driverRating: Int,

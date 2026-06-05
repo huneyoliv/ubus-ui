@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusOutlinedButton
@@ -31,14 +30,7 @@ fun MotoristaSplashScreen(component: RootComponent) {
         Text("Bem-vindo, motorista!", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(8.dp))
         Text("Selecione seu veículo para iniciar a viagem.", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
-        if (!BackendCapabilities.supportsDriverOperationalAssignment) {
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Modo operacional completo (ida/volta, saida e notificacoes) sera habilitado apos atualizacao da API.",
-                style = MaterialTheme.typography.bodySmall,
-                color = UbusText3,
-            )
-        }
+
         Spacer(Modifier.height(32.dp))
         UbusButton(text = "Selecionar veículo", onClick = { component.navigateTo(RootComponent.Config.SelecionarVeiculo) })
         Spacer(Modifier.height(12.dp))

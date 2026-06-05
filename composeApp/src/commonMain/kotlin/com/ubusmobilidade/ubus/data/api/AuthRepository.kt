@@ -16,14 +16,34 @@ class AuthRepository(private val api: ApiClient) {
         api.post("/auth/register", payload)
 
     suspend fun requestPasswordRedefinition(email: String): Unit =
-        api.post("/auth/password-email-send")
+        api.post(
+            "/auth/send-verification-code",
+            SendVerificationCodePayload(
+                identifier = email,
+                channel = VerificationChannel.EMAIL,
+                context = VerificationContext.RESET_PASSWORD,
+            )
+        )
 
     suspend fun resetPassword(payload: PasswordRedefinitionPayload): Unit =
         api.post("/auth/password-redefinition", payload)
 
-    suspend fun sendEmailCode(email: String, context: String): Unit =
-        api.post("/auth/send-email-code", SendEmailCodePayload(email, context))
+    suspend fun sendVerificationCode(
+        identifier: String,
+        channel: VerificationChannel,
+        context: VerificationContext,
+    ): Unit = api.post(
+        "/auth/send-verification-code",
+        SendVerificationCodePayload(identifier, channel, context)
+    )
 
-    suspend fun verifyEmailCode(email: String, code: String): VerifyEmailCodeResponse =
-        api.post("/auth/verify-email-code", VerifyEmailCodePayload(email, code))
+    suspend fun verifyCode(
+        identifier: String,
+        code: String,
+        channel: VerificationChannel,
+        context: VerificationContext,
+    ): VerifyCodeResponse = api.post(
+        "/auth/verify",
+        VerifyCodePayload(identifier, code, channel, context)
+    )
 }

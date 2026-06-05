@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.api.UserRepository

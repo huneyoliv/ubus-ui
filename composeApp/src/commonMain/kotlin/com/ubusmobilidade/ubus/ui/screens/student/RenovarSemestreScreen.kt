@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.data.api.UploadRepository
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.model.RegistrationStatus
 import com.ubusmobilidade.ubus.data.model.SemesterRenewalPayload
 import com.ubusmobilidade.ubus.data.model.UploadType
@@ -189,22 +188,15 @@ fun RenovarSemestreScreen(component: RootComponent) {
                         var finalGradeUrl: String? = gradeUri
                         var finalResidenciaUrl: String? = residenciaUri
 
-                        if (BackendCapabilities.supportsUnifiedUpload) {
-                            gradeUri?.let { uri ->
-                                val fileBytes = readFileBytes(uri)
-                                val fileName = getFileNameFromUri(uri)
-                                finalGradeUrl = uploadRepo.upload(fileBytes, fileName, UploadType.GRADE_DOCUMENT).fileUrl
-                            }
-                            residenciaUri?.let { uri ->
-                                val fileBytes = readFileBytes(uri)
-                                val fileName = getFileNameFromUri(uri)
-                                finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
-                            }
-                        } else {
-                            message = "⏳ Upload de documentos disponível em breve"
-                            isError = false
-                            loading = false
-                            return@launch
+                        gradeUri?.let { uri ->
+                            val fileBytes = readFileBytes(uri)
+                            val fileName = getFileNameFromUri(uri)
+                            finalGradeUrl = uploadRepo.upload(fileBytes, fileName, UploadType.GRADE_DOCUMENT).fileUrl
+                        }
+                        residenciaUri?.let { uri ->
+                            val fileBytes = readFileBytes(uri)
+                            val fileName = getFileNameFromUri(uri)
+                            finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
                         }
 
                         val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(

@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalUriHandler
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.data.model.RegistrationStatus
@@ -47,16 +48,7 @@ fun ManagerStudentDetailScreen(component: RootComponent, userId: String) {
 
     LaunchedEffect(userId) {
         try {
-            val users = userRepo.listUsers(
-                role = RoleUsuario.STUDENT,
-                status = RegistrationStatus.PENDING,
-            )
-            val u = users.find { it.id == userId }
-            if (u != null) {
-                user = u
-            } else {
-                error = "Aluno não encontrado na lista de pendentes."
-            }
+            user = userRepo.getUser(userId)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             error = e.toUserMessage("Não foi possível carregar os dados do aluno.")
@@ -166,9 +158,14 @@ private fun DetailRow(label: String, value: String) {
 
 @Composable
 private fun DocumentCard(label: String, url: String) {
+    val uriHandler = LocalUriHandler.current
     BentoCard(
         modifier = Modifier.padding(bottom = 8.dp),
-        onClick = { /* Abrir URL no browser */ }
+        onClick = {
+            try {
+                uriHandler.openUri(url)
+            } catch (_: Exception) {}
+        }
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Description, null, tint = UbusPrimary)

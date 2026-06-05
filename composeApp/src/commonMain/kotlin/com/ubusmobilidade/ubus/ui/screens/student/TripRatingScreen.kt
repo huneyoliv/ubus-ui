@@ -243,6 +243,7 @@ fun TripRatingScreen(
                             try {
                                 val payload = CreateTripRatingPayload(
                                     reservationId = reservationId,
+                                    tripId = tripId,
                                     cleanlinessRating = cleanlinessRating,
                                     punctualityRating = punctualityRating,
                                     driverRating = driverRating,

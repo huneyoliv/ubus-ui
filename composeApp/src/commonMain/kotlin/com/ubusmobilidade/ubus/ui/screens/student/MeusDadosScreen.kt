@@ -32,6 +32,8 @@ import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.AuthRepository
 import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.data.model.UpdateProfilePayload
+import com.ubusmobilidade.ubus.data.model.VerificationChannel
+import com.ubusmobilidade.ubus.data.model.VerificationContext
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusOutlinedButton
@@ -160,7 +162,7 @@ fun MeusDadosScreen(component: RootComponent) {
                             emailLoading = true; emailMessage = ""
                             scope.launch {
                                 try {
-                                    authRepo.sendEmailCode(newEmail, "CHANGE_EMAIL")
+                                    authRepo.sendVerificationCode(newEmail, VerificationChannel.EMAIL, VerificationContext.CHANGE_EMAIL)
                                     emailStep = 2
                                     emailMessage = "Código enviado para $newEmail"
                                     emailIsError = false
@@ -198,7 +200,7 @@ fun MeusDadosScreen(component: RootComponent) {
                             emailLoading = true; emailMessage = ""
                             scope.launch {
                                 try {
-                                    val result = authRepo.verifyEmailCode(newEmail, emailCode)
+                                    val result = authRepo.verifyCode(newEmail, emailCode, VerificationChannel.EMAIL, VerificationContext.CHANGE_EMAIL)
                                     if (result.verified) {
                                         val updated = userRepo.updateMe(UpdateProfilePayload(email = newEmail))
                                         component.authStorage.user = updated

@@ -41,18 +41,11 @@ fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
 
     LaunchedEffect(busId) {
         try {
-            val buses = fleetRepo.listBuses()
-            val b = buses.find { it.id == busId }
-            if (b != null) {
-                bus = b
-                try {
-                    occupiedSeats = fleetRepo.getBusLayout(busId)
-                } catch (e: Exception) {
-                    println("DEBUG: ManagerBusDetailScreen - Layout endpoint failed or not found: ${e.message}")
-                    // Layout is optional or not implemented in backend yet
-                }
-            } else {
-                error = "Veículo não encontrado."
+            val b = fleetRepo.getBus(busId)
+            bus = b
+            try {
+                occupiedSeats = fleetRepo.getBusLayout(busId)
+            } catch (e: Exception) {
             }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e

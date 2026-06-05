@@ -38,7 +38,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import com.ubusmobilidade.ubus.data.api.ApiClient
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.DriverRepository
 import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.model.Bus
@@ -85,15 +84,7 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
-        if (!BackendCapabilities.supportsDriverOperationalAssignment) {
-            BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
-                Text(
-                    "A vinculacao operacional motorista-onibus ainda esta em modo de compatibilidade ate o backend liberar o novo endpoint.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = UbusText3,
-                )
-            }
-        }
+
 
         if (loading) {
             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -118,17 +109,16 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
                     modifier = Modifier
                         .padding(bottom = 8.dp)
                         .clickable {
-                            if (BackendCapabilities.supportsDriverOperationalAssignment) {
-                                scope.launch {
-                                    try {
-                                        val today = com.ubusmobilidade.ubus.ui.util.getTodayDateString()
-                                        driverRepo.assignForToday(busId = bus.id, serviceDate = today)
-                                    } catch (e: Exception) {
-                                        // Fallback to legacy flow
-                                    }
+                            scope.launch {
+                                try {
+                                    val today = com.ubusmobilidade.ubus.ui.util.getTodayDateString()
+                                    driverRepo.assignForToday(busId = bus.id, serviceDate = today)
+                                    component.navigateTo(RootComponent.Config.Mapa)
+                                } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
+                                    error = e.message ?: "Erro ao vincular veículo."
                                 }
                             }
-                            component.navigateTo(RootComponent.Config.Mapa)
                         }
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

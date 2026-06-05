@@ -66,15 +66,12 @@ fun ManagerMotoristasScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            println("DEBUG: ManagerMotoristasScreen - Loading drivers for municipality: ${component.authStorage.user?.municipalityId}")
             drivers = userRepo.listUsers(
                 municipalityId = component.authStorage.user?.municipalityId,
                 role = RoleUsuario.DRIVER
             )
-            println("DEBUG: ManagerMotoristasScreen - Loaded ${drivers.size} drivers")
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            println("DEBUG: ManagerMotoristasScreen - Error loading drivers: ${e.message}")
             error = e.toUserMessage("Não foi possível carregar motoristas.")
         }
         loading = false

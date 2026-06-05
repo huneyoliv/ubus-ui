@@ -58,9 +58,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.AuthRepository
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.ManagementRepository
 import com.ubusmobilidade.ubus.data.model.Municipality
+import com.ubusmobilidade.ubus.data.model.VerificationChannel
+import com.ubusmobilidade.ubus.data.model.VerificationContext
 import com.ubusmobilidade.ubus.data.model.RegisterPayload
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -229,7 +230,7 @@ fun CadastroScreen(component: RootComponent) {
         generalError = null
         scope.launch {
             try {
-                authRepo.sendEmailCode(email.trim(), "REGISTER")
+                authRepo.sendVerificationCode(email.trim(), VerificationChannel.EMAIL, VerificationContext.REGISTER)
                 codeSent = true
                 resendCountdown = 60
             } catch (e: Exception) {
@@ -251,9 +252,9 @@ fun CadastroScreen(component: RootComponent) {
         codeError = null
         scope.launch {
             try {
-                val response = authRepo.verifyEmailCode(email.trim(), code.trim())
+                val response = authRepo.verifyCode(email.trim(), code.trim(), VerificationChannel.EMAIL, VerificationContext.REGISTER)
                 if (response.verified) {
-                    currentStep = 2
+                    currentStep = 3
                 } else {
                     codeError = response.message ?: "Código inválido"
                 }
@@ -351,14 +352,7 @@ fun CadastroScreen(component: RootComponent) {
                 color = UbusText3,
             )
 
-            if (currentStep == 3 && !BackendCapabilities.supportsPickupPointInRegistration) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "Selecao do ponto de embarque no cadastro sera liberada junto da nova versao da API.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = UbusText3,
-                )
-            }
+
 
             Spacer(Modifier.height(28.dp))
 

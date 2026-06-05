@@ -55,7 +55,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ubusmobilidade.ubus.data.api.ApiClient
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
+
 import com.ubusmobilidade.ubus.data.api.AttendanceRepository
 import com.ubusmobilidade.ubus.data.model.AttendanceScore
 import com.ubusmobilidade.ubus.ui.components.AttendanceBadgeCard
@@ -75,9 +75,7 @@ fun PerfilScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            if (BackendCapabilities.supportsAttendanceScore) {
-                attendanceScore = attendanceRepo.getScore()
-            }
+            attendanceScore = attendanceRepo.getScore()
         } catch (_: Exception) {}
     }
 
@@ -129,7 +127,7 @@ fun PerfilScreen(component: RootComponent) {
                 }
             }
 
-            if (BackendCapabilities.supportsAttendanceScore && attendanceScore != null) {
+            if (attendanceScore != null) {
                 AttendanceBadgeCard(
                     score = attendanceScore!!,
                     modifier = Modifier.padding(bottom = 16.dp)

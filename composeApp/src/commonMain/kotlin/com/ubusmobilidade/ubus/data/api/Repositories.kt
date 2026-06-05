@@ -86,7 +86,6 @@ class UserRepository(private val api: ApiClient) {
         return api.get("/users", params)
     }
 
-    @Deprecated("Use listPending and filter locally since GET /users/{id} is not in Swagger")
     suspend fun getUser(id: String): User = api.get("/users/$id")
 
     suspend fun updateUser(id: String, payload: RegisterPayload): User = 
@@ -171,8 +170,7 @@ class FleetRepository(private val api: ApiClient) {
 
     suspend fun listBuses(): List<Bus> = api.get("/fleet/buses")
 
-    suspend fun getBus(id: String): Bus = listBuses().find { it.id == id }
-        ?: throw ApiError(404, "Bus Not Found", "Ônibus $id não encontrado na listagem local.")
+    suspend fun getBus(id: String): Bus = api.get("/fleet/buses/$id")
 
     suspend fun getBusLayout(id: String, tripId: String? = null): List<OccupiedSeat> =
         api.get("/reservations/trip/$tripId/occupied-seats")
@@ -199,8 +197,7 @@ class FleetRepository(private val api: ApiClient) {
     suspend fun assignDriverToTrip(tripId: String, driverId: String): Trip =
         api.patch("/trips/$tripId/driver", AssignTripDriverPayload(driverId))
 
-    suspend fun updateBusLayout(busId: String, payload: BusLayoutPayload): Bus =
-        api.patch("/fleet/buses/$busId/layout", payload)
+
 }
 
 class ManagementRepository(private val api: ApiClient) {

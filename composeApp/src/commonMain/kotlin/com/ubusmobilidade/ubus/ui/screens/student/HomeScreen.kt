@@ -56,7 +56,6 @@ import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
-import com.ubusmobilidade.ubus.data.api.BackendCapabilities
 import com.ubusmobilidade.ubus.data.api.TripRatingRepository
 import com.ubusmobilidade.ubus.data.api.AttendanceRepository
 import com.ubusmobilidade.ubus.data.model.AttendanceScore
@@ -97,14 +96,10 @@ fun HomeScreen(component: RootComponent) {
                 }
             }
             try {
-                if (BackendCapabilities.supportsTripRating) {
-                    pendingRatings = tripRatingRepo.listPendingRatings()
-                }
+                pendingRatings = tripRatingRepo.listPendingRatings()
             } catch (_: Exception) {}
             try {
-                if (BackendCapabilities.supportsAttendanceScore) {
-                    attendanceScore = attendanceRepo.getScore()
-                }
+                attendanceScore = attendanceRepo.getScore()
             } catch (_: Exception) {}
         } finally {
             loading = false
@@ -185,7 +180,7 @@ fun HomeScreen(component: RootComponent) {
                     )
                 }
 
-                if (BackendCapabilities.supportsTripRating && pendingRatings.isNotEmpty()) {
+                if (pendingRatings.isNotEmpty()) {
                     val pending = pendingRatings.first()
                     BentoCard(
                         modifier = Modifier
@@ -226,7 +221,7 @@ fun HomeScreen(component: RootComponent) {
                     }
                 }
 
-                if (BackendCapabilities.supportsAttendanceScore && attendanceScore != null) {
+                if (attendanceScore != null) {
                     AttendanceBadgeCard(
                         score = attendanceScore!!,
                         modifier = Modifier.padding(bottom = 16.dp)
