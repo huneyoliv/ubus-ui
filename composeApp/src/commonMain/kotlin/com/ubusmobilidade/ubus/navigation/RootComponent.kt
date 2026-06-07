@@ -56,7 +56,7 @@ class RootComponent(
         // Driver
         Config.MotoristaSplash -> Child.MotoristaSplash
         Config.SelecionarVeiculo -> Child.SelecionarVeiculo
-        Config.CadastroVeiculoMultiStep -> Child.CadastroVeiculoMultiStep
+        is Config.CadastroVeiculoMultiStep -> Child.CadastroVeiculoMultiStep(config.municipalityId)
         Config.Mapa -> Child.Mapa
         Config.Avisos -> Child.Avisos
         Config.DriverConfig -> Child.DriverConfig
@@ -137,7 +137,10 @@ class RootComponent(
     }
 
     private fun isRoleAllowed(config: Config, role: RoleUsuario?): Boolean = when (role) {
-        RoleUsuario.DRIVER -> config in driverRoutes
+        RoleUsuario.DRIVER -> when (config) {
+            is Config.CadastroVeiculoMultiStep -> true
+            else -> config in driverRoutes
+        }
         RoleUsuario.MANAGER -> when (config) {
             is Config.ManagerMotoristaDetail -> true
             is Config.ManagerRouteDetail -> true
@@ -145,6 +148,7 @@ class RootComponent(
             is Config.ManagerStudentDetail -> true
             is Config.ManagerPickupPointForm -> true
             Config.ManagerRouteForm -> true
+            is Config.CadastroVeiculoMultiStep -> true
             else -> config in managerRoutes
         }
         RoleUsuario.SUPER_ADMIN -> when (config) {
@@ -155,6 +159,7 @@ class RootComponent(
             is Config.ManagerPickupPointForm -> true
             Config.ManagerRouteForm -> true
             Config.SuperAdminManagement -> true
+            is Config.CadastroVeiculoMultiStep -> true
             else -> config in managerRoutes
         }
         else -> isStudentRoute(config)
@@ -200,7 +205,7 @@ class RootComponent(
         // Driver
         @Serializable data object MotoristaSplash : Config()
         @Serializable data object SelecionarVeiculo : Config()
-        @Serializable data object CadastroVeiculoMultiStep : Config()
+        @Serializable data class CadastroVeiculoMultiStep(val municipalityId: String? = null) : Config()
         @Serializable data object Mapa : Config()
         @Serializable data object Avisos : Config()
         @Serializable data object DriverConfig : Config()
@@ -255,7 +260,7 @@ class RootComponent(
         // Driver
         data object MotoristaSplash : Child()
         data object SelecionarVeiculo : Child()
-        data object CadastroVeiculoMultiStep : Child()
+        data class CadastroVeiculoMultiStep(val municipalityId: String? = null) : Child()
         data object Mapa : Child()
         data object Avisos : Child()
         data object DriverConfig : Child()
@@ -308,7 +313,6 @@ class RootComponent(
         private val driverRoutes = setOf(
             Config.MotoristaSplash,
             Config.SelecionarVeiculo,
-            Config.CadastroVeiculoMultiStep,
             Config.Mapa,
             Config.Avisos,
             Config.DriverConfig,

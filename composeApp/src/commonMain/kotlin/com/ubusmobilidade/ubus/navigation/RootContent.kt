@@ -83,7 +83,7 @@ fun RootContent(component: RootComponent) {
             // Driver
             is RootComponent.Child.MotoristaSplash -> MotoristaSplashScreen(component)
             is RootComponent.Child.SelecionarVeiculo -> SelecionarVeiculoScreen(component)
-            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component)
+            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component, instance.municipalityId)
             is RootComponent.Child.Mapa -> MapaScreen(component)
             is RootComponent.Child.Avisos -> AvisosScreen(component)
             is RootComponent.Child.DriverConfig -> DriverConfigScreen(component)

@@ -211,3 +211,28 @@ data class AttendanceScore(
     val badges: List<AttendanceBadge> = emptyList(),
 )
 
+/* ── Bus Layout Models ── */
+
+@Serializable
+data class BusCell(
+    val col: Int,
+    val type: CellType,
+    val virtualNumber: Int? = null,
+    val physicalNumber: Int? = null,
+    val position: SeatPosition? = null,
+    val isDpm: Boolean = false,
+)
+
+@Serializable
+data class BusLayoutRow(val cells: List<BusCell>)
+
+@Serializable
+data class BusLayout(
+    val busId: String,
+    val numberingMode: SeatNumberingMode,
+    val numerationSide: NumerationSide,
+    val rows: List<BusLayoutRow>,
+    val dpmSeatVirtualNumber: Int? = null,
+    val updatedAt: String? = null,
+)
+

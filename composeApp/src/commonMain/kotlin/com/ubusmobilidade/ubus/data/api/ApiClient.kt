@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -74,6 +75,16 @@ class ApiClient(
 
     suspend inline fun <reified T> patch(path: String, body: Any? = null): T {
         val response = httpClient.patch(fullUrl(path)) {
+            if (body != null) setBody(body)
+        }
+        handleResponse(response)
+        return if (T::class == Unit::class) Unit as T
+        else if (T::class == String::class) response.bodyAsText() as T
+        else response.body()
+    }
+
+    suspend inline fun <reified T> put(path: String, body: Any? = null): T {
+        val response = httpClient.put(fullUrl(path)) {
             if (body != null) setBody(body)
         }
         handleResponse(response)

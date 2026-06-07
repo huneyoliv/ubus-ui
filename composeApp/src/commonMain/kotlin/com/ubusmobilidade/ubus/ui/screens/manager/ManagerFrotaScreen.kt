@@ -71,7 +71,13 @@ fun ManagerFrotaScreen(component: RootComponent) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep) },
+                onClick = {
+                    component.navigateTo(
+                        RootComponent.Config.CadastroVeiculoMultiStep(
+                            municipalityId = component.authStorage.user?.municipalityId
+                        )
+                    )
+                },
                 containerColor = UbusPrimary,
                 contentColor = Color.White
             ) {

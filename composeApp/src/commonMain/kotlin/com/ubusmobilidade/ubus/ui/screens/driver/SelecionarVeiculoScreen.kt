@@ -138,7 +138,7 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
         
         UbusOutlinedButton(
             text = "Cadastrar novo veículo",
-            onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep) },
+            onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep()) },
             modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
         )
     }

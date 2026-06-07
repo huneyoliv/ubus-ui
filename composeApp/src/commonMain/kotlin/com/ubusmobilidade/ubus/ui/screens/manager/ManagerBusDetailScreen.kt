@@ -14,20 +14,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.model.Bus
-import com.ubusmobilidade.ubus.data.model.OccupiedSeat
+import com.ubusmobilidade.ubus.data.model.BusLayout
+import com.ubusmobilidade.ubus.data.model.CellType
+import com.ubusmobilidade.ubus.data.model.SeatNumberingMode
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
+import com.ubusmobilidade.ubus.ui.components.BusCellState
+import com.ubusmobilidade.ubus.ui.components.BusCellView
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
-import kotlinx.coroutines.launch
 
 @Composable
 fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
@@ -35,7 +37,7 @@ fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
     val fleetRepo = remember { FleetRepository(apiClient) }
     
     var bus by remember { mutableStateOf<Bus?>(null) }
-    var occupiedSeats by remember { mutableStateOf<List<OccupiedSeat>>(emptyList()) }
+    var busLayout by remember { mutableStateOf<BusLayout?>(null) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf("") }
 
@@ -44,8 +46,8 @@ fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
             val b = fleetRepo.getBus(busId)
             bus = b
             try {
-                occupiedSeats = fleetRepo.getBusLayout(busId)
-            } catch (e: Exception) {
+                busLayout = fleetRepo.getBusLayout(busId)
+            } catch (_: Exception) {
             }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -62,6 +64,7 @@ fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
             IconButton(onClick = { component.goBack() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
             }
+            Spacer(Modifier.width(8.dp))
             Text("Detalhes do Veículo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         }
 
@@ -87,11 +90,15 @@ fun ManagerBusDetailScreen(component: RootComponent, busId: String) {
             }
 
             Spacer(Modifier.height(32.dp))
-            Text("Layout de Ocupação", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Vermelho: Ocupado | Verde: Livre", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+            Text("Layout do Veículo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(16.dp))
 
-            BusLayoutGrid(b.standardCapacity, occupiedSeats)
+            val layout = busLayout
+            if (layout != null) {
+                BusLayoutFinal(layout, layout.numberingMode)
+            } else {
+                BusLayoutGridLegacy(b.standardCapacity)
+            }
             
             Spacer(Modifier.height(32.dp))
         }
@@ -106,20 +113,22 @@ private fun Badge(text: String, color: Color) {
 }
 
 @Composable
-private fun BusLayoutGrid(capacity: Int, occupied: List<OccupiedSeat>) {
-    val rows = (capacity + 3) / 4 // 4 seats per row
+private fun BusLayoutFinal(layout: BusLayout, displayMode: SeatNumberingMode) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-        for (i in 0 until rows) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                for (j in 0 until 4) {
-                    val seatNum = i * 4 + j + 1
-                    if (seatNum <= capacity) {
-                        val isOccupied = occupied.any { it.seatNumber == seatNum }
-                        SeatVisual(seatNum, isOccupied, Modifier.weight(1f))
-                    } else {
-                        Spacer(Modifier.weight(1f))
+        layout.rows.forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.cells.forEach { cell ->
+                    val state = when {
+                        cell.type != CellType.SEAT -> BusCellState.DISABLED
+                        cell.isDpm -> BusCellState.DPM
+                        else -> BusCellState.FREE
                     }
-                    if (j == 1) Spacer(Modifier.width(24.dp)) // Corredor
+                    BusCellView(
+                        cell = cell,
+                        state = state,
+                        displayMode = displayMode,
+                        onClick = null
+                    )
                 }
             }
         }
@@ -127,9 +136,29 @@ private fun BusLayoutGrid(capacity: Int, occupied: List<OccupiedSeat>) {
 }
 
 @Composable
-private fun SeatVisual(number: Int, isOccupied: Boolean, modifier: Modifier = Modifier) {
+private fun BusLayoutGridLegacy(capacity: Int) {
+    val rows = (capacity + 3) / 4
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+        for (i in 0 until rows) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                for (j in 0 until 4) {
+                    val seatNum = i * 4 + j + 1
+                    if (seatNum <= capacity) {
+                        SeatVisual(seatNum, Modifier.weight(1f))
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
+                    if (j == 1) Spacer(Modifier.width(24.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeatVisual(number: Int, modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.height(48.dp).background(if (isOccupied) UbusDestructive else UbusSuccess, RoundedCornerShape(8.dp)),
+        modifier = modifier.height(48.dp).background(UbusSuccess, RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         Text("$number", color = Color.White, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)

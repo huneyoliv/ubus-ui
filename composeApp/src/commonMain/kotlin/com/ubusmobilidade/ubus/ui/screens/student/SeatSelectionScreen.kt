@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Wc
+import androidx.compose.material.icons.filled.Accessible
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,31 +38,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
+import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
-import com.ubusmobilidade.ubus.data.model.CreateReservationPayload
+import com.ubusmobilidade.ubus.data.model.BusCell
+import com.ubusmobilidade.ubus.data.model.BusLayout
+import com.ubusmobilidade.ubus.data.model.CellType
 import com.ubusmobilidade.ubus.data.model.RoleUsuario
+import com.ubusmobilidade.ubus.data.model.SeatNumberingMode
 import com.ubusmobilidade.ubus.data.model.Trip
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
+import com.ubusmobilidade.ubus.ui.components.BusCellState
+import com.ubusmobilidade.ubus.ui.components.BusCellView
 import com.ubusmobilidade.ubus.ui.components.SeatCell
 import com.ubusmobilidade.ubus.ui.components.SeatState
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
-import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.util.NotificationScheduler
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
-import kotlinx.coroutines.launch
 
 @Composable
 fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInboundTripId: String? = null) {
@@ -66,13 +74,14 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     val tripRepo = remember { TripRepository(apiClient) }
+    val fleetRepo = remember { FleetRepository(apiClient) }
     val notificationScheduler = remember { NotificationScheduler() }
 
     var trip by remember { mutableStateOf<Trip?>(null) }
     var occupiedSeats by remember { mutableStateOf<List<Int>>(emptyList()) }
+    var busLayout by remember { mutableStateOf<BusLayout?>(null) }
     var selectedSeat by remember { mutableStateOf<Int?>(null) }
     var loading by remember { mutableStateOf(true) }
-    var reserving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
@@ -81,16 +90,22 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
             trip = fetchedTrip
             val occupied = reservationRepo.getOccupiedSeats(tripId)
             occupiedSeats = occupied.map { it.seatNumber }
+
+            val busId = fetchedTrip.busId.takeIf { it.isNotBlank() }
+            if (busId != null) {
+                busLayout = fleetRepo.getBusLayout(busId)
+            }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             e.printStackTrace()
             errorMessage = e.toUserMessage("Não foi possível carregar os assentos.")
+        } finally {
+            loading = false
         }
-        loading = false
     }
 
     val seatsCount = 44
-    val itemsList = remember {
+    val itemsListLegacy = remember {
         val list = mutableListOf<Int?>()
         var seatNum = 1
         for (i in 0 until (seatsCount + seatsCount / 4)) {
@@ -130,7 +145,7 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { component.goBack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                 }
                 Spacer(Modifier.width(8.dp))
                 val activeTrip = trip
@@ -175,7 +190,10 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(12.dp))
+
+                val hasBathroom = busLayout?.rows?.any { row -> row.cells.any { it.type == CellType.BATHROOM } } ?: false
+                val hasBox = busLayout?.rows?.any { row -> row.cells.any { it.type == CellType.BOX } } ?: false
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -183,28 +201,42 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFF1F5F9)))
+                        Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFFF1F5F9)))
                         Spacer(Modifier.width(4.dp))
-                        Text("Livre", fontSize = 11.sp, color = UbusText3)
+                        Text("Livre", fontSize = 10.sp, color = UbusText3)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(UbusPrimary))
+                        Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(UbusPrimary))
                         Spacer(Modifier.width(4.dp))
-                        Text("Selecionado", fontSize = 11.sp, color = UbusText3)
+                        Text("Selecionado", fontSize = 10.sp, color = UbusText3)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFE2E8F0)))
+                        Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFFE2E8F0)))
                         Spacer(Modifier.width(4.dp))
-                        Text("Ocupado", fontSize = 11.sp, color = UbusText3)
+                        Text("Ocupado", fontSize = 10.sp, color = UbusText3)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFFDCFCE7)))
+                        Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFFDCFCE7)))
                         Spacer(Modifier.width(4.dp))
-                        Text("Acessível", fontSize = 11.sp, color = UbusText3)
+                        Text("DPM", fontSize = 10.sp, color = UbusText3)
+                    }
+                    if (hasBox) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Accessible, null, tint = Color(0xFF6B21A8), modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(2.dp))
+                            Text("Box", fontSize = 10.sp, color = UbusText3)
+                        }
+                    }
+                    if (hasBathroom) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Wc, null, tint = Color(0xFF475569), modifier = Modifier.size(12.dp))
+                            Spacer(Modifier.width(2.dp))
+                            Text("WC", fontSize = 10.sp, color = UbusText3)
+                        }
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(16.dp))
 
                 Box(
                     modifier = Modifier
@@ -214,35 +246,72 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
                         .background(Color(0xFFF8FAFC))
                         .padding(16.dp)
                 ) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(5),
-                        contentPadding = PaddingValues(bottom = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        items(itemsList) { seatNumber ->
-                            if (seatNumber == null) {
-                                Box(Modifier.size(46.dp))
-                            } else {
-                                val isOccupied = occupiedSeats.contains(seatNumber)
-                                val isSelected = selectedSeat == seatNumber
-                                val isAccessible = seatNumber <= 4
+                    val activeLayout = busLayout
+                    if (activeLayout != null) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                        ) {
+                            activeLayout.rows.forEach { row ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    row.cells.forEach { cell ->
+                                        val state = when {
+                                            cell.type != CellType.SEAT -> BusCellState.DISABLED
+                                            cell.virtualNumber == selectedSeat -> BusCellState.SELECTED
+                                            occupiedSeats.contains(cell.virtualNumber) -> {
+                                                if (cell.isDpm) BusCellState.DPM_OCCUPIED else BusCellState.OCCUPIED
+                                            }
+                                            cell.isDpm -> BusCellState.DPM
+                                            else -> BusCellState.FREE
+                                        }
 
-                                val state = when {
-                                    isSelected -> SeatState.SELECTED
-                                    isOccupied -> SeatState.OCCUPIED
-                                    isAccessible -> SeatState.ACCESSIBLE
-                                    else -> SeatState.FREE
-                                }
-
-                                SeatCell(
-                                    number = seatNumber,
-                                    state = state,
-                                    onClick = {
-                                        selectedSeat = if (isSelected) null else seatNumber
+                                        BusCellView(
+                                            cell = cell,
+                                            state = state,
+                                            displayMode = activeLayout.numberingMode,
+                                            onClick = if (state == BusCellState.FREE || state == BusCellState.DPM || state == BusCellState.SELECTED) {
+                                                { selectedSeat = if (selectedSeat == cell.virtualNumber) null else cell.virtualNumber }
+                                            } else null
+                                        )
                                     }
-                                )
+                                }
+                            }
+                        }
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(5),
+                            contentPadding = PaddingValues(bottom = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(itemsListLegacy) { seatNumber ->
+                                if (seatNumber == null) {
+                                    Box(Modifier.size(46.dp))
+                                } else {
+                                    val isOccupied = occupiedSeats.contains(seatNumber)
+                                    val isSelected = selectedSeat == seatNumber
+                                    val isAccessible = seatNumber <= 4
+
+                                    val state = when {
+                                        isSelected -> SeatState.SELECTED
+                                        isOccupied -> SeatState.OCCUPIED
+                                        isAccessible -> SeatState.ACCESSIBLE
+                                        else -> SeatState.FREE
+                                    }
+
+                                    SeatCell(
+                                        number = seatNumber,
+                                        state = state,
+                                        onClick = {
+                                            selectedSeat = if (isSelected) null else seatNumber
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -250,8 +319,24 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
 
                 Spacer(Modifier.height(16.dp))
 
+                val buttonText = if (selectedSeat != null) {
+                    val activeLayout = busLayout
+                    val selectedCell = activeLayout?.rows?.flatMap { it.cells }?.find { it.virtualNumber == selectedSeat }
+                    if (selectedCell != null) {
+                        when (activeLayout.numberingMode) {
+                            SeatNumberingMode.PHYSICAL -> "Avançar (Poltrona ${selectedCell.physicalNumber ?: selectedCell.virtualNumber})"
+                            SeatNumberingMode.MIXED -> "Avançar (Assento #${selectedCell.virtualNumber}" + (selectedCell.physicalNumber?.let { " [Físico: $it]" } ?: "") + ")"
+                            else -> "Avançar (Assento #$selectedSeat)"
+                        }
+                    } else {
+                        "Avançar (Assento #$selectedSeat)"
+                    }
+                } else {
+                    "Selecione um assento"
+                }
+
                 UbusButton(
-                    text = if (selectedSeat != null) "Avançar (Assento #$selectedSeat)" else "Selecione um assento",
+                    text = buttonText,
                     enabled = selectedSeat != null,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     onClick = {

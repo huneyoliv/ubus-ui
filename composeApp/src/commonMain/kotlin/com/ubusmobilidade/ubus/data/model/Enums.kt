@@ -80,4 +80,25 @@ fun AccessibilityReason.requiredDocuments(): String = when (this) {
 fun AccessibilityReason.needsWheelchairQuestion(): Boolean =
     this == AccessibilityReason.PCD || this == AccessibilityReason.MOBILIDADE_REDUZIDA
 
+@Serializable
+enum class SeatNumberingMode { PHYSICAL, VIRTUAL, MIXED }
+
+@Serializable
+enum class FrontRowLayout { FOUR, THREE, TWO }
+
+@Serializable
+enum class RearLayout { BATHROOM, NORMAL, FIVE, BOX }
+
+@Serializable
+enum class NumerationSide { LEFT, RIGHT }
+
+@Serializable
+enum class AccessibilityFeature { DPM, BOX, NONE }
+
+@Serializable
+enum class CellType { SEAT, AISLE, EMPTY, BATHROOM, BOX }
+
+@Serializable
+enum class SeatPosition { WINDOW_LEFT, AISLE_LEFT, CENTER, AISLE_RIGHT, WINDOW_RIGHT }
+
 

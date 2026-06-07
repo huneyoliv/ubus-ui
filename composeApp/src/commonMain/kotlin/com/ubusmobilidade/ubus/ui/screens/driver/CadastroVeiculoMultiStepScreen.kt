@@ -22,24 +22,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,58 +51,85 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.FleetRepository
+import com.ubusmobilidade.ubus.data.model.AccessibilityFeature
+import com.ubusmobilidade.ubus.data.model.BusCell
+import com.ubusmobilidade.ubus.data.model.BusLayout
+import com.ubusmobilidade.ubus.data.model.BusWizardAnswers
+import com.ubusmobilidade.ubus.data.model.CellType
 import com.ubusmobilidade.ubus.data.model.CreateBusPayload
+import com.ubusmobilidade.ubus.data.model.FrontRowLayout
+import com.ubusmobilidade.ubus.data.model.NumerationSide
+import com.ubusmobilidade.ubus.data.model.RearLayout
+import com.ubusmobilidade.ubus.data.model.SaveBusLayoutPayload
+import com.ubusmobilidade.ubus.data.model.SeatNumberingMode
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
+import com.ubusmobilidade.ubus.ui.components.BusCellState
+import com.ubusmobilidade.ubus.ui.components.BusCellView
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.components.UbusTextField
-import com.ubusmobilidade.ubus.ui.theme.UbusBorder
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
-import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import com.ubusmobilidade.ubus.ui.util.BusLayoutEngine
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
-fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
+fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: String? = null) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val fleetRepo = remember { FleetRepository(apiClient) }
 
     var currentStep by remember { mutableIntStateOf(0) }
+    var plate by remember { mutableStateOf("") }
+    var identificationNumber by remember { mutableStateOf("") }
+    var p1 by remember { mutableStateOf<SeatNumberingMode?>(null) }
+    var p2 by remember { mutableStateOf<FrontRowLayout?>(null) }
+    var p3 by remember { mutableStateOf<RearLayout?>(null) }
+    var p4capacity by remember { mutableStateOf<Int?>(null) }
+    var p5 by remember { mutableStateOf<AccessibilityFeature?>(null) }
+    var p6 by remember { mutableStateOf<NumerationSide?>(null) }
+    val p7numbers = remember { mutableStateMapOf<Int, Int>() }
+
+    var validationError by remember { mutableStateOf<String?>(null) }
+    var layout by remember { mutableStateOf<BusLayout?>(null) }
+    var dpmWarning by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Dados do Veículo
-    var plate by remember { mutableStateOf("") }
-    var identificationNumber by remember { mutableStateOf("") }
-    var hasElevator by remember { mutableStateOf<Boolean?>(null) }
-    var hasNumberedSeats by remember { mutableStateOf<Boolean?>(null) }
-    var lastSeatNumber by remember { mutableStateOf("") }
-    var firstRowLayout = remember { mutableStateListOf("", "", "", "") }
-    var hasBathroom by remember { mutableStateOf<Boolean?>(null) }
-    var capacityFromDoc by remember { mutableStateOf("") }
+    var activeDialogSeat by remember { mutableStateOf<BusCell?>(null) }
 
-    fun calculateCapacity(): Int {
-        if (hasNumberedSeats == false) {
-            return capacityFromDoc.toIntOrNull() ?: 0
+    fun buildAnswers(): BusWizardAnswers {
+        return BusWizardAnswers(
+            plate = plate.uppercase(),
+            identificationNumber = identificationNumber.trim(),
+            p1 = p1 ?: SeatNumberingMode.PHYSICAL,
+            p2 = p2 ?: FrontRowLayout.FOUR,
+            p3 = p3 ?: RearLayout.NORMAL,
+            p4capacity = p4capacity ?: 44,
+            p5 = p5 ?: AccessibilityFeature.NONE,
+            p6 = p6 ?: NumerationSide.LEFT,
+            p7physicalNumbers = p7numbers.toMap()
+        )
+    }
+
+    fun computeDpmWarningMessage(answers: BusWizardAnswers, builtLayout: BusLayout): String? {
+        if (answers.p5 != AccessibilityFeature.DPM) return null
+        val firstRow = builtLayout.rows.firstOrNull() ?: return null
+        return if (answers.p6 == NumerationSide.LEFT) {
+            if (firstRow.cells[3].type != CellType.SEAT) {
+                "Atenção: O assento acessível (DPM) foi posicionado na janela da primeira fileira (poltrona ${firstRow.cells[4].virtualNumber}) porque a posição de corredor está vazia."
+            } else null
+        } else {
+            if (firstRow.cells[1].type != CellType.SEAT) {
+                "Atenção: O assento acessível (DPM) foi posicionado na janela da primeira fileira (poltrona ${firstRow.cells[0].virtualNumber}) porque a posição de corredor está vazia."
+            } else null
         }
-        
-        var base = lastSeatNumber.toIntOrNull() ?: 0
-        // Se tem banheiro, perde 1 poltrona na última fileira
-        if (hasBathroom == true) base -= 1
-        
-        // Primeira fileira (se alguma poltrona foi removida/está vazia)
-        val missingInFirstRow = firstRowLayout.count { it.isBlank() }
-        base -= missingInFirstRow
-        
-        // Elevador costuma ocupar espaço mas o usuário disse "tem 1 espaço reservado além das poltronas"
-        // Isso sugere que a capacidade total (lugares) não diminui, ou talvez aumente?
-        // Vou assumir que a capacidade em poltronas é o que calculamos acima.
-        return base
     }
 
     fun isValidPlate(plate: String): Boolean {
@@ -110,34 +139,49 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
         return oldPattern.matches(clean) || mercosulPattern.matches(clean)
     }
 
-    fun handleSave() {
-        val finalCapacity = calculateCapacity()
+    suspend fun handleSave() {
         loading = true
         error = null
-        scope.launch {
-            try {
-                fleetRepo.createBus(
-                    CreateBusPayload(
-                        municipalityId = component.authStorage.user?.municipalityId,
-                        identificationNumber = identificationNumber,
-                        plate = plate.uppercase(),
-                        standardCapacity = finalCapacity,
-                        hasBathroom = hasBathroom,
-                        hasAirConditioning = false,
-                        hasElevator = hasElevator
-                    )
+        try {
+            val answers = buildAnswers()
+            val finalLayout = BusLayoutEngine.applyPhysicalNumbers(layout!!, p7numbers.toMap())
+            val dpmNum = BusLayoutEngine.computeDpmVirtualNumber(answers, finalLayout)
+
+            val bus = fleetRepo.createBus(
+                CreateBusPayload(
+                    municipalityId = municipalityId ?: component.authStorage.user?.municipalityId,
+                    identificationNumber = identificationNumber.trim(),
+                    plate = plate.uppercase(),
+                    standardCapacity = answers.p4capacity,
+                    hasBathroom = answers.p3 == RearLayout.BATHROOM,
+                    hasAirConditioning = false,
+                    hasElevator = answers.p5 == AccessibilityFeature.BOX || answers.p3 == RearLayout.BOX,
+                    preferentialSeats = if (dpmNum != null) listOf(dpmNum) else emptyList()
                 )
-                component.goBack()
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                error = e.toUserMessage("Erro ao cadastrar veículo.")
-            } finally {
-                loading = false
-            }
+            )
+
+            fleetRepo.saveBusLayout(
+                bus.id,
+                SaveBusLayoutPayload(
+                    numberingMode = answers.p1,
+                    numerationSide = answers.p6,
+                    rows = finalLayout.rows,
+                    dpmSeatVirtualNumber = dpmNum,
+                    preferentialSeats = if (dpmNum != null) listOf(dpmNum) else emptyList()
+                )
+            )
+
+            component.goBack()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Erro ao cadastrar ônibus.")
+        } finally {
+            loading = false
         }
     }
 
     fun handleAdvance() {
+        error = null
         when (currentStep) {
             0 -> {
                 if (plate.isNotBlank() && identificationNumber.isNotBlank()) {
@@ -147,22 +191,61 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
                     error = "Preencha a placa e o número do veículo."
                 }
             }
-            1 -> if (hasElevator != null) currentStep = 2
-            2 -> {
-                if (hasNumberedSeats == true) currentStep = 3
-                else if (hasNumberedSeats == false) currentStep = 4 // Pula P3 se não houver numeração
+            1 -> if (p1 != null) currentStep = 2
+            2 -> if (p2 != null) currentStep = 3
+            3 -> if (p3 != null) currentStep = 4
+            4 -> if (p4capacity != null) currentStep = 5
+            5 -> if (p5 != null) currentStep = 6
+            6 -> {
+                if (p6 == null) return
+                val answers = buildAnswers()
+                val err = BusLayoutEngine.validate(answers)
+                if (err != null) {
+                    validationError = err
+                    currentStep = 7
+                } else {
+                    val built = BusLayoutEngine.buildLayout(answers)
+                    layout = built
+                    dpmWarning = computeDpmWarningMessage(answers, built)
+                    currentStep = 8
+                }
             }
-            3 -> if (lastSeatNumber.isNotBlank()) currentStep = 4
-            4 -> if (hasBathroom != null) currentStep = 5
-            5 -> handleSave()
+            8 -> currentStep = 9
+            9 -> {
+                scope.launch { handleSave() }
+            }
+        }
+    }
+
+    fun handleBack() {
+        error = null
+        when (currentStep) {
+            0 -> component.goBack()
+            7 -> currentStep = 6
+            8 -> currentStep = 6
+            9 -> currentStep = 8
+            else -> currentStep--
         }
     }
 
     Column(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
     ) {
-        IconButton(onClick = { component.goBack() }, modifier = Modifier.padding(top = 8.dp, start = 8.dp)) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp, start = 8.dp, end = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { handleBack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
+            }
+            Spacer(Modifier.weight(1f))
+            if (currentStep in 1..6) {
+                Text(
+                    "Etapa $currentStep de 6",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = UbusText3
+                )
+            }
         }
 
         Column(
@@ -170,7 +253,7 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
         ) {
             Text("Novo Veículo", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             Text("Siga as etapas para configurar o ônibus.", style = MaterialTheme.typography.bodyMedium, color = UbusText3)
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
 
             AnimatedContent(
                 targetState = currentStep,
@@ -178,17 +261,30 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
                     (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
                 }
             ) { step ->
-                Column {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     when (step) {
                         0 -> StepPlate(
                             plate = plate, onPlateChange = { if (it.length <= 7) plate = it },
                             id = identificationNumber, onIdChange = { identificationNumber = it }
                         )
-                        1 -> QuestionStep("O ônibus tem elevador para cadeirante?", selected = hasElevator, onSelect = { hasElevator = it; error = null })
-                        2 -> QuestionStep("O ônibus tem numeração nas poltronas?", selected = hasNumberedSeats, onSelect = { hasNumberedSeats = it; error = null })
-                        3 -> StepLastSeat(lastSeatNumber, onValueChange = { lastSeatNumber = it; error = null })
-                        4 -> QuestionStep("O ônibus tem banheiro?", selected = hasBathroom, onSelect = { hasBathroom = it; error = null })
-                        5 -> QuestionStep("O ônibus é executivo (leito)?", subtitle = "Determina o layout de 2 ou 4 colunas", selected = null, onSelect = { /* Mock por enquanto */ handleSave() })
+                        1 -> StepP1(p1, onSelect = { p1 = it })
+                        2 -> StepP2(p2, onSelect = { p2 = it })
+                        3 -> StepP3(p3, onSelect = { p3 = it })
+                        4 -> StepP4(p4capacity, p2, p3, onSelect = { p4capacity = it })
+                        5 -> StepP5(p5, onSelect = { p5 = it })
+                        6 -> StepP6(p6, onSelect = { p6 = it })
+                        7 -> StepValidation(validationError ?: "Erro desconhecido", onRedirect = { stepToRedirect -> currentStep = stepToRedirect })
+                        8 -> StepShellPreview(
+                            layout = layout!!,
+                            p7numbers = p7numbers,
+                            isMixed = p1 == SeatNumberingMode.MIXED,
+                            onSeatClick = { cell -> activeDialogSeat = cell }
+                        )
+                        9 -> StepFinalMap(
+                            layout = layout!!,
+                            p7numbers = p7numbers,
+                            dpmWarning = dpmWarning
+                        )
                     }
                 }
             }
@@ -199,11 +295,41 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent) {
             }
         }
 
-        UbusButton(
-            text = if (currentStep == 5) "Concluir e Salvar" else "Avançar",
-            onClick = { handleAdvance() },
-            loading = loading,
-            modifier = Modifier.padding(24.dp)
+        if (currentStep != 7) {
+            val isNextEnabled = when (currentStep) {
+                0 -> plate.isNotBlank() && identificationNumber.isNotBlank()
+                1 -> p1 != null
+                2 -> p2 != null
+                3 -> p3 != null
+                4 -> p4capacity != null
+                5 -> p5 != null
+                6 -> p6 != null
+                else -> true
+            }
+
+            UbusButton(
+                text = if (currentStep == 9) "Concluir e Salvar" else "Avançar",
+                onClick = { handleAdvance() },
+                enabled = isNextEnabled,
+                loading = loading,
+                modifier = Modifier.padding(24.dp)
+            )
+        }
+    }
+
+    activeDialogSeat?.let { cell ->
+        PhysicalNumberDialog(
+            cell = cell,
+            initialValue = p7numbers[cell.virtualNumber]?.toString() ?: "",
+            onDismiss = { activeDialogSeat = null },
+            onConfirm = { number ->
+                if (number != null) {
+                    p7numbers[cell.virtualNumber!!] = number
+                } else {
+                    p7numbers.remove(cell.virtualNumber!!)
+                }
+                activeDialogSeat = null
+            }
         )
     }
 }
@@ -229,99 +355,392 @@ private fun StepPlate(plate: String, onPlateChange: (String) -> Unit, id: String
 }
 
 @Composable
-private fun QuestionStep(question: String, subtitle: String? = null, selected: Boolean?, onSelect: (Boolean) -> Unit) {
-    Text(question, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    subtitle?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = UbusText3) }
-    Spacer(Modifier.height(24.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        SelectCard("Sim", isSelected = selected == true, onClick = { onSelect(true) }, Modifier.weight(1f))
-        SelectCard("Não", isSelected = selected == false, onClick = { onSelect(false) }, Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun SelectCard(text: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    BentoCard(
-        modifier = modifier.clickable { onClick() }.border(2.dp, if (isSelected) UbusPrimary else Color.Transparent, MaterialTheme.shapes.large)
-    ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
-            Text(text, style = MaterialTheme.typography.titleMedium, color = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}
-
-@Composable
-private fun StepLastSeat(value: String, onValueChange: (String) -> Unit) {
-    Text("Qual o número da última poltrona?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+private fun StepP1(selected: SeatNumberingMode?, onSelect: (SeatNumberingMode) -> Unit) {
+    Text("As poltronas têm número físico?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(16.dp))
-    UbusTextField(value = value, onValueChange = onValueChange, label = "Número da última poltrona", placeholder = "Ex: 48")
-}
-
-@Composable
-private fun StepFirstRow(layout: SnapshotStateList<String>) {
-    Text("Configuração da primeira fileira", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    Text("Digite o número da poltrona ou deixe vazio se não existir.", style = MaterialTheme.typography.bodySmall, color = UbusText3)
-    Spacer(Modifier.height(32.dp))
-    
-    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-        Column {
-            Text("Esquerda", style = MaterialTheme.typography.labelSmall)
-            Row {
-                SeatItemInput(layout[0]) { layout[0] = it }
-                Spacer(Modifier.width(8.dp))
-                SeatItemInput(layout[1]) { layout[1] = it }
-            }
-        }
-        
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.height(24.dp))
-            Text("CORREDOR", style = MaterialTheme.typography.labelSmall, color = UbusText3)
-        }
-        
-        Column(horizontalAlignment = Alignment.End) {
-            Text("Direita", style = MaterialTheme.typography.labelSmall)
-            Row {
-                SeatItemInput(layout[2]) { layout[2] = it }
-                Spacer(Modifier.width(8.dp))
-                SeatItemInput(layout[3]) { layout[3] = it }
-            }
-        }
-    }
-}
-
-@Composable
-private fun SeatItemInput(value: String, onValueChange: (String) -> Unit) {
-    Box(
-        modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp))
-            .background(if (value.isNotEmpty()) UbusPrimary else UbusBorder.copy(alpha = 0.5f))
-            .border(1.dp, if (value.isNotEmpty()) UbusPrimary else UbusBorder, RoundedCornerShape(8.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = { if (it.length <= 3) onValueChange(it) },
-            textStyle = MaterialTheme.typography.titleMedium.copy(color = if (value.isNotEmpty()) Color.White else MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-            cursorBrush = SolidColor(if (value.isNotEmpty()) Color.White else UbusPrimary)
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "Sim, todas têm (numeração contínua)",
+            subtitle = "Ex: As poltronas físicas seguem a sequência normal de 1 até o final.",
+            isSelected = selected == SeatNumberingMode.PHYSICAL,
+            onClick = { onSelect(SeatNumberingMode.PHYSICAL) }
+        )
+        SelectOptionCard(
+            title = "Não, o ônibus só informa a lotação total",
+            subtitle = "Ex: O ônibus não possui números gravados nos assentos, os alunos escolhem livremente por número virtual.",
+            isSelected = selected == SeatNumberingMode.VIRTUAL,
+            onClick = { onSelect(SeatNumberingMode.VIRTUAL) }
+        )
+        SelectOptionCard(
+            title = "Mista / Personalizada",
+            subtitle = "Ex: Algumas poltronas têm números pulados, fora de ordem, ou o banheiro muda a numeração física.",
+            isSelected = selected == SeatNumberingMode.MIXED,
+            onClick = { onSelect(SeatNumberingMode.MIXED) }
         )
     }
 }
 
 @Composable
-private fun SeatItem(number: Int, exists: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(if (exists) UbusPrimary else UbusBorder).clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        if (exists) Text("$number", color = Color.White, fontWeight = FontWeight.Bold)
+private fun StepP2(selected: FrontRowLayout?, onSelect: (FrontRowLayout) -> Unit) {
+    Text("Quantos assentos existem na primeira fileira?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(16.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "4 assentos",
+            subtitle = "Layout completo com 2 assentos na esquerda e 2 na direita.",
+            isSelected = selected == FrontRowLayout.FOUR,
+            onClick = { onSelect(FrontRowLayout.FOUR) }
+        )
+        SelectOptionCard(
+            title = "3 assentos",
+            subtitle = "Geralmente falta o assento do corredor direito por conta da escada da porta.",
+            isSelected = selected == FrontRowLayout.THREE,
+            onClick = { onSelect(FrontRowLayout.THREE) }
+        )
+        SelectOptionCard(
+            title = "2 assentos",
+            subtitle = "Apenas os assentos da janela, deixando o corredor e espaço de escada mais amplos.",
+            isSelected = selected == FrontRowLayout.TWO,
+            onClick = { onSelect(FrontRowLayout.TWO) }
+        )
     }
 }
 
 @Composable
-private fun StepManualCapacity(value: String, onValueChange: (String) -> Unit) {
-    Text("Capacidade do Veículo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-    Text("Consulte o CRLV ou a placa de lotação interna.", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+private fun StepP3(selected: RearLayout?, onSelect: (RearLayout) -> Unit) {
+    Text("Como é a parte de trás do ônibus?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(16.dp))
-    UbusTextField(value = value, onValueChange = onValueChange, label = "Total de lugares", placeholder = "Ex: 44")
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "Tem banheiro no fundo",
+            subtitle = "O banheiro ocupa o lado direito do fundo. Sobram 2 assentos no lado esquerdo.",
+            isSelected = selected == RearLayout.BATHROOM,
+            onClick = { onSelect(RearLayout.BATHROOM) }
+        )
+        SelectOptionCard(
+            title = "Fileira normal com 4 assentos",
+            subtitle = "Layout padrão de 2 assentos na esquerda e 2 na direita, com corredor central.",
+            isSelected = selected == RearLayout.NORMAL,
+            onClick = { onSelect(RearLayout.NORMAL) }
+        )
+        SelectOptionCard(
+            title = "Fileira inteira com 5 assentos",
+            subtitle = "Última fileira inteiriça sem corredor, contendo 5 lugares.",
+            isSelected = selected == RearLayout.FIVE,
+            onClick = { onSelect(RearLayout.FIVE) }
+        )
+        SelectOptionCard(
+            title = "Espaço de cadeirante / Box no fundo",
+            subtitle = "O fundo do ônibus é reservado para fixação de cadeira de rodas.",
+            isSelected = selected == RearLayout.BOX,
+            onClick = { onSelect(RearLayout.BOX) }
+        )
+    }
+}
+
+@Composable
+private fun StepP4(selected: Int?, p2: FrontRowLayout?, p3: RearLayout?, onSelect: (Int) -> Unit) {
+    Text("Qual a capacidade total de lugares?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(16.dp))
+
+    val capacities = listOf(40, 42, 44, 46, 47, 48, 50)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        capacities.forEach { capacity ->
+            val isPossible = checkCapacityPossible(capacity, p2, p3)
+            SelectOptionCard(
+                title = "$capacity lugares",
+                subtitle = if (isPossible) "Disposição física compatível" else "Incompatível com o layout de primeira fileira e fundo selecionados",
+                isSelected = selected == capacity,
+                enabled = isPossible,
+                onClick = { onSelect(capacity) }
+            )
+        }
+    }
+}
+
+private fun checkCapacityPossible(capacity: Int, p2: FrontRowLayout?, p3: RearLayout?): Boolean {
+    val frontSeats = when (p2) {
+        FrontRowLayout.FOUR -> 4
+        FrontRowLayout.THREE -> 3
+        FrontRowLayout.TWO -> 2
+        null -> return true
+    }
+    val rearSeats = when (p3) {
+        RearLayout.BATHROOM -> 2
+        RearLayout.NORMAL -> 4
+        RearLayout.FIVE -> 5
+        RearLayout.BOX -> 0
+        null -> return true
+    }
+
+    if (p2 == FrontRowLayout.THREE && p3 == RearLayout.BATHROOM) return false
+    if (p2 == FrontRowLayout.FOUR && p3 == RearLayout.FIVE) return false
+
+    val remaining = capacity - frontSeats - rearSeats
+    return remaining >= 0 && remaining % 4 == 0
+}
+
+@Composable
+private fun StepP5(selected: AccessibilityFeature?, onSelect: (AccessibilityFeature) -> Unit) {
+    Text("Qual o recurso de acessibilidade?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(16.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "DPM (Dispositivo de Poltrona Móvel)",
+            subtitle = "Poltrona da primeira fileira que se projeta para fora do ônibus.",
+            isSelected = selected == AccessibilityFeature.DPM,
+            onClick = { onSelect(AccessibilityFeature.DPM) }
+        )
+        SelectOptionCard(
+            title = "Box para Cadeira de Rodas no fundo",
+            subtitle = "Espaço reservado no fundo para fixação de cadeira de rodas.",
+            isSelected = selected == AccessibilityFeature.BOX,
+            onClick = { onSelect(AccessibilityFeature.BOX) }
+        )
+        SelectOptionCard(
+            title = "Nenhum",
+            subtitle = "O ônibus não possui recursos especiais de acessibilidade instalados.",
+            isSelected = selected == AccessibilityFeature.NONE,
+            onClick = { onSelect(AccessibilityFeature.NONE) }
+        )
+    }
+}
+
+@Composable
+private fun StepP6(selected: NumerationSide?, onSelect: (NumerationSide) -> Unit) {
+    Text("De qual lado começa a numeração?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(16.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "Lado Esquerdo",
+            subtitle = "A contagem das poltronas inicia no lado do motorista.",
+            isSelected = selected == NumerationSide.LEFT,
+            onClick = { onSelect(NumerationSide.LEFT) }
+        )
+        SelectOptionCard(
+            title = "Lado Direito",
+            subtitle = "A contagem das poltronas inicia no lado da porta de embarque.",
+            isSelected = selected == NumerationSide.RIGHT,
+            onClick = { onSelect(NumerationSide.RIGHT) }
+        )
+    }
+}
+
+@Composable
+private fun StepValidation(error: String, onRedirect: (Int) -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.Warning,
+            contentDescription = "Erro de validação",
+            tint = Color(0xFFEF4444),
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            "Inconsistência Detectada",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            error,
+            style = MaterialTheme.typography.bodyMedium,
+            color = UbusText3,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        Spacer(Modifier.height(32.dp))
+
+        if (error.contains("box") || error.contains("acessibilidade")) {
+            UbusButton(text = "Ajustar Fundo (P3)", onClick = { onRedirect(3) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+            UbusButton(text = "Ajustar Acessibilidade (P5)", onClick = { onRedirect(5) }, modifier = Modifier.fillMaxWidth())
+        } else {
+            UbusButton(text = "Ajustar Primeira Fileira (P2)", onClick = { onRedirect(2) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+            UbusButton(text = "Ajustar Fundo (P3)", onClick = { onRedirect(3) }, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp))
+            UbusButton(text = "Ajustar Capacidade (P4)", onClick = { onRedirect(4) }, modifier = Modifier.fillMaxWidth())
+        }
+    }
+}
+
+@Composable
+private fun StepShellPreview(
+    layout: BusLayout,
+    p7numbers: Map<Int, Int>,
+    isMixed: Boolean,
+    onSeatClick: (BusCell) -> Unit
+) {
+    Text(
+        if (isMixed) "Configurar Numeração Física" else "Pré-visualização do Layout",
+        style = MaterialTheme.typography.titleLarge,
+        fontWeight = FontWeight.Bold
+    )
+    Text(
+        if (isMixed) "Toque nas poltronas para digitar o número físico gravado nelas." else "Verifique a disposição do corredor e assentos gerada.",
+        style = MaterialTheme.typography.bodySmall,
+        color = UbusText3
+    )
+    Spacer(Modifier.height(24.dp))
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)).padding(16.dp)
+        ) {
+            layout.rows.forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.cells.forEach { cell ->
+                        val displayCell = if (cell.type == CellType.SEAT) {
+                            cell.copy(physicalNumber = p7numbers[cell.virtualNumber])
+                        } else cell
+
+                        BusCellView(
+                            cell = displayCell,
+                            state = if (cell.type == CellType.SEAT) BusCellState.SHELL else BusCellState.DISABLED,
+                            displayMode = if (isMixed) SeatNumberingMode.MIXED else SeatNumberingMode.PHYSICAL,
+                            onClick = if (isMixed && cell.type == CellType.SEAT) {
+                                { onSeatClick(cell) }
+                            } else null
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepFinalMap(
+    layout: BusLayout,
+    p7numbers: Map<Int, Int>,
+    dpmWarning: String?
+) {
+    Text("Mapa Final do Veículo", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text("Este é o mapa que será exibido aos alunos para a reserva de passagens.", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+    Spacer(Modifier.height(16.dp))
+
+    dpmWarning?.let {
+        BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Info, null, tint = UbusPrimary, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(12.dp)).padding(16.dp)
+        ) {
+            layout.rows.forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.cells.forEach { cell ->
+                        val displayCell = if (cell.type == CellType.SEAT) {
+                            cell.copy(
+                                physicalNumber = p7numbers[cell.virtualNumber]
+                            )
+                        } else cell
+
+                        BusCellView(
+                            cell = displayCell,
+                            state = if (cell.type == CellType.SEAT) {
+                                if (cell.isDpm) BusCellState.DPM else BusCellState.FREE
+                            } else BusCellState.DISABLED,
+                            displayMode = layout.numberingMode,
+                            onClick = null
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectOptionCard(
+    title: String,
+    subtitle: String,
+    isSelected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    BentoCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = enabled) { onClick() }
+            .border(
+                width = 2.dp,
+                color = if (isSelected) UbusPrimary else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .alpha(if (enabled) 1.0f else 0.4f)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+        }
+    }
+}
+
+@Composable
+private fun PhysicalNumberDialog(
+    cell: BusCell,
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (Int?) -> Unit
+) {
+    var text by remember { mutableStateOf(initialValue) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Número Físico - Assento Virtual #${cell.virtualNumber}") },
+        text = {
+            Column {
+                Text(
+                    "Insira o número físico visível impresso neste assento no ônibus real.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = UbusText3
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it.filter { char -> char.isDigit() }.take(3) },
+                    label = { Text("Número da Poltrona") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(text.toIntOrNull()) }
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onConfirm(null) }
+            ) {
+                Text("Limpar / Usar Padrão")
+            }
+        }
+    )
 }

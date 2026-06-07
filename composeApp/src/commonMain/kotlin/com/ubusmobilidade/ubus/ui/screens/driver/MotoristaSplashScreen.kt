@@ -34,7 +34,7 @@ fun MotoristaSplashScreen(component: RootComponent) {
         Spacer(Modifier.height(32.dp))
         UbusButton(text = "Selecionar veículo", onClick = { component.navigateTo(RootComponent.Config.SelecionarVeiculo) })
         Spacer(Modifier.height(12.dp))
-        UbusOutlinedButton(text = "Cadastrar novo veículo", onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep) })
+        UbusOutlinedButton(text = "Cadastrar novo veículo", onClick = { component.navigateTo(RootComponent.Config.CadastroVeiculoMultiStep()) })
         Spacer(Modifier.height(24.dp))
         UbusOutlinedButton(text = "Sair", onClick = { component.logout() })
     }

@@ -172,8 +172,13 @@ class FleetRepository(private val api: ApiClient) {
 
     suspend fun getBus(id: String): Bus = api.get("/fleet/buses/$id")
 
-    suspend fun getBusLayout(id: String, tripId: String? = null): List<OccupiedSeat> =
-        api.get("/reservations/trip/$tripId/occupied-seats")
+    suspend fun getBusLayout(busId: String): BusLayout? =
+        try { api.get("/fleet/buses/$busId/layout") }
+        catch (_: Exception) { null }
+
+    suspend fun saveBusLayout(busId: String, payload: SaveBusLayoutPayload): BusLayout? =
+        try { api.put("/fleet/buses/$busId/layout", payload) }
+        catch (_: Exception) { null }
 
     suspend fun createBus(payload: CreateBusPayload): Bus =
         api.post("/fleet/buses", payload)

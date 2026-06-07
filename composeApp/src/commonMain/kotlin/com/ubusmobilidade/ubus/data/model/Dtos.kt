@@ -91,6 +91,7 @@ data class CreateBusPayload(
     val hasBathroom: Boolean? = null,
     val hasAirConditioning: Boolean? = null,
     val hasElevator: Boolean? = null,
+    val preferentialSeats: List<Int>? = null,
 )
 
 @Serializable
@@ -102,6 +103,7 @@ data class UpdateBusPayload(
     val hasAirConditioning: Boolean? = null,
     val routeId: String? = null,
     val active: Boolean? = null,
+    val preferentialSeats: List<Int>? = null,
 )
 
 @Serializable
@@ -323,5 +325,28 @@ data class CreateTripRatingPayload(
     val punctualityRating: Int,
     val driverRating: Int,
     val comment: String? = null,
+)
+
+/* ── Bus Layout DTOs ── */
+
+data class BusWizardAnswers(
+    val plate: String,
+    val identificationNumber: String,
+    val p1: SeatNumberingMode,
+    val p2: FrontRowLayout,
+    val p3: RearLayout,
+    val p4capacity: Int,
+    val p5: AccessibilityFeature,
+    val p6: NumerationSide,
+    val p7physicalNumbers: Map<Int, Int> = emptyMap(),
+)
+
+@Serializable
+data class SaveBusLayoutPayload(
+    val numberingMode: SeatNumberingMode,
+    val numerationSide: NumerationSide,
+    val rows: List<BusLayoutRow>,
+    val dpmSeatVirtualNumber: Int?,
+    val preferentialSeats: List<Int>,
 )
 
