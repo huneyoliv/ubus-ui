@@ -50,14 +50,26 @@ fun buildLeafletHtml(lat: Double, lng: Double, points: List<MapPoint>): String {
 
                 var points = $pointsJson;
                 var bounds = L.latLngBounds([[$lat, $lng]]);
+                var latlngs = [];
+                latlngs.push([$lat, $lng]);
 
                 points.forEach(function(point) {
                     if (point.lat && point.lng) {
                         L.marker([point.lat, point.lng]).addTo(map)
                             .bindPopup(point.label);
                         bounds.extend([point.lat, point.lng]);
+                        latlngs.push([point.lat, point.lng]);
                     }
                 });
+
+                if (latlngs.length > 1) {
+                    L.polyline(latlngs, {
+                        color: '#002776',
+                        weight: 5,
+                        opacity: 0.75,
+                        lineJoin: 'round'
+                    }).addTo(map);
+                }
 
                 if (points.length > 0) {
                     map.fitBounds(bounds, { padding: [50, 50] });

@@ -71,6 +71,16 @@ data class PickupPoint(
     val routeId: String? = null,
 )
 
+@Serializable
+data class DropoffPoint(
+    val id: String,
+    val name: String,
+    val address: String? = null,
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val routeId: String? = null,
+)
+
 /* ── Bus ── */
 
 @Serializable

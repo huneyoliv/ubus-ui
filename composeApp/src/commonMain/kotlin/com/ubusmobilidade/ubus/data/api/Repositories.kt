@@ -158,6 +158,9 @@ class FleetRepository(private val api: ApiClient) {
     suspend fun listPickupPoints(routeId: String): List<PickupPoint> =
         api.get("/fleet/routes/$routeId/points")
 
+    suspend fun listDropoffPoints(routeId: String): List<DropoffPoint> =
+        api.get("/fleet/routes/$routeId/dropoff-points")
+
     suspend fun createPickupPoint(routeId: String, payload: CreatePickupPointPayload): PickupPoint =
         api.post("/fleet/routes/$routeId/points", payload)
 

@@ -60,17 +60,66 @@ fun MapaScreen(component: RootComponent) {
                     }
 
                     val trip = tripRepo.getTrip(tripId)
-                    val pointsList = fleetRepo.listPickupPoints(trip.routeId)
-                    
-                    val mappedPoints = currentSummary.points.mapNotNull { summaryPoint ->
-                        val detail = pointsList.find { it.id == summaryPoint.pointId }
-                        if (detail?.lat != null && detail.lng != null) {
-                            MapPoint(
-                                lat = detail.lat,
-                                lng = detail.lng,
-                                label = "${detail.name} (${summaryPoint.studentsCount} alunos)"
-                            )
-                        } else null
+                    val isReturn = trip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.INBOUND
+
+                    val pickupList = try {
+                        fleetRepo.listPickupPoints(trip.routeId)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+
+                    val dropoffList = try {
+                        fleetRepo.listDropoffPoints(trip.routeId)
+                    } catch (_: Exception) {
+                        emptyList()
+                    }
+
+                    val mappedPoints = mutableListOf<MapPoint>()
+
+                    if (isReturn) {
+                        val boarding = currentSummary.points.mapNotNull { summaryPoint ->
+                            val detail = dropoffList.find { it.id == summaryPoint.pointId }
+                            if (detail?.lat != null && detail.lng != null) {
+                                MapPoint(
+                                    lat = detail.lat,
+                                    lng = detail.lng,
+                                    label = "[Embarque] ${detail.name} (${summaryPoint.studentsCount} alunos)"
+                                )
+                            } else null
+                        }
+                        val alighting = pickupList.mapNotNull { detail ->
+                            if (detail.lat != null && detail.lng != null) {
+                                MapPoint(
+                                    lat = detail.lat,
+                                    lng = detail.lng,
+                                    label = "[Desembarque] ${detail.name}"
+                                )
+                            } else null
+                        }
+                        mappedPoints.addAll(boarding)
+                        mappedPoints.addAll(alighting)
+                    } else {
+                        val boarding = currentSummary.points.mapNotNull { summaryPoint ->
+                            val detail = pickupList.find { it.id == summaryPoint.pointId }
+                            if (detail?.lat != null && detail.lng != null) {
+                                MapPoint(
+                                    lat = detail.lat,
+                                    lng = detail.lng,
+                                    label = "[Embarque] ${detail.name} (${summaryPoint.studentsCount} alunos)"
+                                )
+                            } else null
+                        }
+                        val alighting = dropoffList.mapNotNull { detail ->
+                            if (detail.lat != null && detail.lng != null) {
+                                MapPoint(
+                                    lat = detail.lat,
+                                    lng = detail.lng,
+                                    label = "[Desembarque] ${detail.name}"
+                                )
+                            } else null
+                        }
+                        mappedPoints.addAll(boarding)
+                        mappedPoints.addAll(alighting)
                     }
                     tripPoints = mappedPoints
                 }
