@@ -264,7 +264,7 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                 Column(modifier = Modifier.fillMaxWidth()) {
                     when (step) {
                         0 -> StepPlate(
-                            plate = plate, onPlateChange = { if (it.length <= 7) plate = it },
+                            plate = plate, onPlateChange = { if (it.length <= 8) plate = it },
                             id = identificationNumber, onIdChange = { identificationNumber = it }
                         )
                         1 -> StepP1(p1, onSelect = { p1 = it })
