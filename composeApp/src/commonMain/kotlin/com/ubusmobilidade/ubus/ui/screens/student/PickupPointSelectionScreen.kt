@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 fun PickupPointSelectionScreen(
     component: RootComponent,
     tripId: String,
-    seatNumber: Int,
+    seatNumber: Int?,
     pendingInboundTripId: String? = null
 ) {
     val scope = rememberCoroutineScope()
@@ -116,7 +116,13 @@ fun PickupPointSelectionScreen(
                     .padding(top = 24.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { component.replaceWith(RootComponent.Config.SelecionarAssento(tripId, pendingInboundTripId)) }) {
+                IconButton(onClick = {
+                    if (seatNumber == null) {
+                        component.goBack()
+                    } else {
+                        component.replaceWith(RootComponent.Config.SelecionarAssento(tripId, pendingInboundTripId))
+                    }
+                }) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                 }
                 Spacer(Modifier.width(8.dp))
@@ -154,12 +160,14 @@ fun PickupPointSelectionScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
-                        Text(
-                            text = "Assento Escolhido: #$seatNumber",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = UbusPrimary,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (seatNumber != null) {
+                            Text(
+                                text = "Assento Escolhido: #$seatNumber",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = UbusPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 

@@ -64,6 +64,7 @@ import com.ubusmobilidade.ubus.data.model.CellType
 import com.ubusmobilidade.ubus.data.model.CreateBusPayload
 import com.ubusmobilidade.ubus.data.model.FrontRowLayout
 import com.ubusmobilidade.ubus.data.model.NumerationSide
+import com.ubusmobilidade.ubus.data.model.NumberingPattern
 import com.ubusmobilidade.ubus.data.model.RearLayout
 import com.ubusmobilidade.ubus.data.model.SaveBusLayoutPayload
 import com.ubusmobilidade.ubus.data.model.SeatNumberingMode
@@ -85,6 +86,8 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val fleetRepo = remember { FleetRepository(apiClient) }
 
+    // Steps: 0=Placa, 1=P1, 2=P2, 3=P3, 4=P4, 5=P5, 6=P6-A, 10=P6-B, 11=VirtualCapacity
+    // 7=Validation, 8=ShellPreview(MIXED), 9=FinalMap
     var currentStep by remember { mutableIntStateOf(0) }
     var plate by remember { mutableStateOf("") }
     var identificationNumber by remember { mutableStateOf("") }
@@ -94,6 +97,8 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
     var p4capacity by remember { mutableStateOf<Int?>(null) }
     var p5 by remember { mutableStateOf<AccessibilityFeature?>(null) }
     var p6 by remember { mutableStateOf<NumerationSide?>(null) }
+    var p6b by remember { mutableStateOf<NumberingPattern?>(null) }
+    var virtualCapacity by remember { mutableStateOf("") }
     val p7numbers = remember { mutableStateMapOf<Int, Int>() }
 
     var validationError by remember { mutableStateOf<String?>(null) }
@@ -111,9 +116,10 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
             p1 = p1 ?: SeatNumberingMode.PHYSICAL,
             p2 = p2 ?: FrontRowLayout.FOUR,
             p3 = p3 ?: RearLayout.NORMAL,
-            p4capacity = p4capacity ?: 44,
+            p4capacity = if (p1 == SeatNumberingMode.VIRTUAL) (virtualCapacity.toIntOrNull() ?: 44) else (p4capacity ?: 44),
             p5 = p5 ?: AccessibilityFeature.NONE,
             p6 = p6 ?: NumerationSide.LEFT,
+            p6b = p6b ?: NumberingPattern.SEQUENTIAL,
             p7physicalNumbers = p7numbers.toMap()
         )
     }
@@ -137,6 +143,32 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
         val oldPattern = Regex("^[A-Z]{3}\\d{4}$")
         val mercosulPattern = Regex("^[A-Z]{3}\\d[A-Z]\\d{2}$")
         return oldPattern.matches(clean) || mercosulPattern.matches(clean)
+    }
+
+    suspend fun handleSaveVirtual() {
+        loading = true
+        error = null
+        try {
+            val capacity = virtualCapacity.toIntOrNull() ?: 44
+            fleetRepo.createBus(
+                CreateBusPayload(
+                    municipalityId = municipalityId ?: component.authStorage.user?.municipalityId,
+                    identificationNumber = identificationNumber.trim(),
+                    plate = plate.uppercase(),
+                    standardCapacity = capacity,
+                    hasBathroom = false,
+                    hasAirConditioning = false,
+                    hasElevator = p5 == AccessibilityFeature.BOX,
+                    preferentialSeats = emptyList()
+                )
+            )
+            component.goBack()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = e.toUserMessage("Erro ao cadastrar ônibus.")
+        } finally {
+            loading = false
+        }
     }
 
     suspend fun handleSave() {
@@ -182,6 +214,7 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
 
     fun handleAdvance() {
         error = null
+        val isVirtual = p1 == SeatNumberingMode.VIRTUAL
         when (currentStep) {
             0 -> {
                 if (plate.isNotBlank() && identificationNumber.isNotBlank()) {
@@ -191,13 +224,28 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                     error = "Preencha a placa e o número do veículo."
                 }
             }
-            1 -> if (p1 != null) currentStep = 2
+            1 -> {
+                if (p1 == null) return
+                currentStep = if (isVirtual) 11 else 2
+            }
+            11 -> {
+                val cap = virtualCapacity.toIntOrNull()
+                if (cap == null || cap < 1) {
+                    error = "Informe uma capacidade válida."
+                } else {
+                    currentStep = 5
+                }
+            }
             2 -> if (p2 != null) currentStep = 3
             3 -> if (p3 != null) currentStep = 4
             4 -> if (p4capacity != null) currentStep = 5
-            5 -> if (p5 != null) currentStep = 6
-            6 -> {
-                if (p6 == null) return
+            5 -> {
+                if (p5 == null) return
+                currentStep = if (isVirtual) 9 else 6
+            }
+            6 -> if (p6 != null) currentStep = 10
+            10 -> {
+                if (p6b == null) return
                 val answers = buildAnswers()
                 val err = BusLayoutEngine.validate(answers)
                 if (err != null) {
@@ -207,23 +255,31 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                     val built = BusLayoutEngine.buildLayout(answers)
                     layout = built
                     dpmWarning = computeDpmWarningMessage(answers, built)
-                    currentStep = 8
+                    currentStep = if (p1 == SeatNumberingMode.MIXED) 8 else 9
                 }
             }
             8 -> currentStep = 9
             9 -> {
-                scope.launch { handleSave() }
+                if (isVirtual) scope.launch { handleSaveVirtual() }
+                else scope.launch { handleSave() }
             }
         }
     }
 
     fun handleBack() {
         error = null
+        val isVirtual = p1 == SeatNumberingMode.VIRTUAL
         when (currentStep) {
             0 -> component.goBack()
-            7 -> currentStep = 6
-            8 -> currentStep = 6
-            9 -> currentStep = 8
+            1 -> currentStep = 0
+            11 -> currentStep = 1
+            2 -> currentStep = 1
+            5 -> currentStep = if (isVirtual) 11 else 4
+            6 -> currentStep = 5
+            10 -> currentStep = 6
+            7 -> currentStep = 10
+            8 -> currentStep = 10
+            9 -> currentStep = if (isVirtual) 5 else if (p1 == SeatNumberingMode.MIXED) 8 else 10
             else -> currentStep--
         }
     }
@@ -239,12 +295,15 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = MaterialTheme.colorScheme.onBackground)
             }
             Spacer(Modifier.weight(1f))
-            if (currentStep in 1..6) {
-                Text(
-                    "Etapa $currentStep de 6",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = UbusText3
-                )
+            val stepLabel = when {
+                p1 == SeatNumberingMode.VIRTUAL && currentStep == 11 -> "Etapa 2 de 3"
+                p1 == SeatNumberingMode.VIRTUAL && currentStep == 5 -> "Etapa 3 de 3"
+                currentStep in 1..6 -> "Etapa $currentStep de 7"
+                currentStep == 10 -> "Etapa 7 de 7"
+                else -> null
+            }
+            stepLabel?.let {
+                Text(it, style = MaterialTheme.typography.labelMedium, color = UbusText3)
             }
         }
 
@@ -268,11 +327,13 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                             id = identificationNumber, onIdChange = { identificationNumber = it }
                         )
                         1 -> StepP1(p1, onSelect = { p1 = it })
+                        11 -> StepCapacityVirtual(virtualCapacity, onCapacityChange = { virtualCapacity = it })
                         2 -> StepP2(p2, onSelect = { p2 = it })
                         3 -> StepP3(p3, onSelect = { p3 = it })
                         4 -> StepP4(p4capacity, p2, p3, onSelect = { p4capacity = it })
                         5 -> StepP5(p5, onSelect = { p5 = it })
-                        6 -> StepP6(p6, onSelect = { p6 = it })
+                        6 -> StepP6A(p6, onSelect = { p6 = it })
+                        10 -> StepP6B(p6b, onSelect = { p6b = it })
                         7 -> StepValidation(validationError ?: "Erro desconhecido", onRedirect = { stepToRedirect -> currentStep = stepToRedirect })
                         8 -> StepShellPreview(
                             layout = layout!!,
@@ -280,11 +341,18 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
                             isMixed = p1 == SeatNumberingMode.MIXED,
                             onSeatClick = { cell -> activeDialogSeat = cell }
                         )
-                        9 -> StepFinalMap(
-                            layout = layout!!,
-                            p7numbers = p7numbers,
-                            dpmWarning = dpmWarning
-                        )
+                        9 -> if (p1 == SeatNumberingMode.VIRTUAL) {
+                            StepVirtualConfirm(
+                                capacity = virtualCapacity.toIntOrNull() ?: 0,
+                                accessibility = p5 ?: AccessibilityFeature.NONE
+                            )
+                        } else {
+                            StepFinalMap(
+                                layout = layout!!,
+                                p7numbers = p7numbers,
+                                dpmWarning = dpmWarning
+                            )
+                        }
                     }
                 }
             }
@@ -299,11 +367,13 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
             val isNextEnabled = when (currentStep) {
                 0 -> plate.isNotBlank() && identificationNumber.isNotBlank()
                 1 -> p1 != null
+                11 -> virtualCapacity.toIntOrNull() != null && virtualCapacity.toInt() > 0
                 2 -> p2 != null
                 3 -> p3 != null
                 4 -> p4capacity != null
                 5 -> p5 != null
                 6 -> p6 != null
+                10 -> p6b != null
                 else -> true
             }
 
@@ -507,7 +577,7 @@ private fun StepP5(selected: AccessibilityFeature?, onSelect: (AccessibilityFeat
 }
 
 @Composable
-private fun StepP6(selected: NumerationSide?, onSelect: (NumerationSide) -> Unit) {
+private fun StepP6A(selected: NumerationSide?, onSelect: (NumerationSide) -> Unit) {
     Text("De qual lado começa a numeração?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
     Spacer(Modifier.height(16.dp))
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -523,6 +593,83 @@ private fun StepP6(selected: NumerationSide?, onSelect: (NumerationSide) -> Unit
             isSelected = selected == NumerationSide.RIGHT,
             onClick = { onSelect(NumerationSide.RIGHT) }
         )
+    }
+}
+
+@Composable
+private fun StepP6B(selected: NumberingPattern?, onSelect: (NumberingPattern) -> Unit) {
+    Text("Como as poltronas são numeradas?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(16.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SelectOptionCard(
+            title = "Sequencial",
+            subtitle = "1, 2, 3, 4... — cada fileira é numerada da frente para o fundo, coluna por coluna.",
+            isSelected = selected == NumberingPattern.SEQUENTIAL,
+            onClick = { onSelect(NumberingPattern.SEQUENTIAL) }
+        )
+        SelectOptionCard(
+            title = "Ímpares na janela",
+            subtitle = "Janelas: 1, 3, 5... / Corredor: 2, 4, 6... — poltronas de janela recebem números ímpares.",
+            isSelected = selected == NumberingPattern.ODD_WINDOW,
+            onClick = { onSelect(NumberingPattern.ODD_WINDOW) }
+        )
+        SelectOptionCard(
+            title = "Pares na janela",
+            subtitle = "Janelas: 2, 4, 6... / Corredor: 1, 3, 5... — poltronas de janela recebem números pares.",
+            isSelected = selected == NumberingPattern.EVEN_WINDOW,
+            onClick = { onSelect(NumberingPattern.EVEN_WINDOW) }
+        )
+    }
+}
+
+@Composable
+private fun StepCapacityVirtual(capacity: String, onCapacityChange: (String) -> Unit) {
+    Text("Quantas poltronas tem o ônibus?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text(
+        "Como as poltronas não têm numeração física, informe apenas o total de assentos disponíveis.",
+        style = MaterialTheme.typography.bodySmall,
+        color = UbusText3
+    )
+    Spacer(Modifier.height(24.dp))
+    UbusTextField(
+        value = capacity,
+        onValueChange = { onCapacityChange(it.filter { c -> c.isDigit() }.take(3)) },
+        label = "Total de assentos",
+        placeholder = "Ex: 44",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
+}
+
+@Composable
+private fun StepVirtualConfirm(capacity: Int, accessibility: AccessibilityFeature) {
+    Text("Resumo do Ônibus", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+    Text(
+        "Este ônibus não possui numeração física nas poltronas. Os alunos escolherão livremente ao reservar.",
+        style = MaterialTheme.typography.bodySmall,
+        color = UbusText3
+    )
+    Spacer(Modifier.height(24.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        BentoCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(4.dp)) {
+                Text("Capacidade", style = MaterialTheme.typography.labelSmall, color = UbusText3)
+                Text("$capacity assentos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+        }
+        BentoCard(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(4.dp)) {
+                Text("Acessibilidade", style = MaterialTheme.typography.labelSmall, color = UbusText3)
+                Text(
+                    when (accessibility) {
+                        AccessibilityFeature.DPM -> "DPM — Dispositivo de Poltrona Móvel"
+                        AccessibilityFeature.BOX -> "Box para Cadeira de Rodas"
+                        AccessibilityFeature.NONE -> "Nenhum recurso especial"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
 

@@ -338,6 +338,7 @@ data class BusWizardAnswers(
     val p4capacity: Int,
     val p5: AccessibilityFeature,
     val p6: NumerationSide,
+    val p6b: NumberingPattern = NumberingPattern.SEQUENTIAL,
     val p7physicalNumbers: Map<Int, Int> = emptyMap(),
 )
 

@@ -93,7 +93,11 @@ enum class RearLayout { BATHROOM, NORMAL, FIVE, BOX }
 enum class NumerationSide { LEFT, RIGHT }
 
 @Serializable
+enum class NumberingPattern { SEQUENTIAL, ODD_WINDOW, EVEN_WINDOW }
+
+@Serializable
 enum class AccessibilityFeature { DPM, BOX, NONE }
+
 
 @Serializable
 enum class CellType { SEAT, AISLE, EMPTY, BATHROOM, BOX }

@@ -167,4 +167,43 @@ class BusLayoutEngineTest {
         assertEquals(102, updated.rows[0].cells[1].physicalNumber)
         assertNull(updated.rows[0].cells[3].physicalNumber)
     }
+
+    @Test
+    fun testPatternedNumbering() {
+        val baseAnswers = BusWizardAnswers(
+            plate = "ABC-1234",
+            identificationNumber = "1050",
+            p1 = SeatNumberingMode.PHYSICAL,
+            p2 = FrontRowLayout.FOUR,
+            p3 = RearLayout.NORMAL,
+            p4capacity = 44,
+            p5 = AccessibilityFeature.NONE,
+            p6 = NumerationSide.LEFT,
+            p6b = NumberingPattern.ODD_WINDOW
+        )
+
+        // ODD_WINDOW: Janela ímpar, Corredor par
+        val layoutOdd = BusLayoutEngine.buildLayout(baseAnswers)
+        assertEquals(1, layoutOdd.rows[0].cells[0].virtualNumber) // WINDOW_LEFT
+        assertEquals(2, layoutOdd.rows[0].cells[1].virtualNumber) // AISLE_LEFT
+        assertEquals(4, layoutOdd.rows[0].cells[3].virtualNumber) // AISLE_RIGHT
+        assertEquals(3, layoutOdd.rows[0].cells[4].virtualNumber) // WINDOW_RIGHT
+
+        assertEquals(5, layoutOdd.rows[1].cells[0].virtualNumber) // WINDOW_LEFT
+        assertEquals(6, layoutOdd.rows[1].cells[1].virtualNumber) // AISLE_LEFT
+        assertEquals(8, layoutOdd.rows[1].cells[3].virtualNumber) // AISLE_RIGHT
+        assertEquals(7, layoutOdd.rows[1].cells[4].virtualNumber) // WINDOW_RIGHT
+
+        // EVEN_WINDOW: Janela par, Corredor ímpar
+        val layoutEven = BusLayoutEngine.buildLayout(baseAnswers.copy(p6b = NumberingPattern.EVEN_WINDOW))
+        assertEquals(2, layoutEven.rows[0].cells[0].virtualNumber) // WINDOW_LEFT
+        assertEquals(1, layoutEven.rows[0].cells[1].virtualNumber) // AISLE_LEFT
+        assertEquals(3, layoutEven.rows[0].cells[3].virtualNumber) // AISLE_RIGHT
+        assertEquals(4, layoutEven.rows[0].cells[4].virtualNumber) // WINDOW_RIGHT
+
+        assertEquals(6, layoutEven.rows[1].cells[0].virtualNumber) // WINDOW_LEFT
+        assertEquals(5, layoutEven.rows[1].cells[1].virtualNumber) // AISLE_LEFT
+        assertEquals(7, layoutEven.rows[1].cells[3].virtualNumber) // AISLE_RIGHT
+        assertEquals(8, layoutEven.rows[1].cells[4].virtualNumber) // WINDOW_RIGHT
+    }
 }

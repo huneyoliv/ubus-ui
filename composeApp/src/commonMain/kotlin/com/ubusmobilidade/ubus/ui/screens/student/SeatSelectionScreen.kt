@@ -95,6 +95,9 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
             if (busId != null) {
                 busLayout = fleetRepo.getBusLayout(busId)
             }
+            if (busLayout == null) {
+                component.replaceWith(RootComponent.Config.SelecionarPontoEmbarque(tripId, null, pendingInboundTripId))
+            }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             e.printStackTrace()
