@@ -36,3 +36,4 @@ As configurações de versão estão localizadas no bloco `defaultConfig` do arq
    - Faça o commit das alterações incluindo o arquivo `build.gradle.kts`.
    - Crie uma tag do git no formato `v<versionName>` (ex: `v1.1.1`).
    - Faça o push dos commits e da tag para o repositório remoto para disparar o pipeline de CI/CD.
+   
