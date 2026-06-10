@@ -57,9 +57,7 @@ import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 
 import com.ubusmobilidade.ubus.data.api.TripRatingRepository
-import com.ubusmobilidade.ubus.data.api.AttendanceRepository
-import com.ubusmobilidade.ubus.data.model.AttendanceScore
-import com.ubusmobilidade.ubus.ui.components.AttendanceBadgeCard
+
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Star
 
@@ -75,14 +73,14 @@ fun HomeScreen(component: RootComponent) {
 
     var myReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var pendingRatings by remember { mutableStateOf<List<Reservation>>(emptyList()) }
-    var attendanceScore by remember { mutableStateOf<AttendanceScore?>(null) }
+
     var loading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
 
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val reservationRepo = remember { ReservationRepository(apiClient) }
     val tripRatingRepo = remember { TripRatingRepository(apiClient) }
-    val attendanceRepo = remember { AttendanceRepository(apiClient) }
+
 
     LaunchedEffect(Unit) {
         try {
@@ -98,9 +96,7 @@ fun HomeScreen(component: RootComponent) {
             try {
                 pendingRatings = tripRatingRepo.listPendingRatings()
             } catch (_: Exception) {}
-            try {
-                attendanceScore = attendanceRepo.getScore()
-            } catch (_: Exception) {}
+
         } finally {
             loading = false
         }
@@ -221,12 +217,7 @@ fun HomeScreen(component: RootComponent) {
                     }
                 }
 
-                if (attendanceScore != null) {
-                    AttendanceBadgeCard(
-                        score = attendanceScore!!,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                }
+
 
 
 

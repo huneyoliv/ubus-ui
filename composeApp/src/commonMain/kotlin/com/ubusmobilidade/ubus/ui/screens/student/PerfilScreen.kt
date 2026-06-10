@@ -56,9 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ubusmobilidade.ubus.data.api.ApiClient
 
-import com.ubusmobilidade.ubus.data.api.AttendanceRepository
-import com.ubusmobilidade.ubus.data.model.AttendanceScore
-import com.ubusmobilidade.ubus.ui.components.AttendanceBadgeCard
+
 
 @Composable
 fun PerfilScreen(component: RootComponent) {
@@ -70,14 +68,6 @@ fun PerfilScreen(component: RootComponent) {
         ?.joinToString("") ?: "?"
 
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
-    val attendanceRepo = remember { AttendanceRepository(apiClient) }
-    var attendanceScore by remember { mutableStateOf<AttendanceScore?>(null) }
-
-    LaunchedEffect(Unit) {
-        try {
-            attendanceScore = attendanceRepo.getScore()
-        } catch (_: Exception) {}
-    }
 
     AppScaffold(
         bottomBar = {
@@ -127,12 +117,7 @@ fun PerfilScreen(component: RootComponent) {
                 }
             }
 
-            if (attendanceScore != null) {
-                AttendanceBadgeCard(
-                    score = attendanceScore!!,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
+
 
             // Menu items
             ProfileMenuItem(Icons.Default.Edit, "Meus dados") {
