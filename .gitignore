@@ -42,6 +42,7 @@ Thumbs.db
 
 # ── Claude ───────────────────────────────────────
 *.md
+!VERSIONING.md
 *.html
 /Swagger UI_files/
 .claude/
