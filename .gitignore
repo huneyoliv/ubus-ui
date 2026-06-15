@@ -3,6 +3,7 @@
 .kotlin/
 **/.agent/
 **/build/
+**/temp_jdk/
 **/.teste/
 !src/**/build/
 local.properties

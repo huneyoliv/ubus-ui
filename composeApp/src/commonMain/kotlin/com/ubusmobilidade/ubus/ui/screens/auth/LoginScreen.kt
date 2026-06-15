@@ -122,7 +122,7 @@ fun LoginScreen(component: RootComponent) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp),
+                    .height(180.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (showBack) {
@@ -147,26 +147,26 @@ fun LoginScreen(component: RootComponent) {
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(72.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+                            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.DirectionsBus,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(38.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
                     Text(
                         "Ubus",
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 32.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp
+                        letterSpacing = 1.sp
                     )
                     Text(
                         "Transporte Estudantil Inteligente",
