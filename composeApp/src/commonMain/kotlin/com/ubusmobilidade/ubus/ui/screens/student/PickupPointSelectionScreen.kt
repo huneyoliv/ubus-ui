@@ -247,7 +247,43 @@ fun PickupPointSelectionScreen(
                                 notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
 
                                 if (pendingInboundTripId != null) {
-                                    component.navigateTo(RootComponent.Config.SelecionarAssento(pendingInboundTripId, null))
+                                    if (seatNumber == null) {
+                                        component.navigateTo(
+                                            RootComponent.Config.SelecionarPontoEmbarque(
+                                                tripId = pendingInboundTripId,
+                                                seatNumber = null,
+                                                pendingInboundTripId = null
+                                            )
+                                        )
+                                    } else {
+                                        try {
+                                            val occupied = reservationRepo.getOccupiedSeats(pendingInboundTripId)
+                                            val isOccupied = occupied.any { it.seatNumber == seatNumber }
+                                            if (isOccupied) {
+                                                component.navigateTo(
+                                                    RootComponent.Config.SelecionarAssento(
+                                                        tripId = pendingInboundTripId,
+                                                        pendingInboundTripId = null
+                                                    )
+                                                )
+                                            } else {
+                                                component.navigateTo(
+                                                    RootComponent.Config.SelecionarPontoEmbarque(
+                                                        tripId = pendingInboundTripId,
+                                                        seatNumber = seatNumber,
+                                                        pendingInboundTripId = null
+                                                    )
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            component.navigateTo(
+                                                RootComponent.Config.SelecionarAssento(
+                                                    tripId = pendingInboundTripId,
+                                                    pendingInboundTripId = null
+                                                )
+                                            )
+                                        }
+                                    }
                                 } else {
                                     component.replaceWith(RootComponent.Config.ReservaConcluida(reservation.isRideShare))
                                 }
