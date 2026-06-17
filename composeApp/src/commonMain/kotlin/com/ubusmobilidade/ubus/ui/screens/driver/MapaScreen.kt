@@ -14,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.DriverRepository
-import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.DriverCurrentTripSummary
 import com.ubusmobilidade.ubus.navigation.RootComponent
@@ -26,14 +25,12 @@ import com.ubusmobilidade.ubus.ui.components.MapWebView
 import com.ubusmobilidade.ubus.ui.components.UbusButton
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import kotlinx.coroutines.launch
-
 @Composable
 fun MapaScreen(component: RootComponent) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val driverRepo = remember { DriverRepository(apiClient) }
     val tripRepo = remember { TripRepository(apiClient) }
-    val fleetRepo = remember { FleetRepository(apiClient) }
 
     var summary by remember { mutableStateOf<DriverCurrentTripSummary?>(null) }
     var tripPoints by remember { mutableStateOf<List<MapPoint>>(emptyList()) }
@@ -59,67 +56,15 @@ fun MapaScreen(component: RootComponent) {
                     } catch (e: Exception) {
                     }
 
-                    val trip = tripRepo.getTrip(tripId)
-                    val isReturn = trip.direction == com.ubusmobilidade.ubus.data.model.TripDirection.INBOUND
-
-                    val pickupList = try {
-                        fleetRepo.listPickupPoints(trip.routeId)
-                    } catch (_: Exception) {
-                        emptyList()
-                    }
-
-                    val dropoffList = try {
-                        fleetRepo.listDropoffPoints(trip.routeId)
-                    } catch (_: Exception) {
-                        emptyList()
-                    }
-
-                    val mappedPoints = mutableListOf<MapPoint>()
-
-                    if (isReturn) {
-                        val boarding = currentSummary.points.mapNotNull { summaryPoint ->
-                            val detail = dropoffList.find { it.id == summaryPoint.pointId }
-                            if (detail?.lat != null && detail.lng != null) {
-                                MapPoint(
-                                    lat = detail.lat,
-                                    lng = detail.lng,
-                                    label = "[Embarque] ${detail.name} (${summaryPoint.studentsCount} alunos)"
-                                )
-                            } else null
-                        }
-                        val alighting = pickupList.mapNotNull { detail ->
-                            if (detail.lat != null && detail.lng != null) {
-                                MapPoint(
-                                    lat = detail.lat,
-                                    lng = detail.lng,
-                                    label = "[Desembarque] ${detail.name}"
-                                )
-                            } else null
-                        }
-                        mappedPoints.addAll(boarding)
-                        mappedPoints.addAll(alighting)
-                    } else {
-                        val boarding = currentSummary.points.mapNotNull { summaryPoint ->
-                            val detail = pickupList.find { it.id == summaryPoint.pointId }
-                            if (detail?.lat != null && detail.lng != null) {
-                                MapPoint(
-                                    lat = detail.lat,
-                                    lng = detail.lng,
-                                    label = "[Embarque] ${detail.name} (${summaryPoint.studentsCount} alunos)"
-                                )
-                            } else null
-                        }
-                        val alighting = dropoffList.mapNotNull { detail ->
-                            if (detail.lat != null && detail.lng != null) {
-                                MapPoint(
-                                    lat = detail.lat,
-                                    lng = detail.lng,
-                                    label = "[Desembarque] ${detail.name}"
-                                )
-                            } else null
-                        }
-                        mappedPoints.addAll(boarding)
-                        mappedPoints.addAll(alighting)
+                    val mappedPoints = currentSummary.points.mapNotNull { pt ->
+                        if (pt.lat != null && pt.lng != null) {
+                            val prefix = if (pt.type == "BOARDING") "[Embarque]" else "[Desembarque]"
+                            MapPoint(
+                                lat = pt.lat,
+                                lng = pt.lng,
+                                label = "$prefix ${pt.pointName} (${pt.studentsCount} alunos)"
+                            )
+                        } else null
                     }
                     tripPoints = mappedPoints
                 }

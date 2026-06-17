@@ -11,7 +11,8 @@ import com.ubusmobilidade.ubus.ui.screens.driver.AvisosScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.CadastroVeiculoMultiStepScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.DriverConfigScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.MapaScreen
-import com.ubusmobilidade.ubus.ui.screens.driver.MotoristaSplashScreen
+import com.ubusmobilidade.ubus.ui.screens.driver.DriverHomeScreen
+import com.ubusmobilidade.ubus.ui.screens.driver.TrocarOnibusScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.SelecionarVeiculoScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerConfiguracoesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerDashboardScreen
@@ -81,12 +82,13 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.Regras -> RegrasScreen(component)
 
             // Driver
-            is RootComponent.Child.MotoristaSplash -> MotoristaSplashScreen(component)
+            is RootComponent.Child.DriverHome -> DriverHomeScreen(component)
             is RootComponent.Child.SelecionarVeiculo -> SelecionarVeiculoScreen(component)
-            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component, instance.municipalityId)
+            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component, instance.municipalityId, instance.prefillNumber)
             is RootComponent.Child.Mapa -> MapaScreen(component)
             is RootComponent.Child.Avisos -> AvisosScreen(component)
             is RootComponent.Child.DriverConfig -> DriverConfigScreen(component)
+            is RootComponent.Child.TrocarOnibus -> TrocarOnibusScreen(component, instance.currentBusId)
 
             // Manager
             is RootComponent.Child.ManagerDashboard -> ManagerDashboardScreen(component)
