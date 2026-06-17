@@ -113,7 +113,7 @@ fun SelecionarVeiculoScreen(component: RootComponent) {
                                 try {
                                     val today = com.ubusmobilidade.ubus.ui.util.getTodayDateString()
                                     driverRepo.assignForToday(busId = bus.id, serviceDate = today)
-                                    component.navigateTo(RootComponent.Config.Mapa)
+                                    component.replaceWith(RootComponent.Config.DriverHome)
                                 } catch (e: Exception) {
                                     if (e is kotlinx.coroutines.CancellationException) throw e
                                     error = e.message ?: "Erro ao vincular veículo."

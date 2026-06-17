@@ -52,14 +52,16 @@ class RootComponent(
         Config.RenovarSemestre -> Child.RenovarSemestre
         Config.BaixaMobilidade -> Child.BaixaMobilidade
         Config.Regras -> Child.Regras
+        is Config.ReservaConcluida -> Child.ReservaConcluida(config.isRideShare)
 
         // Driver
-        Config.MotoristaSplash -> Child.MotoristaSplash
+        Config.DriverHome -> Child.DriverHome
         Config.SelecionarVeiculo -> Child.SelecionarVeiculo
-        is Config.CadastroVeiculoMultiStep -> Child.CadastroVeiculoMultiStep(config.municipalityId)
+        is Config.CadastroVeiculoMultiStep -> Child.CadastroVeiculoMultiStep(config.municipalityId, config.prefillNumber)
         Config.Mapa -> Child.Mapa
         Config.Avisos -> Child.Avisos
         Config.DriverConfig -> Child.DriverConfig
+        is Config.TrocarOnibus -> Child.TrocarOnibus(config.currentBusId)
 
         // Manager
         Config.ManagerDashboard -> Child.ManagerDashboard
@@ -97,7 +99,7 @@ class RootComponent(
     fun onLoginSuccess() {
         val role = authStorage.userRole
         when (role) {
-            RoleUsuario.DRIVER -> replaceWith(Config.MotoristaSplash)
+            RoleUsuario.DRIVER -> replaceWith(Config.DriverHome)
             RoleUsuario.MANAGER, RoleUsuario.SUPER_ADMIN -> replaceWith(Config.ManagerDashboard)
             else -> replaceWith(Config.StudentHome)
         }
@@ -131,7 +133,7 @@ class RootComponent(
     }
 
     private fun homeForRole(role: RoleUsuario?): Config = when (role) {
-        RoleUsuario.DRIVER -> Config.MotoristaSplash
+        RoleUsuario.DRIVER -> Config.DriverHome
         RoleUsuario.MANAGER, RoleUsuario.SUPER_ADMIN -> Config.ManagerDashboard
         else -> Config.StudentHome
     }
@@ -139,6 +141,7 @@ class RootComponent(
     private fun isRoleAllowed(config: Config, role: RoleUsuario?): Boolean = when (role) {
         RoleUsuario.DRIVER -> when (config) {
             is Config.CadastroVeiculoMultiStep -> true
+            is Config.TrocarOnibus -> true
             else -> config in driverRoutes
         }
         RoleUsuario.MANAGER -> when (config) {
@@ -170,6 +173,7 @@ class RootComponent(
         is Config.SelecionarPontoEmbarque -> true
         is Config.AvaliarViagem -> true
         is Config.SelecionarDirecao -> true
+        is Config.ReservaConcluida -> true
         else -> config in studentRoutes
     }
 
@@ -201,14 +205,16 @@ class RootComponent(
         @Serializable data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Config()
         @Serializable data class AvaliarViagem(val reservationId: String, val tripId: String) : Config()
         @Serializable data object Regras : Config()
+        @Serializable data class ReservaConcluida(val isRideShare: Boolean) : Config()
 
         // Driver
-        @Serializable data object MotoristaSplash : Config()
+        @Serializable data object DriverHome : Config()
         @Serializable data object SelecionarVeiculo : Config()
-        @Serializable data class CadastroVeiculoMultiStep(val municipalityId: String? = null) : Config()
+        @Serializable data class CadastroVeiculoMultiStep(val municipalityId: String? = null, val prefillNumber: String? = null) : Config()
         @Serializable data object Mapa : Config()
         @Serializable data object Avisos : Config()
         @Serializable data object DriverConfig : Config()
+        @Serializable data class TrocarOnibus(val currentBusId: String? = null) : Config()
 
         // Manager
         @Serializable data object ManagerDashboard : Config()
@@ -256,14 +262,16 @@ class RootComponent(
         data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Child()
         data class AvaliarViagem(val reservationId: String, val tripId: String) : Child()
         data object Regras : Child()
+        data class ReservaConcluida(val isRideShare: Boolean) : Child()
 
         // Driver
-        data object MotoristaSplash : Child()
+        data object DriverHome : Child()
         data object SelecionarVeiculo : Child()
-        data class CadastroVeiculoMultiStep(val municipalityId: String? = null) : Child()
+        data class CadastroVeiculoMultiStep(val municipalityId: String? = null, val prefillNumber: String? = null) : Child()
         data object Mapa : Child()
         data object Avisos : Child()
         data object DriverConfig : Child()
+        data class TrocarOnibus(val currentBusId: String? = null) : Child()
 
         // Manager
         data object ManagerDashboard : Child()
@@ -311,7 +319,7 @@ class RootComponent(
         )
 
         private val driverRoutes = setOf(
-            Config.MotoristaSplash,
+            Config.DriverHome,
             Config.SelecionarVeiculo,
             Config.Mapa,
             Config.Avisos,

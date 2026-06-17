@@ -47,7 +47,7 @@ actual fun isToday(dateString: String): Boolean {
     if (parts.size != 3) return false
     val year = parts[0].toLongOrNull() ?: return false
     val month = parts[1].toLongOrNull() ?: return false
-    val day = parts[2].toLongOrNull() ?: return false
+    val day = PlatformDateDay(parts)
 
     val calendar = NSCalendar.currentCalendar
     val today = platform.Foundation.NSDate()
@@ -61,4 +61,31 @@ actual fun isToday(dateString: String): Boolean {
     return todayComponents.year == year &&
            todayComponents.month == month &&
            todayComponents.day == day
+}
+
+private fun PlatformDateDay(parts: List<String>): Long {
+    return parts[2].toLongOrNull() ?: 0L
+}
+
+actual fun isPast(dateString: String): Boolean {
+    val parts = dateString.split("-")
+    if (parts.size != 3) return false
+    val year = parts[0].toLongOrNull() ?: return false
+    val month = parts[1].toLongOrNull() ?: return false
+    val day = PlatformDateDay(parts)
+
+    val calendar = NSCalendar.currentCalendar
+    val today = platform.Foundation.NSDate()
+    val todayComponents = calendar.components(
+        platform.Foundation.NSCalendarUnitYear or
+        platform.Foundation.NSCalendarUnitMonth or
+        platform.Foundation.NSCalendarUnitDay,
+        fromDate = today
+    )
+
+    if (todayComponents.year > year) return true
+    if (todayComponents.year < year) return false
+    if (todayComponents.month > month) return true
+    if (todayComponents.month < month) return false
+    return todayComponents.day > day
 }

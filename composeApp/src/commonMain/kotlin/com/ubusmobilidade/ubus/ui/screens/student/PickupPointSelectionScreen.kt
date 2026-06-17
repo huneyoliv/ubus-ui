@@ -35,9 +35,11 @@ import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
 import com.ubusmobilidade.ubus.data.model.CreateReservationPayload
+import com.ubusmobilidade.ubus.data.model.DropoffPoint
 import com.ubusmobilidade.ubus.data.model.PickupPoint
 import com.ubusmobilidade.ubus.data.model.RoleUsuario
 import com.ubusmobilidade.ubus.data.model.Trip
+import com.ubusmobilidade.ubus.data.model.TripDirection
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.AppScaffold
 import com.ubusmobilidade.ubus.ui.components.BentoCard
@@ -76,7 +78,20 @@ fun PickupPointSelectionScreen(
         try {
             val fetchedTrip = tripRepo.getTrip(tripId)
             trip = fetchedTrip
-            val fetchedPoints = fleetRepo.listPickupPoints(fetchedTrip.routeId)
+            val fetchedPoints = if (fetchedTrip.direction == TripDirection.INBOUND) {
+                fleetRepo.listDropoffPoints(fetchedTrip.routeId).map { drop ->
+                    PickupPoint(
+                        id = drop.id,
+                        name = drop.name,
+                        address = drop.address,
+                        lat = drop.lat,
+                        lng = drop.lng,
+                        routeId = drop.routeId
+                    )
+                }
+            } else {
+                fleetRepo.listPickupPoints(fetchedTrip.routeId)
+            }
             points = fetchedPoints
 
             val defaultPointId = component.authStorage.user?.defaultPointId
@@ -180,7 +195,10 @@ fun PickupPointSelectionScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "Selecione o ponto onde irá embarcar:",
+                        text = if (activeTrip.direction == TripDirection.INBOUND)
+                            "Selecione seu destino (onde deseja desembarcar):"
+                        else
+                            "Selecione o ponto onde irá embarcar:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = UbusText3,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -229,9 +247,45 @@ fun PickupPointSelectionScreen(
                                 notificationScheduler.scheduleEmbarkAlert(reservationWithTrip, 30)
 
                                 if (pendingInboundTripId != null) {
-                                    component.navigateTo(RootComponent.Config.SelecionarAssento(pendingInboundTripId, null))
+                                    if (seatNumber == null) {
+                                        component.navigateTo(
+                                            RootComponent.Config.SelecionarPontoEmbarque(
+                                                tripId = pendingInboundTripId,
+                                                seatNumber = null,
+                                                pendingInboundTripId = null
+                                            )
+                                        )
+                                    } else {
+                                        try {
+                                            val occupied = reservationRepo.getOccupiedSeats(pendingInboundTripId)
+                                            val isOccupied = occupied.any { it.seatNumber == seatNumber }
+                                            if (isOccupied) {
+                                                component.navigateTo(
+                                                    RootComponent.Config.SelecionarAssento(
+                                                        tripId = pendingInboundTripId,
+                                                        pendingInboundTripId = null
+                                                    )
+                                                )
+                                            } else {
+                                                component.navigateTo(
+                                                    RootComponent.Config.SelecionarPontoEmbarque(
+                                                        tripId = pendingInboundTripId,
+                                                        seatNumber = seatNumber,
+                                                        pendingInboundTripId = null
+                                                    )
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            component.navigateTo(
+                                                RootComponent.Config.SelecionarAssento(
+                                                    tripId = pendingInboundTripId,
+                                                    pendingInboundTripId = null
+                                                )
+                                            )
+                                        }
+                                    }
                                 } else {
-                                    component.replaceWith(RootComponent.Config.Historico)
+                                    component.replaceWith(RootComponent.Config.ReservaConcluida(reservation.isRideShare))
                                 }
                             } catch (e: Exception) {
                                 if (e is kotlinx.coroutines.CancellationException) throw e

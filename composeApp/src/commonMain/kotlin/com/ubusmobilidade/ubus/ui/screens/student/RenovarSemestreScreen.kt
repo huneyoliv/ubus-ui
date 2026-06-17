@@ -22,7 +22,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,12 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.CircularProgressIndicator
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.UserRepository
 import com.ubusmobilidade.ubus.data.api.UploadRepository
+import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.model.RegistrationStatus
 import com.ubusmobilidade.ubus.data.model.SemesterRenewalPayload
 import com.ubusmobilidade.ubus.data.model.UploadType
+import com.ubusmobilidade.ubus.data.model.Route
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.UbusButton
@@ -75,6 +80,20 @@ fun RenovarSemestreScreen(component: RootComponent) {
     var loading by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+
+    val currentUser = component.authStorage.user
+    var routes by remember { mutableStateOf<List<Route>>(emptyList()) }
+    var loadingRoutes by remember { mutableStateOf(true) }
+    var selectedRouteId by remember { mutableStateOf<String?>(currentUser?.preferredRouteId) }
+
+    LaunchedEffect(Unit) {
+        try {
+            routes = FleetRepository(apiClient).listRoutes()
+        } catch (_: Exception) {
+        } finally {
+            loadingRoutes = false
+        }
+    }
     
     val statusApproved = user?.status == RegistrationStatus.APPROVED
     val statusPending = user?.status == RegistrationStatus.PENDING
@@ -171,6 +190,25 @@ fun RenovarSemestreScreen(component: RootComponent) {
 
         Spacer(Modifier.height(24.dp))
 
+        Text("Rota preferencial", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Spacer(Modifier.height(8.dp))
+
+        if (currentUser?.pendingPreferredRouteId != null) {
+            BentoCard {
+                Text(
+                    "Mudança de rota já solicitada — aguardando aprovação do gestor.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = UbusWarning,
+                )
+            }
+        } else {
+            Text("Deseja alterar sua rota preferencial nesta renovação?", style = MaterialTheme.typography.bodySmall, color = UbusText3)
+            Spacer(Modifier.height(12.dp))
+            RouteSelectionList(routes, loadingRoutes, selectedRouteId, onSelect = { selectedRouteId = it })
+        }
+
+        Spacer(Modifier.height(24.dp))
+
         if (message.isNotEmpty()) {
             Text(message, color = if (isError) UbusDestructive else UbusSuccess, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(16.dp))
@@ -202,6 +240,7 @@ fun RenovarSemestreScreen(component: RootComponent) {
                         val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
                             gradeFileUrl = finalGradeUrl,
                             residenciaFileUrl = finalResidenciaUrl,
+                            preferredRouteId = selectedRouteId,
                         ))
                         message = resp.message ?: "Solicitação enviada com sucesso!"
                         isError = false
@@ -257,6 +296,63 @@ private fun DocumentUploadItem(
                 onClick = onSelect,
                 modifier = Modifier.width(120.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun RouteSelectionList(
+    routes: List<Route>,
+    loading: Boolean,
+    selectedId: String?,
+    onSelect: (String?) -> Unit,
+) {
+    if (loading) {
+        Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = UbusPrimary, modifier = Modifier.size(24.dp))
+        }
+    } else if (routes.isEmpty()) {
+        BentoCard {
+            Text("Nenhuma rota disponível.", color = UbusText3, style = MaterialTheme.typography.bodySmall)
+        }
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val isNoneSelected = selectedId == null
+            BentoCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(null) }
+                    .then(if (isNoneSelected) Modifier.border(2.dp, UbusText3, MaterialTheme.shapes.large) else Modifier)
+            ) {
+                Text(
+                    "Não tenho rota preferencial (serei caronista)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (isNoneSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isNoneSelected) MaterialTheme.colorScheme.onSurface else UbusText3,
+                )
+            }
+
+            routes.forEach { route ->
+                val isSelected = route.id == selectedId
+                BentoCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSelect(route.id) }
+                        .then(if (isSelected) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier)
+                ) {
+                    Column {
+                        Text(
+                            route.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.onBackground
+                        )
+                        if (!route.description.isNullOrBlank()) {
+                            Text(route.description, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                        }
+                    }
+                }
+            }
         }
     }
 }

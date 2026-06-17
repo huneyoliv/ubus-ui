@@ -2,6 +2,7 @@ package com.ubusmobilidade.ubus.ui.screens.manager
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -167,6 +168,9 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
     var description by remember { mutableStateOf("") }
     var departureTimeOutbound by remember { mutableStateOf("") }
     var departureTimeInbound by remember { mutableStateOf("") }
+    var votingOpenTime by remember { mutableStateOf("06:00") }
+    var votingOpenDaysBefore by remember { mutableStateOf(0) }
+    var votingCloseTime by remember { mutableStateOf("18:00") }
     var selectedDriverId by remember { mutableStateOf<String?>(null) }
     var driverDropdownExpanded by remember { mutableStateOf(false) }
     
@@ -187,6 +191,9 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 description = r.description ?: ""
                 departureTimeOutbound = r.departureTimeOutbound ?: "06:30"
                 departureTimeInbound = r.departureTimeInbound ?: "18:00"
+                votingOpenTime = r.votingOpenTime ?: "06:00"
+                votingOpenDaysBefore = r.votingOpenDaysBefore ?: 0
+                votingCloseTime = r.votingCloseTime ?: "18:00"
                 
                 assignedBuses = fleetRepo.listBusesByRoute(routeId)
                 allBuses = fleetRepo.listBuses()
@@ -222,6 +229,10 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             error = "Os horários de partida devem estar no formato HH:mm."
             return
         }
+        if (departureTimeOutbound.isNotBlank() && (!votingOpenTime.matches(timeRegex) || !votingCloseTime.matches(timeRegex))) {
+            error = "Os horários de votação devem estar no formato HH:mm."
+            return
+        }
 
         saving = true
         scope.launch {
@@ -230,7 +241,10 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     name = name,
                     description = description,
                     departureTimeOutbound = departureTimeOutbound,
-                    departureTimeInbound = departureTimeInbound
+                    departureTimeInbound = departureTimeInbound,
+                    votingOpenTime = if (departureTimeOutbound.isNotBlank()) votingOpenTime else null,
+                    votingCloseTime = if (departureTimeOutbound.isNotBlank()) votingCloseTime else null,
+                    votingOpenDaysBefore = if (departureTimeOutbound.isNotBlank()) votingOpenDaysBefore else null
                 ))
                 error = "Alterações salvas com sucesso!"
             } catch (e: Exception) {
@@ -322,7 +336,25 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 datesToGenerate.forEach { date ->
                     generatingProgress = "Gerando dia $date (${count + 1}/${datesToGenerate.size})..."
                     
-                    // 1. Viagem de Ida (OUTBOUND)
+                    val (vOpen, vClose) = if (departureTimeOutbound.isNotBlank()) {
+                        val openDateStr = if (votingOpenDaysBefore == 1) {
+                            val dateParts = date.split("-")
+                            val y = dateParts[0].toInt()
+                            val m = dateParts[1].toInt()
+                            val d = dateParts[2].toInt()
+                            val epoch = dateToEpochDays(y, m, d) - 1
+                            val (prevY, prevM, prevD) = epochDaysToDate(epoch)
+                            val prevMStr = if (prevM < 10) "0$prevM" else "$prevM"
+                            val prevDStr = if (prevD < 10) "0$prevD" else "$prevD"
+                            "$prevY-$prevMStr-$prevDStr"
+                        } else {
+                            date
+                        }
+                        Pair("${openDateStr}T${votingOpenTime}:00Z", "${date}T${votingCloseTime}:00Z")
+                    } else {
+                        Pair("${date}T00:00:00Z", "${date}T23:59:59Z")
+                    }
+                    
                     val outboundId = "trip_${routeId.take(8)}_${date.replace("-", "")}_O"
                     tripRepo.createTrip(
                         CreateTripPayload(
@@ -334,12 +366,11 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                             busId = busId,
                             driverId = selectedDriverId,
                             realCapacity = assignedBuses.first().standardCapacity,
-                            votingOpen = "${date}T00:00:00Z",
-                            votingClose = "${date}T23:59:59Z",
+                            votingOpen = vOpen,
+                            votingClose = vClose,
                         )
                     )
                     
-                    // 2. Viagem de Volta (INBOUND)
                     val inboundId = "trip_${routeId.take(8)}_${date.replace("-", "")}_I"
                     tripRepo.createTrip(
                         CreateTripPayload(
@@ -351,8 +382,8 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                             busId = busId,
                             driverId = selectedDriverId,
                             realCapacity = assignedBuses.first().standardCapacity,
-                            votingOpen = "${date}T00:00:00Z",
-                            votingClose = "${date}T23:59:59Z",
+                            votingOpen = vOpen,
+                            votingClose = vClose,
                         )
                     )
                     count++
@@ -406,6 +437,68 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         UbusTextField(value = departureTimeOutbound, onValueChange = { departureTimeOutbound = it }, label = "Horário de Ida", modifier = Modifier.weight(1f), placeholder = "06:30")
                         UbusTextField(value = departureTimeInbound, onValueChange = { departureTimeInbound = it }, label = "Horário de Volta", modifier = Modifier.weight(1f), placeholder = "18:00")
+                    }
+                    
+                    if (departureTimeOutbound.isNotBlank()) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Configurações de Votação (Ida/Volta)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            UbusTextField(
+                                value = votingOpenTime,
+                                onValueChange = { votingOpenTime = it },
+                                label = "Hora de Abertura",
+                                modifier = Modifier.weight(1f),
+                                placeholder = "06:00"
+                            )
+                            UbusTextField(
+                                value = votingCloseTime,
+                                onValueChange = { votingCloseTime = it },
+                                label = "Hora de Fechamento",
+                                modifier = Modifier.weight(1f),
+                                placeholder = "18:00"
+                            )
+                        }
+                        Column {
+                            Text(
+                                text = "Dia de abertura",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                BentoCard(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { votingOpenDaysBefore = 0 }
+                                        .then(if (votingOpenDaysBefore == 0) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier)
+                                ) {
+                                    Text(
+                                        text = "Mesmo dia",
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        fontWeight = if (votingOpenDaysBefore == 0) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                                BentoCard(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { votingOpenDaysBefore = 1 }
+                                        .then(if (votingOpenDaysBefore == 1) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier)
+                                ) {
+                                    Text(
+                                        text = "Dia anterior",
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        fontWeight = if (votingOpenDaysBefore == 1) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

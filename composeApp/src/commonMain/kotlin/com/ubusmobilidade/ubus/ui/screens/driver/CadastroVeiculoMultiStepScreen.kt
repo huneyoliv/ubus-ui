@@ -81,7 +81,7 @@ import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
 @Composable
-fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: String? = null) {
+fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: String? = null, prefillNumber: String? = null) {
     val scope = rememberCoroutineScope()
     val apiClient = remember { ApiClient(component.authStorage, onUnauthorized = { component.logout() }) }
     val fleetRepo = remember { FleetRepository(apiClient) }
@@ -90,7 +90,7 @@ fun CadastroVeiculoMultiStepScreen(component: RootComponent, municipalityId: Str
     // 7=Validation, 8=ShellPreview(MIXED), 9=FinalMap
     var currentStep by remember { mutableIntStateOf(0) }
     var plate by remember { mutableStateOf("") }
-    var identificationNumber by remember { mutableStateOf("") }
+    var identificationNumber by remember { mutableStateOf(prefillNumber ?: "") }
     var p1 by remember { mutableStateOf<SeatNumberingMode?>(null) }
     var p2 by remember { mutableStateOf<FrontRowLayout?>(null) }
     var p3 by remember { mutableStateOf<RearLayout?>(null) }

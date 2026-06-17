@@ -63,6 +63,7 @@ import com.ubusmobilidade.ubus.data.model.Municipality
 import com.ubusmobilidade.ubus.data.model.VerificationChannel
 import com.ubusmobilidade.ubus.data.model.VerificationContext
 import com.ubusmobilidade.ubus.data.model.RegisterPayload
+import com.ubusmobilidade.ubus.data.model.Route
 import com.ubusmobilidade.ubus.navigation.RootComponent
 import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.PasswordStrengthBar
@@ -84,13 +85,14 @@ import kotlinx.coroutines.launch
 
 import com.ubusmobilidade.ubus.ui.util.rememberCameraLauncher
 
-private const val TOTAL_STEPS = 5
+private const val TOTAL_STEPS = 6
 
 private val stepTitles = listOf(
     "Dados pessoais",
     "Tirar foto",
     "Verificar e-mail",
     "Selecionar município",
+    "Rota preferencial",
     "Criar senha",
 )
 
@@ -99,6 +101,7 @@ private val stepSubtitles = listOf(
     "Precisamos de uma foto sua para identificação.",
     "Enviaremos um código para seu e-mail.",
     "Escolha o município onde você utiliza o transporte.",
+    "Selecione a rota que você usa normalmente. Em outras rotas você será caronista.",
     "Crie uma senha segura para sua conta.",
 )
 
@@ -143,7 +146,13 @@ fun CadastroScreen(component: RootComponent) {
     var municipalitiesError by remember { mutableStateOf<String?>(null) }
     var selectedMunicipalityId by remember { mutableStateOf<String?>(null) }
 
-    // ── Step 4: Senha ──
+    // ── Step 4: Rota Preferencial ──
+    var routes by remember { mutableStateOf<List<Route>>(emptyList()) }
+    var loadingRoutes by remember { mutableStateOf(false) }
+    var routesError by remember { mutableStateOf<String?>(null) }
+    var selectedRouteId by remember { mutableStateOf<String?>(null) }
+
+    // ── Step 5: Senha ──
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf<String?>(null) }
@@ -179,6 +188,21 @@ fun CadastroScreen(component: RootComponent) {
                 municipalitiesError = "Erro ao carregar municípios. Tente novamente."
             } finally {
                 loadingMunicipalities = false
+            }
+        }
+    }
+
+    LaunchedEffect(currentStep) {
+        if (currentStep == 4 && routes.isEmpty() && !loadingRoutes && selectedMunicipalityId != null) {
+            loadingRoutes = true
+            routesError = null
+            try {
+                routes = managementRepo.listPublicRoutes(selectedMunicipalityId!!)
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                routesError = "Erro ao carregar rotas. Tente novamente."
+            } finally {
+                loadingRoutes = false
             }
         }
     }
@@ -282,6 +306,7 @@ fun CadastroScreen(component: RootComponent) {
                         password = password,
                         phone = phone.filter { it.isDigit() },
                         photoUrl = photoUri,
+                        preferredRouteId = selectedRouteId,
                     )
                 )
                 component.replaceWith(RootComponent.Config.Login)
@@ -301,7 +326,8 @@ fun CadastroScreen(component: RootComponent) {
             1 -> if (photoUri != null) currentStep = 2 else generalError = "Tire uma foto para continuar"
             2 -> { /* advance handled by verify callback */ }
             3 -> if (selectedMunicipalityId != null) currentStep = 4
-            4 -> handleRegister()
+            4 -> currentStep = 5
+            5 -> handleRegister()
         }
     }
 
@@ -411,7 +437,28 @@ fun CadastroScreen(component: RootComponent) {
                                 }
                             },
                         )
-                        4 -> StepCriarSenha(
+                        4 -> StepSelecionarRota(
+                            routes = routes,
+                            loading = loadingRoutes,
+                            error = routesError,
+                            selectedId = selectedRouteId,
+                            onSelect = { selectedRouteId = it },
+                            onRetry = {
+                                routesError = null
+                                loadingRoutes = true
+                                scope.launch {
+                                    try {
+                                        routes = managementRepo.listPublicRoutes(selectedMunicipalityId!!)
+                                    } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
+                                        routesError = "Erro ao carregar rotas."
+                                    } finally {
+                                        loadingRoutes = false
+                                    }
+                                }
+                            }
+                        )
+                        5 -> StepCriarSenha(
                             password = password, onPasswordChange = { password = it; passwordError = null },
                             confirmPassword = confirmPassword, onConfirmChange = { confirmPassword = it; confirmPasswordError = null },
                             passwordError = passwordError, confirmPasswordError = confirmPasswordError,
@@ -434,14 +481,14 @@ fun CadastroScreen(component: RootComponent) {
 
         Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             when (currentStep) {
-                0, 1 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
+                0, 1, 4 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
                 2 -> {} 
                 3 -> UbusButton(
                     text = "Avançar",
                     onClick = { handleAdvance() },
                     enabled = selectedMunicipalityId != null,
                 )
-                4 -> UbusButton(
+                5 -> UbusButton(
                     text = "Criar conta",
                     onClick = { handleAdvance() },
                     loading = registering,
@@ -726,4 +773,84 @@ private fun StepCriarSenha(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         isError = confirmPasswordError != null, errorMessage = confirmPasswordError,
     )
+}
+
+@Composable
+private fun StepSelecionarRota(
+    routes: List<Route>,
+    loading: Boolean,
+    error: String?,
+    selectedId: String?,
+    onSelect: (String?) -> Unit,
+    onRetry: () -> Unit,
+) {
+    when {
+        loading -> {
+            Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = UbusPrimary)
+            }
+        }
+        error != null -> {
+            Text(error, color = UbusDestructive, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.height(12.dp))
+            UbusOutlinedButton(text = "Tentar novamente", onClick = onRetry)
+        }
+        routes.isEmpty() -> {
+            BentoCard {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Text("Nenhuma rota cadastrada neste município.", color = UbusText3)
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Você pode pular esta etapa. Será tratado como caronista em todas as rotas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = UbusText3,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+        }
+        else -> {
+            val isNoneSelected = selectedId == null
+            BentoCard(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                    .clickable { onSelect(null) }
+                    .then(if (isNoneSelected) Modifier.border(2.dp, UbusText3, MaterialTheme.shapes.large) else Modifier),
+            ) {
+                Text(
+                    "Não tenho rota preferencial (serei caronista)",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (isNoneSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isNoneSelected) MaterialTheme.colorScheme.onSurface else UbusText3,
+                )
+            }
+
+            routes.forEach { route ->
+                val isSelected = route.id == selectedId
+                BentoCard(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        .clickable { onSelect(route.id) }
+                        .then(if (isSelected) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier),
+                ) {
+                    Column {
+                        Text(
+                            route.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) UbusPrimary else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (!route.description.isNullOrBlank()) {
+                            Text(route.description, style = MaterialTheme.typography.bodySmall, color = UbusText3)
+                        }
+                        if (route.departureTimeOutbound != null) {
+                            Text(
+                                "Saída: ${route.departureTimeOutbound} · Volta: ${route.departureTimeInbound ?: "—"}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = UbusText3,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

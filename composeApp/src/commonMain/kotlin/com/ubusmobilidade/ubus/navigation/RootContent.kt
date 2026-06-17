@@ -11,7 +11,8 @@ import com.ubusmobilidade.ubus.ui.screens.driver.AvisosScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.CadastroVeiculoMultiStepScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.DriverConfigScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.MapaScreen
-import com.ubusmobilidade.ubus.ui.screens.driver.MotoristaSplashScreen
+import com.ubusmobilidade.ubus.ui.screens.driver.DriverHomeScreen
+import com.ubusmobilidade.ubus.ui.screens.driver.TrocarOnibusScreen
 import com.ubusmobilidade.ubus.ui.screens.driver.SelecionarVeiculoScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerConfiguracoesScreen
 import com.ubusmobilidade.ubus.ui.screens.manager.ManagerDashboardScreen
@@ -47,6 +48,7 @@ import com.ubusmobilidade.ubus.ui.screens.student.SeatSelectionScreen
 import com.ubusmobilidade.ubus.ui.screens.student.PickupPointSelectionScreen
 import com.ubusmobilidade.ubus.ui.screens.student.TripRatingScreen
 import com.ubusmobilidade.ubus.ui.screens.student.SelecionarDirecaoScreen
+import com.ubusmobilidade.ubus.ui.screens.student.ReservaConcluidaScreen
 
 @Composable
 fun RootContent(component: RootComponent) {
@@ -79,14 +81,16 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.RenovarSemestre -> RenovarSemestreScreen(component)
             is RootComponent.Child.BaixaMobilidade -> BaixaMobilidadeScreen(component)
             is RootComponent.Child.Regras -> RegrasScreen(component)
+            is RootComponent.Child.ReservaConcluida -> ReservaConcluidaScreen(component, instance.isRideShare)
 
             // Driver
-            is RootComponent.Child.MotoristaSplash -> MotoristaSplashScreen(component)
+            is RootComponent.Child.DriverHome -> DriverHomeScreen(component)
             is RootComponent.Child.SelecionarVeiculo -> SelecionarVeiculoScreen(component)
-            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component, instance.municipalityId)
+            is RootComponent.Child.CadastroVeiculoMultiStep -> CadastroVeiculoMultiStepScreen(component, instance.municipalityId, instance.prefillNumber)
             is RootComponent.Child.Mapa -> MapaScreen(component)
             is RootComponent.Child.Avisos -> AvisosScreen(component)
             is RootComponent.Child.DriverConfig -> DriverConfigScreen(component)
+            is RootComponent.Child.TrocarOnibus -> TrocarOnibusScreen(component, instance.currentBusId)
 
             // Manager
             is RootComponent.Child.ManagerDashboard -> ManagerDashboardScreen(component)

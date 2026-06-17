@@ -13,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.FleetRepository
 import com.ubusmobilidade.ubus.data.model.CreateRoutePayload
@@ -34,6 +38,9 @@ fun ManagerRouteFormScreen(component: RootComponent) {
     var description by remember { mutableStateOf("") }
     var departureTimeOutbound by remember { mutableStateOf("06:30") }
     var departureTimeInbound by remember { mutableStateOf("18:00") }
+    var votingOpenTime by remember { mutableStateOf("06:00") }
+    var votingOpenDaysBefore by remember { mutableStateOf(0) }
+    var votingCloseTime by remember { mutableStateOf("18:00") }
 
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -49,6 +56,10 @@ fun ManagerRouteFormScreen(component: RootComponent) {
             error = "Os horários de partida devem estar no formato HH:mm."
             return
         }
+        if (departureTimeOutbound.isNotBlank() && (!votingOpenTime.matches(timeRegex) || !votingCloseTime.matches(timeRegex))) {
+            error = "Os horários de votação devem estar no formato HH:mm."
+            return
+        }
 
         saving = true
         scope.launch {
@@ -58,8 +69,9 @@ fun ManagerRouteFormScreen(component: RootComponent) {
                         name = name,
                         description = description.ifBlank { null },
                         weekDays = listOf(1, 2, 3, 4, 5),
-                        votingOpenTime = "06:00",
-                        votingCloseTime = "18:00",
+                        votingOpenTime = if (departureTimeOutbound.isNotBlank()) votingOpenTime else null,
+                        votingCloseTime = if (departureTimeOutbound.isNotBlank()) votingCloseTime else null,
+                        votingOpenDaysBefore = if (departureTimeOutbound.isNotBlank()) votingOpenDaysBefore else null,
                         departureTimeOutbound = departureTimeOutbound,
                         departureTimeInbound = departureTimeInbound
                     )
@@ -111,6 +123,68 @@ fun ManagerRouteFormScreen(component: RootComponent) {
                         modifier = Modifier.weight(1f),
                         placeholder = "18:00"
                     )
+                }
+
+                if (departureTimeOutbound.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Configurações de Votação (Ida/Volta)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        UbusTextField(
+                            value = votingOpenTime,
+                            onValueChange = { votingOpenTime = it },
+                            label = "Hora de Abertura",
+                            modifier = Modifier.weight(1f),
+                            placeholder = "06:00"
+                        )
+                        UbusTextField(
+                            value = votingCloseTime,
+                            onValueChange = { votingCloseTime = it },
+                            label = "Hora de Fechamento",
+                            modifier = Modifier.weight(1f),
+                            placeholder = "18:00"
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "Dia de abertura",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                            BentoCard(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { votingOpenDaysBefore = 0 }
+                                    .then(if (votingOpenDaysBefore == 0) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier)
+                            ) {
+                                Text(
+                                    text = "Mesmo dia",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    fontWeight = if (votingOpenDaysBefore == 0) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                            BentoCard(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { votingOpenDaysBefore = 1 }
+                                    .then(if (votingOpenDaysBefore == 1) Modifier.border(2.dp, UbusPrimary, MaterialTheme.shapes.large) else Modifier)
+                            ) {
+                                Text(
+                                    text = "Dia anterior",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    fontWeight = if (votingOpenDaysBefore == 1) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

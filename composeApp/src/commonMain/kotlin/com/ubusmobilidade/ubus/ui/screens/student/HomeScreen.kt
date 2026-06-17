@@ -222,7 +222,10 @@ fun HomeScreen(component: RootComponent) {
 
 
                 // Active reservations
-                val futureReservations = myReservations.filter { it.id != reservationToday?.id }
+                val futureReservations = myReservations.filter { res ->
+                    res.id != reservationToday?.id &&
+                    res.trip?.tripDate?.let { !com.ubusmobilidade.ubus.ui.util.isPast(it) } != false
+                }
                 if (futureReservations.isNotEmpty()) {
                     Text(
                         "Próximas reservas",

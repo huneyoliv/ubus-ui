@@ -16,7 +16,8 @@ data class User(
     val phone: String? = null,
     val status: RegistrationStatus? = null,
     val priorityLevel: Int? = null,
-    val defaultRouteId: String? = null,
+    val preferredRouteId: String? = null,
+    val pendingPreferredRouteId: String? = null,
     val defaultPointId: String? = null,
     val needsWheelchair: Boolean? = null,
     val accessibilityReason: AccessibilityReason? = null,
@@ -53,6 +54,7 @@ data class Route(
     val weekDays: List<Int>? = null,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
+    val votingOpenDaysBefore: Int? = null,
     val departureTimeOutbound: String? = null,
     val departureTimeInbound: String? = null,
     val active: Boolean = true,
@@ -168,7 +170,7 @@ data class DashboardMetrics(
 
 @Serializable
 data class OccupiedSeat(
-    val seatNumber: Int,
+    val seatNumber: Int? = null,
     val userId: String? = null,
     val userName: String? = null,
 )
@@ -181,16 +183,44 @@ data class DriverAssignmentResponse(
 )
 
 @Serializable
+data class DriverRouteInfo(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    val departureTimeOutbound: String? = null,
+    val departureTimeInbound: String? = null,
+)
+
+@Serializable
+data class DriverBusInfo(
+    val id: String,
+    val identificationNumber: String,
+    val plate: String? = null,
+    val standardCapacity: Int,
+    val hasElevator: Boolean = false,
+    val hasBathroom: Boolean = false,
+)
+
+@Serializable
 data class DriverTripPoint(
     val pointId: String,
     val pointName: String,
     val studentsCount: Int,
+    val lat: Double? = null,
+    val lng: Double? = null,
+    val type: String? = null, // "BOARDING" | "ALIGHTING"
 )
 
 @Serializable
 data class DriverCurrentTripSummary(
     val phase: String? = null,
     val tripId: String? = null,
+    val tripDate: String? = null,
+    val shift: String? = null,
+    val direction: TripDirection? = null,
+    val noTripToday: Boolean = false,
+    val route: DriverRouteInfo? = null,
+    val bus: DriverBusInfo? = null,
     val points: List<DriverTripPoint> = emptyList(),
 )
 
