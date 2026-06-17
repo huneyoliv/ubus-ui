@@ -92,7 +92,7 @@ class UserRepository(private val api: ApiClient) {
         api.patch("/users/$id", payload)
 
     suspend fun deleteUser(id: String) {
-        updateStatus(id, RegistrationStatus.REJECTED)
+        api.delete<Unit>("/users/$id")
     }
 
     suspend fun updateStatus(id: String, status: RegistrationStatus): User =
@@ -142,11 +142,11 @@ class FleetRepository(private val api: ApiClient) {
         listBuses().filter { it.routeId == routeId }
 
     suspend fun assignBusToRoute(routeId: String, busId: String) {
-        updateBus(busId, UpdateBusPayload(routeId = routeId))
+        api.patch<Unit>("/fleet/routes/$routeId/bus", mapOf("busId" to busId))
     }
 
     suspend fun removeBusFromRoute(routeId: String, busId: String) {
-        updateBus(busId, UpdateBusPayload(routeId = null))
+        api.patch<Unit>("/fleet/routes/$routeId/bus", mapOf("busId" to null))
     }
 
     suspend fun createRoute(payload: CreateRoutePayload): Route =
@@ -177,7 +177,7 @@ class FleetRepository(private val api: ApiClient) {
 
     suspend fun getBusLayout(busId: String): BusLayout? =
         try { api.get("/fleet/buses/$busId/layout") }
-        catch (_: Exception) { null }
+        catch (e: ApiError) { if (e.status == 404) null else throw e }
 
     suspend fun saveBusLayout(busId: String, payload: SaveBusLayoutPayload): BusLayout? =
         try { api.put("/fleet/buses/$busId/layout", payload) }

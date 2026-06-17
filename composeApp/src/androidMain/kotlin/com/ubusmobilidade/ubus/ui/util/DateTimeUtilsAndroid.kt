@@ -50,3 +50,22 @@ actual fun isToday(dateString: String): Boolean {
            today.get(Calendar.MONTH) == month &&
            today.get(Calendar.DAY_OF_MONTH) == day
 }
+
+actual fun isPast(dateString: String): Boolean {
+    val parts = dateString.split("-")
+    if (parts.size != 3) return false
+    val year = parts[0].toIntOrNull() ?: return false
+    val month = parts[1].toIntOrNull()?.minus(1) ?: return false
+    val day = parts[2].toIntOrNull() ?: return false
+
+    val today = Calendar.getInstance()
+    val currentYear = today.get(Calendar.YEAR)
+    val currentMonth = today.get(Calendar.MONTH)
+    val currentDay = today.get(Calendar.DAY_OF_MONTH)
+
+    if (currentYear > year) return true
+    if (currentYear < year) return false
+    if (currentMonth > month) return true
+    if (currentMonth < month) return false
+    return currentDay > day
+}

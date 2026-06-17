@@ -101,7 +101,6 @@ data class UpdateBusPayload(
     val standardCapacity: Int? = null,
     val hasBathroom: Boolean? = null,
     val hasAirConditioning: Boolean? = null,
-    val routeId: String? = null,
     val active: Boolean? = null,
     val preferentialSeats: List<Int>? = null,
 )

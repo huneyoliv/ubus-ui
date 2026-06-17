@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,9 +52,17 @@ fun RedefinirSenhaScreen(component: RootComponent) {
     var success by remember { mutableStateOf(false) }
 
     fun sendCode() {
-        if (email.isBlank() || !email.contains("@")) {
-            error = "Informe um e-mail válido."
-            return
+        val isEmail = channel == VerificationChannel.EMAIL
+        if (isEmail) {
+            if (email.isBlank() || !email.contains("@")) {
+                error = "Informe um e-mail válido."
+                return
+            }
+        } else {
+            if (email.filter { it.isDigit() }.length != 11) {
+                error = "Informe um telefone com DDD (11 dígitos)."
+                return
+            }
         }
         error = ""
         loading = true
@@ -156,8 +165,9 @@ fun RedefinirSenhaScreen(component: RootComponent) {
         } else {
             when (step) {
                 1 -> {
+                    val isEmail = channel == VerificationChannel.EMAIL
                     Text(
-                        "Informe seu e-mail e selecione o canal para receber o código.",
+                        if (isEmail) "Informe seu e-mail e selecione o canal para receber o código." else "Informe seu telefone e selecione o canal para receber o código.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = UbusText3,
                     )
@@ -165,16 +175,20 @@ fun RedefinirSenhaScreen(component: RootComponent) {
                     UbusTextField(
                         value = email,
                         onValueChange = { email = it },
-                        label = "E-mail",
-                        placeholder = "seu@email.com",
-                        leadingIcon = { Icon(Icons.Default.Email, null, tint = UbusText3) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                        label = if (isEmail) "E-mail" else "Telefone (com DDD)",
+                        placeholder = if (isEmail) "seu@email.com" else "11999999999",
+                        leadingIcon = { Icon(if (isEmail) Icons.Default.Email else Icons.Default.Phone, null, tint = UbusText3) },
+                        keyboardOptions = KeyboardOptions(keyboardType = if (isEmail) KeyboardType.Email else KeyboardType.Phone, imeAction = ImeAction.Next),
                     )
                     Spacer(Modifier.height(20.dp))
                     VerificationChannelSelector(
                         selected = channel,
-                        onSelect = { channel = it },
-                        phone = "placeholder"
+                        onSelect = { 
+                            channel = it
+                            email = ""
+                            error = ""
+                        },
+                        phone = if (!isEmail) email else ""
                     )
                     Spacer(Modifier.height(24.dp))
                     if (error.isNotEmpty()) {

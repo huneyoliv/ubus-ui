@@ -89,7 +89,7 @@ fun SeatSelectionScreen(component: RootComponent, tripId: String, pendingInbound
             val fetchedTrip = tripRepo.getTrip(tripId)
             trip = fetchedTrip
             val occupied = reservationRepo.getOccupiedSeats(tripId)
-            occupiedSeats = occupied.map { it.seatNumber }
+            occupiedSeats = occupied.mapNotNull { it.seatNumber }
 
             val busId = fetchedTrip.busId.takeIf { it.isNotBlank() }
             if (busId != null) {

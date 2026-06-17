@@ -168,7 +168,7 @@ data class DashboardMetrics(
 
 @Serializable
 data class OccupiedSeat(
-    val seatNumber: Int,
+    val seatNumber: Int? = null,
     val userId: String? = null,
     val userName: String? = null,
 )
