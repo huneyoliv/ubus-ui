@@ -27,7 +27,7 @@ data class RegisterPayload(
     val phone: String? = null,
     val role: RoleUsuario? = null,
     val priorityLevel: Int? = null,
-    val defaultRouteId: String? = null,
+    val preferredRouteId: String? = null,
     val needsWheelchair: Boolean? = null,
     val photoUrl: String? = null,
     val gradeFileUrl: String? = null,
@@ -280,12 +280,19 @@ data class CreateTripPayload(
     val status: TripStatus = TripStatus.OPEN_FOR_RESERVATION,
 )
 
+@Serializable
+data class UpdatePreferredRoutePayload(val routeId: String?)
+
+@Serializable
+data class SwapDriverBusPayload(val busId: String)
+
 /* ── Semester Renewal ── */
 
 @Serializable
 data class SemesterRenewalPayload(
     val gradeFileUrl: String? = null,
     val residenciaFileUrl: String? = null,
+    val preferredRouteId: String? = null,
 )
 
 @Serializable

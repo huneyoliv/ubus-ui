@@ -125,6 +125,12 @@ class UserRepository(private val api: ApiClient) {
 
     suspend fun submitAccessibilityRequest(payload: AccessibilityRequestPayload): User =
         api.post("/users/me/accessibility", payload)
+
+    suspend fun updatePreferredRoute(routeId: String?): User {
+        val updated = api.patch<User>("/users/me/preferred-route", UpdatePreferredRoutePayload(routeId))
+        api.authStorage.user = updated
+        return updated
+    }
 }
 
 class NotificationRepository(private val api: ApiClient) {
@@ -232,6 +238,9 @@ class ManagementRepository(private val api: ApiClient) {
 
     suspend fun listPublicPickupPoints(municipalityId: String): List<PickupPoint> =
         api.get("/management/public/$municipalityId/pickup-points")
+
+    suspend fun listPublicRoutes(municipalityId: String): List<Route> =
+        api.get("/management/public/$municipalityId/routes")
 }
 
 class MetricsRepository(private val api: ApiClient) {
@@ -247,6 +256,12 @@ class DriverRepository(private val api: ApiClient) {
 
     suspend fun notifyDeparting(tripId: String): String =
         api.post("/driver/trips/$tripId/departing", DriverDepartingPayload(departingNow = true))
+
+    suspend fun swapBus(busId: String): DriverCurrentTripSummary =
+        api.patch("/driver/trips/current/bus", SwapDriverBusPayload(busId))
+
+    suspend fun getBusByNumber(identificationNumber: String): Bus =
+        api.get("/fleet/buses/by-number/$identificationNumber")
 }
 
 class TripRatingRepository(private val api: ApiClient) {
