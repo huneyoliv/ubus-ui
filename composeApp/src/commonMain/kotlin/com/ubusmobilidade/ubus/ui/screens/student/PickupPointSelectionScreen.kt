@@ -249,7 +249,7 @@ fun PickupPointSelectionScreen(
                                 if (pendingInboundTripId != null) {
                                     component.navigateTo(RootComponent.Config.SelecionarAssento(pendingInboundTripId, null))
                                 } else {
-                                    component.replaceWith(RootComponent.Config.Historico)
+                                    component.replaceWith(RootComponent.Config.ReservaConcluida(reservation.isRideShare))
                                 }
                             } catch (e: Exception) {
                                 if (e is kotlinx.coroutines.CancellationException) throw e

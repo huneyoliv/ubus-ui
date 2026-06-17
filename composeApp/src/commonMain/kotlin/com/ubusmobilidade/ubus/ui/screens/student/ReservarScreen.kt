@@ -37,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import com.ubusmobilidade.ubus.data.api.ApiClient
 import com.ubusmobilidade.ubus.data.api.ReservationRepository
 import com.ubusmobilidade.ubus.data.api.TripRepository
@@ -49,12 +50,17 @@ import com.ubusmobilidade.ubus.ui.components.BentoCard
 import com.ubusmobilidade.ubus.ui.components.StudentBottomNavBar
 import com.ubusmobilidade.ubus.ui.components.StudentTab
 import com.ubusmobilidade.ubus.ui.components.UbusButton
+import com.ubusmobilidade.ubus.ui.components.UbusOutlinedButton
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.util.NotificationScheduler
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
+import com.russhwolf.settings.Settings
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.border
 
 @Composable
 fun ReservarScreen(component: RootComponent) {
@@ -70,6 +76,29 @@ fun ReservarScreen(component: RootComponent) {
     var reservingId by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
+
+    val settings = remember { Settings() }
+    var selectedDestination by remember { mutableStateOf(settings.getStringOrNull("ubus_filter_destination")) }
+    var selectedTime by remember { mutableStateOf(settings.getStringOrNull("ubus_filter_time")) }
+    var destExpanded by remember { mutableStateOf(false) }
+    var timeExpanded by remember { mutableStateOf(false) }
+
+    val destinations = remember(trips) {
+        trips.map { it.route?.description ?: it.route?.name ?: "" }.filter { it.isNotEmpty() }.distinct().sorted()
+    }
+
+    val departureTimes = remember(trips) {
+        trips.flatMap { listOfNotNull(it.route?.departureTimeOutbound, it.route?.departureTimeInbound) }.distinct().sorted()
+    }
+
+    val filteredTrips = remember(trips, selectedDestination, selectedTime) {
+        trips.filter { trip ->
+            val route = trip.route ?: return@filter false
+            val destMatch = selectedDestination == null || (route.description == selectedDestination || route.name == selectedDestination)
+            val timeMatch = selectedTime == null || (route.departureTimeOutbound == selectedTime || route.departureTimeInbound == selectedTime)
+            destMatch && timeMatch
+        }
+    }
 
     LaunchedEffect(Unit) {
         try {
@@ -152,9 +181,137 @@ fun ReservarScreen(component: RootComponent) {
                     }
                 }
             } else {
-                val groupedTrips = remember(trips) {
-                    trips.groupBy { Triple(it.routeId ?: "", it.tripDate, it.shift) }
+                BentoCard(modifier = Modifier.padding(bottom = 16.dp)) {
+                    Column {
+                        Text(
+                            text = "Filtrar Viagens",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = UbusPrimary
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                        .clickable { destExpanded = true }
+                                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                                ) {
+                                    Text(
+                                        text = selectedDestination ?: "Destino",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (selectedDestination != null) MaterialTheme.colorScheme.onSurface else UbusText3,
+                                        maxLines = 1
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = destExpanded,
+                                    onDismissRequest = { destExpanded = false },
+                                    modifier = Modifier.fillMaxWidth(0.4f)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Todos") },
+                                        onClick = {
+                                            selectedDestination = null
+                                            settings.remove("ubus_filter_destination")
+                                            destExpanded = false
+                                        }
+                                    )
+                                    destinations.forEach { dest ->
+                                        DropdownMenuItem(
+                                            text = { Text(dest) },
+                                            onClick = {
+                                                selectedDestination = dest
+                                                settings.putString("ubus_filter_destination", dest)
+                                                destExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Box(modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                                        .clickable { timeExpanded = true }
+                                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                                ) {
+                                    Text(
+                                        text = selectedTime ?: "Horário",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = if (selectedTime != null) MaterialTheme.colorScheme.onSurface else UbusText3,
+                                        maxLines = 1
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = timeExpanded,
+                                    onDismissRequest = { timeExpanded = false },
+                                    modifier = Modifier.fillMaxWidth(0.4f)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Todos") },
+                                        onClick = {
+                                            selectedTime = null
+                                            settings.remove("ubus_filter_time")
+                                            timeExpanded = false
+                                        }
+                                    )
+                                    departureTimes.forEach { time ->
+                                        DropdownMenuItem(
+                                            text = { Text(time) },
+                                            onClick = {
+                                                selectedTime = time
+                                                settings.putString("ubus_filter_time", time)
+                                                timeExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (selectedDestination != null || selectedTime != null) {
+                            Spacer(Modifier.height(12.dp))
+                            UbusOutlinedButton(
+                                text = "Redefinir filtros",
+                                onClick = {
+                                    selectedDestination = null
+                                    selectedTime = null
+                                    settings.remove("ubus_filter_destination")
+                                    settings.remove("ubus_filter_time")
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                 }
+
+                if (filteredTrips.isEmpty()) {
+                    BentoCard {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                            Icon(Icons.Default.Schedule, null, tint = UbusText3, modifier = Modifier.size(32.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Nenhuma viagem atende aos filtros selecionados.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = UbusText3,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    val groupedTrips = remember(filteredTrips) {
+                        filteredTrips.groupBy { Triple(it.routeId ?: "", it.tripDate, it.shift) }
+                    }
 
                 groupedTrips.forEach { (key, tripsInGroup) ->
                     val (routeId, tripDate, shift) = key
@@ -245,6 +402,7 @@ fun ReservarScreen(component: RootComponent) {
                             },
                         )
                     }
+                }
                 }
             }
             Spacer(Modifier.height(16.dp))

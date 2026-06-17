@@ -52,6 +52,7 @@ class RootComponent(
         Config.RenovarSemestre -> Child.RenovarSemestre
         Config.BaixaMobilidade -> Child.BaixaMobilidade
         Config.Regras -> Child.Regras
+        is Config.ReservaConcluida -> Child.ReservaConcluida(config.isRideShare)
 
         // Driver
         Config.DriverHome -> Child.DriverHome
@@ -172,6 +173,7 @@ class RootComponent(
         is Config.SelecionarPontoEmbarque -> true
         is Config.AvaliarViagem -> true
         is Config.SelecionarDirecao -> true
+        is Config.ReservaConcluida -> true
         else -> config in studentRoutes
     }
 
@@ -203,6 +205,7 @@ class RootComponent(
         @Serializable data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Config()
         @Serializable data class AvaliarViagem(val reservationId: String, val tripId: String) : Config()
         @Serializable data object Regras : Config()
+        @Serializable data class ReservaConcluida(val isRideShare: Boolean) : Config()
 
         // Driver
         @Serializable data object DriverHome : Config()
@@ -259,6 +262,7 @@ class RootComponent(
         data class SelecionarDirecao(val routeId: String, val tripDate: String, val shift: String, val outboundTripId: String?, val inboundTripId: String?) : Child()
         data class AvaliarViagem(val reservationId: String, val tripId: String) : Child()
         data object Regras : Child()
+        data class ReservaConcluida(val isRideShare: Boolean) : Child()
 
         // Driver
         data object DriverHome : Child()

@@ -48,6 +48,7 @@ import com.ubusmobilidade.ubus.ui.screens.student.SeatSelectionScreen
 import com.ubusmobilidade.ubus.ui.screens.student.PickupPointSelectionScreen
 import com.ubusmobilidade.ubus.ui.screens.student.TripRatingScreen
 import com.ubusmobilidade.ubus.ui.screens.student.SelecionarDirecaoScreen
+import com.ubusmobilidade.ubus.ui.screens.student.ReservaConcluidaScreen
 
 @Composable
 fun RootContent(component: RootComponent) {
@@ -80,6 +81,7 @@ fun RootContent(component: RootComponent) {
             is RootComponent.Child.RenovarSemestre -> RenovarSemestreScreen(component)
             is RootComponent.Child.BaixaMobilidade -> BaixaMobilidadeScreen(component)
             is RootComponent.Child.Regras -> RegrasScreen(component)
+            is RootComponent.Child.ReservaConcluida -> ReservaConcluidaScreen(component, instance.isRideShare)
 
             // Driver
             is RootComponent.Child.DriverHome -> DriverHomeScreen(component)
