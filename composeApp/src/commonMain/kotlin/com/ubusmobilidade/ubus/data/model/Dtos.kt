@@ -66,6 +66,7 @@ data class CreateRoutePayload(
     val weekDays: List<Int>,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
+    val votingOpenDaysBefore: Int? = null,
     val departureTimeOutbound: String? = null,
     val departureTimeInbound: String? = null,
 )
@@ -77,6 +78,7 @@ data class UpdateRoutePayload(
     val weekDays: List<Int>? = null,
     val votingOpenTime: String? = null,
     val votingCloseTime: String? = null,
+    val votingOpenDaysBefore: Int? = null,
     val active: Boolean? = null,
     val departureTimeOutbound: String? = null,
     val departureTimeInbound: String? = null,
