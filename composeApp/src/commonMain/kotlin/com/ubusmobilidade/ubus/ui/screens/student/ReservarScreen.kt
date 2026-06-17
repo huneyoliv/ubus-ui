@@ -65,6 +65,7 @@ fun ReservarScreen(component: RootComponent) {
     val reservationRepo = remember { ReservationRepository(apiClient) }
 
     var trips by remember { mutableStateOf<List<Trip>>(emptyList()) }
+    var occupiedSeatsMap by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var reservingId by remember { mutableStateOf<String?>(null) }
     var successMessage by remember { mutableStateOf("") }
@@ -72,7 +73,16 @@ fun ReservarScreen(component: RootComponent) {
 
     LaunchedEffect(Unit) {
         try {
-            trips = tripRepo.getOpenTrips()
+            val fetchedTrips = tripRepo.getOpenTrips()
+            trips = fetchedTrips
+            val map = fetchedTrips.associate { trip ->
+                trip.tripId to try {
+                    reservationRepo.getOccupiedSeats(trip.tripId).size
+                } catch (e: Exception) {
+                    0
+                }
+            }
+            occupiedSeatsMap = map
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             errorMessage = e.toUserMessage("Não foi possível carregar as viagens disponíveis.")
@@ -184,9 +194,7 @@ fun ReservarScreen(component: RootComponent) {
 
                         val capacity = tripsInGroup.sumOf { if (it.realCapacity > 0) it.realCapacity else 40 }
                         val occupiedSeatsCount = tripsInGroup.sumOf { trip ->
-                            val seed = trip.tripId.hashCode().let { if (it < 0) -it else it }
-                            val cap = if (trip.realCapacity > 0) trip.realCapacity else 40
-                            (seed % (cap - 5)).coerceIn(10, cap - 3)
+                            occupiedSeatsMap[trip.tripId] ?: 0
                         }
                         val availableSeats = capacity - occupiedSeatsCount
                         val occupancyRatio = occupiedSeatsCount.toFloat() / capacity.toFloat()
