@@ -375,3 +375,10 @@ data class SaveBusLayoutPayload(
     val preferentialSeats: List<Int>,
 )
 
+@Serializable
+data class UniversityCityRequiredError(
+    val error: String,
+    val message: String,
+    val availableCities: List<String> = emptyList(),
+)
+

@@ -1,6 +1,12 @@
 package com.ubusmobilidade.ubus.data.api
 
 import com.ubusmobilidade.ubus.data.model.*
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 
 class TripRepository(private val api: ApiClient) {
     suspend fun getOpenTrips(): List<Trip> = api.get("/trips/open")
@@ -130,6 +136,35 @@ class UserRepository(private val api: ApiClient) {
         val updated = api.patch<User>("/users/me/preferred-route", UpdatePreferredRoutePayload(routeId))
         api.authStorage.user = updated
         return updated
+    }
+
+    suspend fun submitStudentSchedule(
+        fileBytes: ByteArray,
+        fileName: String,
+        universityCity: String? = null,
+    ): String {
+        val response = api.httpClient.post(api.fullUrl("/users/me/schedule")) {
+            setBody(
+                MultiPartFormDataContent(
+                    formData {
+                        append("gradeFile", fileBytes, Headers.build {
+                            append(HttpHeaders.ContentDisposition, "filename=\"$fileName\"")
+                            append(HttpHeaders.ContentType, when {
+                                fileName.endsWith(".pdf", ignoreCase = true) -> "application/pdf"
+                                fileName.endsWith(".png", ignoreCase = true) -> "image/png"
+                                fileName.endsWith(".jpg", ignoreCase = true) || fileName.endsWith(".jpeg", ignoreCase = true) -> "image/jpeg"
+                                else -> "application/octet-stream"
+                            })
+                        })
+                        universityCity?.let {
+                            append("universityCity", it)
+                        }
+                    }
+                )
+            )
+        }
+        api.handleResponse(response)
+        return response.body()
     }
 }
 

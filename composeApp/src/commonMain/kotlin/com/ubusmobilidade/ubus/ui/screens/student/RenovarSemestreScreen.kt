@@ -63,6 +63,16 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.style.TextAlign
+import com.ubusmobilidade.ubus.data.api.ApiError
+import com.ubusmobilidade.ubus.data.model.UniversityCityRequiredError
+import com.ubusmobilidade.ubus.ui.components.UbusTextField
+import kotlinx.serialization.json.Json
 
 @Composable
 fun RenovarSemestreScreen(component: RootComponent) {
@@ -78,6 +88,10 @@ fun RenovarSemestreScreen(component: RootComponent) {
     var loading by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var isError by remember { mutableStateOf(false) }
+
+    var showCitySelector by remember { mutableStateOf(false) }
+    var availableCities by remember { mutableStateOf<List<String>>(emptyList()) }
+    var citySearchQuery by remember { mutableStateOf("") }
 
     val currentUser = component.authStorage.user
     
@@ -181,46 +195,127 @@ fun RenovarSemestreScreen(component: RootComponent) {
             Spacer(Modifier.height(16.dp))
         }
 
+        fun performRenewal(city: String? = null) {
+            loading = true
+            message = ""
+            scope.launch {
+                try {
+                    val uploadRepo = UploadRepository(apiClient)
+                    var finalResidenciaUrl: String? = residenciaUri
+
+                    // 1. Processar grade horária via IA se selecionada
+                    gradeUri?.let { uri ->
+                        val fileBytes = readFileBytes(uri)
+                        val fileName = getFileNameFromUri(uri)
+                        userRepo.submitStudentSchedule(fileBytes, fileName, city)
+                    }
+
+                    // 2. Subir comprovante de residência se selecionado
+                    residenciaUri?.let { uri ->
+                        val fileBytes = readFileBytes(uri)
+                        val fileName = getFileNameFromUri(uri)
+                        finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
+                    }
+
+                    // 3. Solicitar renovação final sem preferredRouteId
+                    val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
+                        gradeFileUrl = null,
+                        residenciaFileUrl = finalResidenciaUrl,
+                        preferredRouteId = null,
+                    ))
+                    message = resp.message ?: "Solicitação enviada com sucesso!"
+                    isError = false
+                    showCitySelector = false
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    if (e is ApiError && e.status == 422 && e.body != null) {
+                        try {
+                            val errorDetail = Json { ignoreUnknownKeys = true }.decodeFromString<UniversityCityRequiredError>(e.body)
+                            if (errorDetail.error == "UNIVERSITY_CITY_REQUIRED") {
+                                availableCities = errorDetail.availableCities
+                                showCitySelector = true
+                                loading = false
+                                return@launch
+                            }
+                        } catch (_: Exception) {}
+                    }
+                    message = e.toUserMessage("Erro ao solicitar renovação.")
+                    isError = true
+                }
+                loading = false
+            }
+        }
+
         UbusButton(
             text = "Solicitar renovação",
             loading = loading,
             enabled = (gradeSelected || residenciaSelected) && !statusApproved && !statusPending,
-            onClick = {
-                loading = true; message = ""
-                scope.launch {
-                    try {
-                        val uploadRepo = UploadRepository(apiClient)
-                        var finalGradeUrl: String? = gradeUri
-                        var finalResidenciaUrl: String? = residenciaUri
-
-                        gradeUri?.let { uri ->
-                            val fileBytes = readFileBytes(uri)
-                            val fileName = getFileNameFromUri(uri)
-                            finalGradeUrl = uploadRepo.upload(fileBytes, fileName, UploadType.GRADE_DOCUMENT).fileUrl
-                        }
-                        residenciaUri?.let { uri ->
-                            val fileBytes = readFileBytes(uri)
-                            val fileName = getFileNameFromUri(uri)
-                            finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
-                        }
-
-                        val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
-                            gradeFileUrl = finalGradeUrl,
-                            residenciaFileUrl = finalResidenciaUrl,
-                            preferredRouteId = null,
-                        ))
-                        message = resp.message ?: "Solicitação enviada com sucesso!"
-                        isError = false
-                    } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
-                        message = e.toUserMessage("Erro ao solicitar renovação.")
-                        isError = true
-                    }
-                    loading = false
-                }
-            },
+            onClick = { performRenewal() },
         )
         Spacer(Modifier.height(32.dp))
+    }
+
+    if (showCitySelector) {
+        val filteredCities = availableCities.filter {
+            it.contains(citySearchQuery, ignoreCase = true)
+        }
+        AlertDialog(
+            onDismissRequest = { showCitySelector = false },
+            title = { Text("Cidade da Faculdade", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Não identificamos a cidade da sua faculdade na grade. Selecione uma das cidades de desembarque abaixo:",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = UbusText3,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    UbusTextField(
+                        value = citySearchQuery,
+                        onValueChange = { citySearchQuery = it },
+                        label = "Pesquisar cidade",
+                        placeholder = "Digite o nome da cidade...",
+                        leadingIcon = { Icon(Icons.Default.Search, null) }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Box(modifier = Modifier.height(180.dp).fillMaxWidth().border(1.dp, UbusBorder, RoundedCornerShape(8.dp)).clip(RoundedCornerShape(8.dp))) {
+                        LazyColumn {
+                            items(filteredCities) { city ->
+                                Text(
+                                    text = city,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            showCitySelector = false
+                                            performRenewal(city)
+                                        }
+                                        .padding(14.dp),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+                            }
+                            if (filteredCities.isEmpty()) {
+                                item {
+                                    Text(
+                                        text = "Nenhuma cidade encontrada",
+                                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = UbusText3,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCitySelector = false }) {
+                    Text("Cancelar", color = UbusDestructive)
+                }
+            }
+        )
     }
 }
 

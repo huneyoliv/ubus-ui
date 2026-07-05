@@ -41,6 +41,12 @@ As configurações de versão estão localizadas no bloco `defaultConfig` do arq
 
 ## 3. Histórico de Versões
 
+### v1.4.0 (versionCode: 8) - 2026-07-05
+- **Grade Horária por IA e Prioridade**: Substituição da rota preferencial manual por grade horária com IA no cadastro e na renovação semestral.
+- **Painel Administrativo de Alunos (Web)**: Nova seção Alunos no `ubus-web` com busca, visualização de documentos (grade/comprovante de residência/laudo), histórico paginado de viagens e editor de grade.
+- **Turnos de Viagem Automáticos (Web)**: Geração de viagens na escala derivando o turno automaticamente (Manhã, Tarde, Noite) dos horários de ida/volta da rota.
+- **Documentação de Transição**: Criação do guia `backend_instructions.md` com prompt injection para sincronizar a API com o novo comportamento.
+
 ### v1.3.0 (versionCode: 7) - 2026-07-04
 - **Remoção da Rota Preferencial no Cadastro**: Redução para 5 etapas de cadastro, passando `preferredRouteId = null`.
 - **Limpeza na Renovação Semestral**: Remoção da rota preferencial da tela `RenovarSemestreScreen` e desativação do botão se o status for `PENDING` ou `APPROVED` (evitando erro 403).
