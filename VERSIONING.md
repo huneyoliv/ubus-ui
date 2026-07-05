@@ -36,4 +36,16 @@ As configurações de versão estão localizadas no bloco `defaultConfig` do arq
    - Faça o commit das alterações incluindo o arquivo `build.gradle.kts`.
    - Crie uma tag do git no formato `v<versionName>` (ex: `v1.1.1`).
    - Faça o push dos commits e da tag para o repositório remoto para disparar o pipeline de CI/CD.
-   
+
+---
+
+## 3. Histórico de Versões
+
+### v1.3.0 (versionCode: 7) - 2026-07-04
+- **Remoção da Rota Preferencial no Cadastro**: Redução para 5 etapas de cadastro, passando `preferredRouteId = null`.
+- **Limpeza na Renovação Semestral**: Remoção da rota preferencial da tela `RenovarSemestreScreen` e desativação do botão se o status for `PENDING` ou `APPROVED` (evitando erro 403).
+- **Gerenciamento de Dropoff Points (Pontos de Desembarque)**: Fluxo completo de CRUD para o Manager gerenciar os pontos de desembarque associados a rotas.
+- **Integração de APIs e Navegação**: Criação de `CreateDropoffPointPayload` e `UpdateDropoffPointPayload`, mapeamento no `FleetRepository`, novos destinos no Decompose (`ManagerDropoffPointFormScreen`).
+
+### v1.2.0 (versionCode: 6)
+- Versão de produção anterior.

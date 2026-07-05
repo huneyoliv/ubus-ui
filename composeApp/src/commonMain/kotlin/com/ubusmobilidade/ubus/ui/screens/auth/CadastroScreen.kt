@@ -85,14 +85,13 @@ import kotlinx.coroutines.launch
 
 import com.ubusmobilidade.ubus.ui.util.rememberCameraLauncher
 
-private const val TOTAL_STEPS = 6
+private const val TOTAL_STEPS = 5
 
 private val stepTitles = listOf(
     "Dados pessoais",
     "Tirar foto",
     "Verificar e-mail",
     "Selecionar município",
-    "Rota preferencial",
     "Criar senha",
 )
 
@@ -101,7 +100,6 @@ private val stepSubtitles = listOf(
     "Precisamos de uma foto sua para identificação.",
     "Enviaremos um código para seu e-mail.",
     "Escolha o município onde você utiliza o transporte.",
-    "Selecione a rota que você usa normalmente. Em outras rotas você será caronista.",
     "Crie uma senha segura para sua conta.",
 )
 
@@ -146,11 +144,7 @@ fun CadastroScreen(component: RootComponent) {
     var municipalitiesError by remember { mutableStateOf<String?>(null) }
     var selectedMunicipalityId by remember { mutableStateOf<String?>(null) }
 
-    // ── Step 4: Rota Preferencial ──
-    var routes by remember { mutableStateOf<List<Route>>(emptyList()) }
-    var loadingRoutes by remember { mutableStateOf(false) }
-    var routesError by remember { mutableStateOf<String?>(null) }
-    var selectedRouteId by remember { mutableStateOf<String?>(null) }
+
 
     // ── Step 5: Senha ──
     var password by remember { mutableStateOf("") }
@@ -192,20 +186,7 @@ fun CadastroScreen(component: RootComponent) {
         }
     }
 
-    LaunchedEffect(currentStep) {
-        if (currentStep == 4 && routes.isEmpty() && !loadingRoutes && selectedMunicipalityId != null) {
-            loadingRoutes = true
-            routesError = null
-            try {
-                routes = managementRepo.listPublicRoutes(selectedMunicipalityId!!)
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                routesError = "Erro ao carregar rotas. Tente novamente."
-            } finally {
-                loadingRoutes = false
-            }
-        }
-    }
+
 
     // ── Validation helpers ──
     fun validateStep1(): Boolean {
@@ -306,7 +287,7 @@ fun CadastroScreen(component: RootComponent) {
                         password = password,
                         phone = phone.filter { it.isDigit() },
                         photoUrl = photoUri,
-                        preferredRouteId = selectedRouteId,
+                        preferredRouteId = null,
                     )
                 )
                 component.replaceWith(RootComponent.Config.Login)
@@ -326,8 +307,7 @@ fun CadastroScreen(component: RootComponent) {
             1 -> if (photoUri != null) currentStep = 2 else generalError = "Tire uma foto para continuar"
             2 -> { /* advance handled by verify callback */ }
             3 -> if (selectedMunicipalityId != null) currentStep = 4
-            4 -> currentStep = 5
-            5 -> handleRegister()
+            4 -> handleRegister()
         }
     }
 
@@ -437,28 +417,7 @@ fun CadastroScreen(component: RootComponent) {
                                 }
                             },
                         )
-                        4 -> StepSelecionarRota(
-                            routes = routes,
-                            loading = loadingRoutes,
-                            error = routesError,
-                            selectedId = selectedRouteId,
-                            onSelect = { selectedRouteId = it },
-                            onRetry = {
-                                routesError = null
-                                loadingRoutes = true
-                                scope.launch {
-                                    try {
-                                        routes = managementRepo.listPublicRoutes(selectedMunicipalityId!!)
-                                    } catch (e: Exception) {
-                                        if (e is kotlinx.coroutines.CancellationException) throw e
-                                        routesError = "Erro ao carregar rotas."
-                                    } finally {
-                                        loadingRoutes = false
-                                    }
-                                }
-                            }
-                        )
-                        5 -> StepCriarSenha(
+                        4 -> StepCriarSenha(
                             password = password, onPasswordChange = { password = it; passwordError = null },
                             confirmPassword = confirmPassword, onConfirmChange = { confirmPassword = it; confirmPasswordError = null },
                             passwordError = passwordError, confirmPasswordError = confirmPasswordError,
@@ -481,14 +440,14 @@ fun CadastroScreen(component: RootComponent) {
 
         Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             when (currentStep) {
-                0, 1, 4 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
+                0, 1 -> UbusButton(text = "Avançar", onClick = { handleAdvance() })
                 2 -> {} 
                 3 -> UbusButton(
                     text = "Avançar",
                     onClick = { handleAdvance() },
                     enabled = selectedMunicipalityId != null,
                 )
-                5 -> UbusButton(
+                4 -> UbusButton(
                     text = "Criar conta",
                     onClick = { handleAdvance() },
                     loading = registering,

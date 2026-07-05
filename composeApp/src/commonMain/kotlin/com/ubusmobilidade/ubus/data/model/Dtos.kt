@@ -121,6 +121,22 @@ data class UpdatePickupPointPayload(
     val lng: Double? = null,
 )
 
+@Serializable
+data class CreateDropoffPointPayload(
+    val name: String,
+    val address: String? = null,
+    val lat: Double,
+    val lng: Double,
+)
+
+@Serializable
+data class UpdateDropoffPointPayload(
+    val name: String? = null,
+    val address: String? = null,
+    val lat: Double? = null,
+    val lng: Double? = null,
+)
+
 /* ── Trips ── */
 
 @Serializable

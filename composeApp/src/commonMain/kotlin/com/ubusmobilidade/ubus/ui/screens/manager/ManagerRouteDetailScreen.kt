@@ -574,14 +574,27 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             var pointToDelete by remember { mutableStateOf<com.ubusmobilidade.ubus.data.model.PickupPoint?>(null) }
             var deletingPoint by remember { mutableStateOf(false) }
 
+            var dropoffPoints by remember { mutableStateOf<List<com.ubusmobilidade.ubus.data.model.DropoffPoint>>(emptyList()) }
+            var loadingDropoffPoints by remember { mutableStateOf(true) }
+            var dropoffPointToDelete by remember { mutableStateOf<com.ubusmobilidade.ubus.data.model.DropoffPoint?>(null) }
+            var deletingDropoffPoint by remember { mutableStateOf(false) }
+
             LaunchedEffect(routeId) {
                 loadingPoints = true
+                loadingDropoffPoints = true
                 try {
                     pickupPoints = fleetRepo.listPickupPoints(routeId)
                 } catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                 }
                 loadingPoints = false
+
+                try {
+                    dropoffPoints = fleetRepo.listDropoffPoints(routeId)
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                }
+                loadingDropoffPoints = false
             }
 
             if (pointToDelete != null) {
@@ -631,6 +644,53 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                 )
             }
 
+            if (dropoffPointToDelete != null) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { if (!deletingDropoffPoint) dropoffPointToDelete = null },
+                    title = { Text("Excluir ponto de desembarque", fontWeight = FontWeight.Bold) },
+                    text = { Text("Excluir \"${dropoffPointToDelete!!.name}\"? Esta ação não pode ser desfeita.") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                deletingDropoffPoint = true
+                                val target = dropoffPointToDelete!!
+                                scope.launch {
+                                    try {
+                                        fleetRepo.deleteDropoffPoint(target.id)
+                                        dropoffPoints = dropoffPoints.filter { it.id != target.id }
+                                    } catch (e: Exception) {
+                                        if (e is kotlinx.coroutines.CancellationException) throw e
+                                        error = e.toUserMessage("Erro ao excluir ponto de desembarque.")
+                                    }
+                                    deletingDropoffPoint = false
+                                    dropoffPointToDelete = null
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = UbusDestructive),
+                            enabled = !deletingDropoffPoint,
+                        ) {
+                            if (deletingDropoffPoint) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = MaterialTheme.colorScheme.onError,
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Text("Excluir")
+                            }
+                        }
+                    },
+                    dismissButton = {
+                        androidx.compose.material3.TextButton(
+                            onClick = { dropoffPointToDelete = null },
+                            enabled = !deletingDropoffPoint,
+                        ) {
+                            Text("Cancelar")
+                        }
+                    },
+                )
+            }
+
             if (loadingPoints) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = UbusPrimary, strokeWidth = 2.dp)
@@ -665,6 +725,74 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
                                 Icon(Icons.Default.Edit, "Editar", tint = UbusPrimary)
                             }
                             IconButton(onClick = { pointToDelete = point }) {
+                                Icon(Icons.Default.Delete, "Excluir", tint = UbusDestructive)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Seção de Pontos de Desembarque
+            Spacer(Modifier.height(28.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Pontos de Desembarque", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                TextButton(onClick = {
+                    component.navigateTo(RootComponent.Config.ManagerDropoffPointForm(routeId))
+                }) {
+                    Icon(Icons.Default.Add, null, tint = UbusPrimary)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Novo", color = UbusPrimary, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+
+            if (loadingDropoffPoints) {
+                Box(Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = UbusPrimary, strokeWidth = 2.dp)
+                }
+            } else if (dropoffPoints.isEmpty()) {
+                BentoCard(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Nenhum ponto cadastrado. Toque em \"Novo\" para adicionar.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = UbusText3,
+                    )
+                }
+            } else {
+                dropoffPoints.forEach { point ->
+                    BentoCard(modifier = Modifier.padding(bottom = 8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.LocationOn, null, tint = UbusPrimary)
+                            Spacer(Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(point.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                if (!point.address.isNullOrBlank()) {
+                                    Text(
+                                        point.address,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = UbusText3,
+                                    )
+                                }
+                                if (point.lat != null && point.lng != null) {
+                                    Text(
+                                        "${point.lat}, ${point.lng}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = UbusText3,
+                                    )
+                                }
+                            }
+                            IconButton(onClick = {
+                                component.navigateTo(RootComponent.Config.ManagerDropoffPointForm(routeId, point.id))
+                            }) {
+                                Icon(Icons.Default.Edit, "Editar", tint = UbusPrimary)
+                            }
+                            IconButton(onClick = { dropoffPointToDelete = point }) {
                                 Icon(Icons.Default.Delete, "Excluir", tint = UbusDestructive)
                             }
                         }
