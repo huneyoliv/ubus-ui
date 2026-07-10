@@ -111,6 +111,54 @@ fun RenovarSemestreScreen(component: RootComponent) {
         }
     }
 
+    fun performRenewal(city: String? = null) {
+        loading = true
+        message = ""
+        scope.launch {
+            try {
+                val uploadRepo = UploadRepository(apiClient)
+                var finalResidenciaUrl: String? = residenciaUri
+
+                gradeUri?.let { uri ->
+                    val fileBytes = readFileBytes(uri)
+                    val fileName = getFileNameFromUri(uri)
+                    userRepo.submitStudentSchedule(fileBytes, fileName, city)
+                }
+
+                residenciaUri?.let { uri ->
+                    val fileBytes = readFileBytes(uri)
+                    val fileName = getFileNameFromUri(uri)
+                    finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
+                }
+
+                val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
+                    gradeFileUrl = null,
+                    residenciaFileUrl = finalResidenciaUrl,
+                    preferredRouteId = null,
+                ))
+                message = resp.message ?: "Solicitação enviada com sucesso!"
+                isError = false
+                showCitySelector = false
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                if (e is ApiError && e.status == 422 && e.body != null) {
+                    try {
+                        val errorDetail = Json { ignoreUnknownKeys = true }.decodeFromString<UniversityCityRequiredError>(e.body)
+                        if (errorDetail.error == "UNIVERSITY_CITY_REQUIRED") {
+                            availableCities = errorDetail.availableCities
+                            showCitySelector = true
+                            loading = false
+                            return@launch
+                        }
+                    } catch (_: Exception) {}
+                }
+                message = e.toUserMessage("Erro ao solicitar renovação.")
+                isError = true
+            }
+            loading = false
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -193,57 +241,6 @@ fun RenovarSemestreScreen(component: RootComponent) {
         if (message.isNotEmpty()) {
             Text(message, color = if (isError) UbusDestructive else UbusSuccess, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.height(16.dp))
-        }
-
-        fun performRenewal(city: String? = null) {
-            loading = true
-            message = ""
-            scope.launch {
-                try {
-                    val uploadRepo = UploadRepository(apiClient)
-                    var finalResidenciaUrl: String? = residenciaUri
-
-                    // 1. Processar grade horária via IA se selecionada
-                    gradeUri?.let { uri ->
-                        val fileBytes = readFileBytes(uri)
-                        val fileName = getFileNameFromUri(uri)
-                        userRepo.submitStudentSchedule(fileBytes, fileName, city)
-                    }
-
-                    // 2. Subir comprovante de residência se selecionado
-                    residenciaUri?.let { uri ->
-                        val fileBytes = readFileBytes(uri)
-                        val fileName = getFileNameFromUri(uri)
-                        finalResidenciaUrl = uploadRepo.upload(fileBytes, fileName, UploadType.RESIDENCIA_DOCUMENT).fileUrl
-                    }
-
-                    // 3. Solicitar renovação final sem preferredRouteId
-                    val resp = userRepo.requestSemesterRenewal(SemesterRenewalPayload(
-                        gradeFileUrl = null,
-                        residenciaFileUrl = finalResidenciaUrl,
-                        preferredRouteId = null,
-                    ))
-                    message = resp.message ?: "Solicitação enviada com sucesso!"
-                    isError = false
-                    showCitySelector = false
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    if (e is ApiError && e.status == 422 && e.body != null) {
-                        try {
-                            val errorDetail = Json { ignoreUnknownKeys = true }.decodeFromString<UniversityCityRequiredError>(e.body)
-                            if (errorDetail.error == "UNIVERSITY_CITY_REQUIRED") {
-                                availableCities = errorDetail.availableCities
-                                showCitySelector = true
-                                loading = false
-                                return@launch
-                            }
-                        } catch (_: Exception) {}
-                    }
-                    message = e.toUserMessage("Erro ao solicitar renovação.")
-                    isError = true
-                }
-                loading = false
-            }
         }
 
         UbusButton(
