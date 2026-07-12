@@ -41,6 +41,9 @@ As configurações de versão estão localizadas no bloco `defaultConfig` do arq
 
 ## 3. Histórico de Versões
 
+### v1.4.1 (versionCode: 9) - 2026-07-11
+- **Correções de Referências e Skills**: Resolução de referências não resolvidas em Repositories e RenovarSemestreScreen, e instalação das novas diretrizes/skills Kotlin KMP para os agentes no diretório .agents.
+
 ### v1.4.0 (versionCode: 8) - 2026-07-05
 - **Grade Horária por IA e Prioridade**: Substituição da rota preferencial manual por grade horária com IA no cadastro e na renovação semestral.
 - **Painel Administrativo de Alunos (Web)**: Nova seção Alunos no `ubus-web` com busca, visualização de documentos (grade/comprovante de residência/laudo), histórico paginado de viagens e editor de grade.
