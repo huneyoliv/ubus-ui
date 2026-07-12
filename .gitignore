@@ -53,3 +53,7 @@ Thumbs.db
 *.ps1
 *.txt
 /clickbus_reference_backup/
+
+# ── Agent Skills ──────────────────────────────────
+!.agents/
+!.agents/**
