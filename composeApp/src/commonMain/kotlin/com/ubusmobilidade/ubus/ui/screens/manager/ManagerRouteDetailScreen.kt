@@ -38,6 +38,10 @@ import com.ubusmobilidade.ubus.ui.theme.UbusDestructive
 import com.ubusmobilidade.ubus.ui.theme.UbusPrimary
 import com.ubusmobilidade.ubus.ui.theme.UbusSuccess
 import com.ubusmobilidade.ubus.ui.theme.UbusText3
+import androidx.compose.foundation.horizontalScroll
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import com.ubusmobilidade.ubus.ui.util.toUserMessage
 import kotlinx.coroutines.launch
 
@@ -175,7 +179,27 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
     var driverDropdownExpanded by remember { mutableStateOf(false) }
     
     // Calendar scheduling states
-    var selectedMonth by remember { mutableStateOf("2026-06") }
+    val availableMonths = remember {
+        val monthNames = listOf("", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro")
+        val now = try {
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        } catch (e: Exception) {
+            null
+        }
+        val baseYear = now?.year ?: 2026
+        val baseMonth = now?.monthNumber ?: 6
+        (0..5).map { offset ->
+            var y = baseYear
+            var m = baseMonth + offset
+            while (m > 12) {
+                m -= 12
+                y += 1
+            }
+            val mStr = if (m < 10) "0$m" else "$m"
+            "$y-$mStr" to "${monthNames[m]} $y"
+        }
+    }
+    var selectedMonth by remember { mutableStateOf(availableMonths.firstOrNull()?.first ?: "2026-06") }
     var selectedDates by remember { mutableStateOf<Set<String>>(emptySet()) }
     var scheduledTripsDates by remember { mutableStateOf<Set<String>>(emptySet()) }
     var generatingTrips by remember { mutableStateOf(false) }
@@ -808,8 +832,14 @@ fun ManagerRouteDetailScreen(component: RootComponent, routeId: String) {
             BentoCard {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Seleção de Mês
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                        listOf("2026-06" to "Junho 2026", "2026-07" to "Julho 2026").forEach { (valMonth, labelMonth) ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(bottom = 16.dp)
+                    ) {
+                        availableMonths.forEach { (valMonth, labelMonth) ->
                             val isSel = selectedMonth == valMonth
                             Box(
                                 modifier = Modifier
