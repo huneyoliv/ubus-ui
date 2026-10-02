@@ -12,9 +12,12 @@ data class LoginPayload(
 
 @Serializable
 data class LoginResponse(
-    val accessToken: String,
+    val accessToken: String? = null,
+    val token: String? = null,
     val user: User,
-)
+) {
+    val effectiveToken: String get() = accessToken ?: token ?: ""
+}
 
 @Serializable
 data class RegisterPayload(

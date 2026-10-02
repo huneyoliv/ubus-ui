@@ -7,7 +7,7 @@ class AuthRepository(private val api: ApiClient) {
 
     suspend fun login(payload: LoginPayload): LoginResponse {
         val response = api.post<LoginResponse>("/auth/login", payload)
-        api.authStorage.token = response.accessToken
+        api.authStorage.token = response.effectiveToken
         api.authStorage.user = response.user
         return response
     }
