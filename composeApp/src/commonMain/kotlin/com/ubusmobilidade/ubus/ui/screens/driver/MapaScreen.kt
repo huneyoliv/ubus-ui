@@ -51,9 +51,22 @@ fun MapaScreen(component: RootComponent) {
                 if (tripId != null) {
                     try {
                         val loc = tripRepo.getLocation(tripId)
-                        driverLat = loc.lat
-                        driverLng = loc.lng
+                        if (loc.lat != 0.0 && loc.lng != 0.0) {
+                            driverLat = loc.lat
+                            driverLng = loc.lng
+                        } else {
+                            val firstValidPoint = currentSummary.points.firstOrNull { it.lat != null && it.lng != null }
+                            if (firstValidPoint?.lat != null && firstValidPoint.lng != null) {
+                                driverLat = firstValidPoint.lat
+                                driverLng = firstValidPoint.lng
+                            }
+                        }
                     } catch (e: Exception) {
+                        val firstValidPoint = currentSummary.points.firstOrNull { it.lat != null && it.lng != null }
+                        if (firstValidPoint?.lat != null && firstValidPoint.lng != null) {
+                            driverLat = firstValidPoint.lat
+                            driverLng = firstValidPoint.lng
+                        }
                     }
 
                     val mappedPoints = currentSummary.points.mapNotNull { pt ->
