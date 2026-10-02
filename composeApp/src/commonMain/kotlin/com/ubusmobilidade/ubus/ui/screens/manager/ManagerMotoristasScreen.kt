@@ -176,7 +176,7 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                                         scope.launch {
                                             try {
                                                 userRepo.updateStatus(driver.id, RegistrationStatus.APPROVED)
-                                                drivers = drivers.filter { it.id != driver.id }
+                                                drivers = drivers.map { if (it.id == driver.id) it.copy(status = RegistrationStatus.APPROVED) else it }
                                             } catch (e: Exception) {
                                                 if (e is kotlinx.coroutines.CancellationException) throw e
                                                 error = e.toUserMessage("Não foi possível aprovar o motorista.")
@@ -193,7 +193,7 @@ fun ManagerMotoristasScreen(component: RootComponent) {
                                         scope.launch {
                                             try {
                                                 userRepo.updateStatus(driver.id, RegistrationStatus.REJECTED)
-                                                drivers = drivers.filter { it.id != driver.id }
+                                                drivers = drivers.map { if (it.id == driver.id) it.copy(status = RegistrationStatus.REJECTED) else it }
                                             } catch (e: Exception) {
                                                 if (e is kotlinx.coroutines.CancellationException) throw e
                                                 error = e.toUserMessage("Não foi possível rejeitar o motorista.")
